@@ -1,0 +1,16 @@
+services:
+  offerfolio:
+    build: .
+    init: true
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_PATH: /app/data/offerfolio.sqlite
+    ports:
+      - "127.0.0.1:${APP_PORT:-5188}:3000"
+    volumes:
+      - offerfolio-data:/app/data
+
+volumes:
+  offerfolio-data:
