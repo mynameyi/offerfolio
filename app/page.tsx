@@ -73,17 +73,17 @@ export default function HomePage() {
   const education = profile.milestones.filter((item) => item.kind === "education");
   const growth = profile.milestones.filter((item) => item.kind === "growth");
   const navItems = [
-    { key: "skills", label: "技能专长", href: "#skills" },
-    { key: "education", label: "教育背景", href: "#education" },
-    { key: "workExperience", label: "工作经历", href: "#experience" },
-    { key: "openSource", label: "开源项目", href: "#opensource" },
-    { key: "bigProjects", label: "精选项目", href: "#projects" },
-    { key: "achievements", label: "成就证书", href: "#achievements" },
-    { key: "blogs", label: "文章博客", href: "#blogs" },
-    { key: "talks", label: "演讲分享", href: "#talks" },
-    { key: "resume", label: "简历", href: "#resume" },
-    { key: "contact", label: "联系我", href: "#contact" },
-  ].filter((item) => modules[item.key as keyof typeof modules]);
+    { key: "skills", label: "技能专长", href: "#skills", visible: modules.skills },
+    { key: "education", label: "教育背景", href: "#education", visible: modules.education && education.length > 0 },
+    { key: "workExperience", label: "工作经历", href: "#experience", visible: modules.workExperience && experience.length > 0 },
+    { key: "openSource", label: "开源项目", href: "#opensource", visible: modules.openSource },
+    { key: "bigProjects", label: "精选项目", href: "#projects", visible: modules.bigProjects },
+    { key: "achievements", label: "成就证书", href: "#achievements", visible: modules.achievements },
+    { key: "blogs", label: "文章博客", href: "#blogs", visible: modules.blogs },
+    { key: "talks", label: "演讲分享", href: "#talks", visible: modules.talks },
+    { key: "resume", label: "简历", href: "#resume", visible: modules.resume },
+    { key: "contact", label: "联系我", href: "#contact", visible: modules.contact },
+  ].filter((item) => item.visible);
   const socialItems = [
     ...profile.socialLinks,
     ...(profile.githubUrl ? [{ id: "profile-github", title: "GitHub", url: profile.githubUrl }] : []),
@@ -93,7 +93,7 @@ export default function HomePage() {
 
   return (
     <main className="developerfolio-site" data-theme="light">
-      <header className="df-header">
+      <header className="df-header" id="top">
         <Link href="/" className="df-logo" aria-label="OfferFolio 首页"><span className="df-logo-muted">&lt;</span><span>{profile.displayName}</span><span className="df-logo-muted">/&gt;</span></Link>
         <details className="df-mobile-menu"><summary aria-label="打开导航"><span /><span /><span /></summary><nav aria-label="移动导航">{navItems.map((item) => <a key={item.key} href={item.href}>{item.label}</a>)}<ThemeToggle /></nav></details>
         <nav className="df-nav" aria-label="主导航">{navItems.map((item) => <a key={item.key} href={item.href}>{item.label}</a>)}<ThemeToggle /></nav>
@@ -211,7 +211,7 @@ export default function HomePage() {
       ) : null}
 
       <footer className="df-footer"><p>用真实作品与清晰经历，展示每一份专业价值。</p><span>© {new Date().getFullYear()} {profile.displayName} · EckyStudio</span><Link href="/admin">管理主页</Link></footer>
-      <a className="df-back-to-top" href="#greeting" aria-label="返回顶部">↑</a>
+      <a className="df-back-to-top" href="#top" aria-label="返回顶部">↑</a>
     </main>
   );
 }
