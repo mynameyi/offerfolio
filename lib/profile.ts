@@ -9,11 +9,26 @@ export type PortfolioProject = {
 
 export type PortfolioMilestone = {
   id: string;
+  kind: "experience" | "education";
   period: string;
   title: string;
   organization: string;
   summary: string;
 };
+
+export const PROFILE_MODULES = [
+  { key: "greeting", label: "首页介绍", description: "姓名、求职方向与个人简介" },
+  { key: "skills", label: "技能专长", description: "展示专业能力与技能标签" },
+  { key: "education", label: "教育经历", description: "展示学校、专业与学习经历" },
+  { key: "experience", label: "工作经历", description: "展示工作与项目履历" },
+  { key: "projects", label: "精选项目", description: "展示项目案例和成果证据" },
+  { key: "openSource", label: "开源主页", description: "展示 GitHub 个人主页入口" },
+  { key: "resume", label: "简历下载", description: "展示简历 PDF 下载入口" },
+  { key: "contact", label: "联系信息", description: "展示邮箱、所在地与联系入口" },
+] as const;
+
+export type PortfolioModuleKey = (typeof PROFILE_MODULES)[number]["key"];
+export type PortfolioModules = Record<PortfolioModuleKey, boolean>;
 
 export type PortfolioProfile = {
   displayName: string;
@@ -27,6 +42,18 @@ export type PortfolioProfile = {
   skills: string[];
   projects: PortfolioProject[];
   milestones: PortfolioMilestone[];
+  modules: PortfolioModules;
+};
+
+export const DEFAULT_MODULES: PortfolioModules = {
+  greeting: true,
+  skills: true,
+  education: true,
+  experience: true,
+  projects: true,
+  openSource: false,
+  resume: false,
+  contact: true,
 };
 
 export const DEFAULT_PROFILE: PortfolioProfile = {
@@ -61,6 +88,7 @@ export const DEFAULT_PROFILE: PortfolioProfile = {
   milestones: [
     {
       id: "milestone-one",
+      kind: "experience",
       period: "时间段",
       title: "职位 / 角色",
       organization: "公司或项目名称",
@@ -68,12 +96,14 @@ export const DEFAULT_PROFILE: PortfolioProfile = {
     },
     {
       id: "milestone-two",
+      kind: "education",
       period: "时间段",
       title: "教育 / 专业经历",
       organization: "学校或组织",
       summary: "补充与目标岗位相关的方向、项目或阶段性成果。",
     },
   ],
+  modules: { ...DEFAULT_MODULES },
 };
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -129,6 +159,9 @@ export function normalizeProfile(value: unknown): PortfolioProfile {
         const fallback = DEFAULT_PROFILE.milestones[index % DEFAULT_PROFILE.milestones.length];
         return {
           id: text(milestone.id, fallback.id, 80) || fallback.id,
+          kind: milestone.kind === "education" || milestone.kind === "experience"
+            ? milestone.kind
+            : fallback.kind,
           period: text(milestone.period, fallback.period, 80),
           title: text(milestone.title, fallback.title, 100),
           organization: text(milestone.organization, fallback.organization, 120),
@@ -149,5 +182,13 @@ export function normalizeProfile(value: unknown): PortfolioProfile {
     skills: textList(input.skills, DEFAULT_PROFILE.skills, 40),
     projects,
     milestones,
+    modules: Object.fromEntries(
+      PROFILE_MODULES.map(({ key }) => [
+        key,
+        typeof asRecord(input.modules)[key] === "boolean"
+          ? asRecord(input.modules)[key]
+          : DEFAULT_MODULES[key],
+      ]),
+    ) as PortfolioModules,
   };
 }

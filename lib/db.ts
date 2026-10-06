@@ -30,14 +30,11 @@ function openDatabase(): CachedDatabase {
     );
   `);
 
-  const existing = connection.prepare("SELECT id FROM portfolio_profile WHERE id = 1").get();
-  if (!existing) {
-    connection
-      .prepare(
-        "INSERT INTO portfolio_profile (id, profile_json, updated_at) VALUES (1, ?, ?)",
-      )
-      .run(JSON.stringify(DEFAULT_PROFILE), new Date().toISOString());
-  }
+  connection
+    .prepare(
+      "INSERT OR IGNORE INTO portfolio_profile (id, profile_json, updated_at) VALUES (1, ?, ?)",
+    )
+    .run(JSON.stringify(DEFAULT_PROFILE), new Date().toISOString());
   return connection;
 }
 

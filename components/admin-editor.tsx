@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { DEFAULT_PROFILE, type PortfolioMilestone, type PortfolioProfile, type PortfolioProject } from "@/lib/profile";
+import { DEFAULT_PROFILE, PROFILE_MODULES, type PortfolioMilestone, type PortfolioModuleKey, type PortfolioProfile, type PortfolioProject } from "@/lib/profile";
 import { Glyph } from "@/components/glyph";
 
 type EditorMode = "checking" | "login" | "editing";
@@ -113,11 +113,15 @@ export function AdminEditor() {
     }));
   }
 
-  function updateMilestone(index: number, key: keyof PortfolioMilestone, value: string) {
+  function updateMilestone<K extends keyof PortfolioMilestone>(index: number, key: K, value: PortfolioMilestone[K]) {
     setProfile((current) => ({
       ...current,
       milestones: current.milestones.map((milestone, milestoneIndex) => milestoneIndex === index ? { ...milestone, [key]: value } : milestone),
     }));
+  }
+
+  function setModule(key: PortfolioModuleKey, visible: boolean) {
+    setProfile((current) => ({ ...current, modules: { ...current.modules, [key]: visible } }));
   }
 
   function addProject() {
@@ -134,7 +138,7 @@ export function AdminEditor() {
   function addMilestone() {
     setProfile((current) => ({
       ...current,
-      milestones: [...current.milestones, { id: crypto.randomUUID(), period: "", title: "", organization: "", summary: "" }],
+      milestones: [...current.milestones, { id: crypto.randomUUID(), kind: "experience", period: "", title: "", organization: "", summary: "" }],
     }));
   }
 
@@ -188,7 +192,20 @@ export function AdminEditor() {
 
       <form className="editor-form" onSubmit={saveProfile}>
         <section className="editor-panel">
-          <div className="editor-panel-title"><span>01</span><div><h2>个人介绍</h2><p>首屏会展示姓名、方向与一句话介绍。</p></div></div>
+          <div className="editor-panel-title"><span>01</span><div><h2>前台模块管理</h2><p>选择公开页面展示的内容模块。隐藏模块不会删除档案数据。</p></div></div>
+          <div className="module-toggle-grid">
+            {PROFILE_MODULES.map(({ key, label, description }) => (
+              <label className={`module-toggle ${profile.modules[key] ? "is-enabled" : ""}`} key={key}>
+                <span className="module-toggle-copy"><strong>{label}</strong><small>{description}</small></span>
+                <input type="checkbox" checked={profile.modules[key]} onChange={(event) => setModule(key, event.target.checked)} />
+                <span className="module-toggle-track" aria-hidden="true"><i /></span>
+              </label>
+            ))}
+          </div>
+        </section>
+
+        <section className="editor-panel">
+          <div className="editor-panel-title"><span>02</span><div><h2>个人介绍</h2><p>首屏会展示姓名、方向与一句话介绍。</p></div></div>
           <div className="editor-fields editor-fields-two">
             <label className="field-label">姓名<input className="field-input" value={profile.displayName} onChange={(event) => setField("displayName", event.target.value)} maxLength={80} /></label>
             <label className="field-label">职位 / 专业方向<input className="field-input" value={profile.title} onChange={(event) => setField("title", event.target.value)} maxLength={120} /></label>
@@ -203,7 +220,7 @@ export function AdminEditor() {
         </section>
 
         <section className="editor-panel">
-          <div className="editor-panel-title"><span>02</span><div><h2>精选项目</h2><p>为每个项目添加简介、技能标签与可验证证据。</p></div></div>
+          <div className="editor-panel-title"><span>03</span><div><h2>精选项目</h2><p>为每个项目添加简介、技能标签与可验证证据。</p></div></div>
           <div className="editor-items">
             {profile.projects.map((project, index) => (
               <article className="editor-item" key={project.id}>
@@ -222,13 +239,14 @@ export function AdminEditor() {
         </section>
 
         <section className="editor-panel">
-          <div className="editor-panel-title"><span>03</span><div><h2>经历时间线</h2><p>工作、教育或重要成长节点都可以放在这里。</p></div></div>
+          <div className="editor-panel-title"><span>04</span><div><h2>经历时间线</h2><p>工作经历和教育背景会分开展示在公开页面。</p></div></div>
           <div className="editor-items">
             {profile.milestones.map((milestone, index) => (
               <article className="editor-item" key={milestone.id}>
                 <div className="editor-item-top"><strong>经历 {String(index + 1).padStart(2, "0")}</strong><button className="icon-button danger-button" type="button" aria-label={`删除经历 ${index + 1}`} onClick={() => removeMilestone(index)}><Glyph name="trash" /></button></div>
                 <div className="editor-fields editor-fields-two">
                   <label className="field-label">时间段<input className="field-input" value={milestone.period} onChange={(event) => updateMilestone(index, "period", event.target.value)} maxLength={80} /></label>
+                  <label className="field-label">经历类型<select className="field-input" value={milestone.kind} onChange={(event) => updateMilestone(index, "kind", event.target.value as PortfolioMilestone["kind"])}><option value="experience">工作经历</option><option value="education">教育经历</option></select></label>
                   <label className="field-label">职位 / 角色<input className="field-input" value={milestone.title} onChange={(event) => updateMilestone(index, "title", event.target.value)} maxLength={100} /></label>
                   <label className="field-label field-span-two">公司 / 学校 / 项目<input className="field-input" value={milestone.organization} onChange={(event) => updateMilestone(index, "organization", event.target.value)} maxLength={120} /></label>
                   <label className="field-label field-span-two">经历说明<textarea className="field-input field-textarea" value={milestone.summary} onChange={(event) => updateMilestone(index, "summary", event.target.value)} maxLength={500} rows={3} /></label>
