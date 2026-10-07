@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Glyph } from "@/components/glyph";
 import { AdminWorkspace } from "@/components/admin-workspace";
+import { ADMIN_SESSION_EXPIRED_EVENT } from "@/components/admin-fetch";
 
 type EditorMode = "checking" | "login" | "editing";
 
@@ -34,6 +35,46 @@ export function AdminEditor() {
       });
     return () => { active = false; };
   }, []);
+
+  useEffect(() => {
+    function handleSessionExpired() {
+      setPassword("");
+      setError("");
+      setMessage("登录已失效，请重新登录。");
+      setMode("login");
+    }
+    window.addEventListener(ADMIN_SESSION_EXPIRED_EVENT, handleSessionExpired);
+    return () => window.removeEventListener(ADMIN_SESSION_EXPIRED_EVENT, handleSessionExpired);
+  }, []);
+
+  useEffect(() => {
+    if (mode !== "editing") return;
+    let checking = false;
+    async function verifySession() {
+      if (checking) return;
+      checking = true;
+      try {
+        const response = await fetch("/api/admin/session", { cache: "no-store" });
+        if (!response.ok) return;
+        const session = await readJson<{ authenticated: boolean }>(response);
+        if (!session.authenticated) window.dispatchEvent(new Event(ADMIN_SESSION_EXPIRED_EVENT));
+      } catch {
+        // Keep the current workspace open during temporary network errors.
+      } finally {
+        checking = false;
+      }
+    }
+    const interval = window.setInterval(() => void verifySession(), 20_000);
+    const onFocus = () => void verifySession();
+    const onVisibilityChange = () => { if (document.visibilityState === "visible") void verifySession(); };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [mode]);
 
   async function submitLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

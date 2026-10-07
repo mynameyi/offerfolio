@@ -3,6 +3,7 @@
 import { useRef, useState, type ChangeEvent } from "react";
 import type { PortfolioContentItem } from "@/lib/profile";
 import { Glyph } from "@/components/glyph";
+import { adminFetch } from "@/components/admin-fetch";
 
 const ACCEPTED_MEDIA = "image/jpeg,image/png,image/webp,image/gif,image/avif,video/mp4,video/webm,video/ogg,video/quicktime,video/x-m4v";
 
@@ -51,7 +52,7 @@ export function HighlightManager({ items, onChange }: { items: PortfolioContentI
     try {
       const formData = new FormData();
       formData.set("file", file);
-      const response = await fetch("/api/admin/highlights/media", { method: "POST", body: formData });
+      const response = await adminFetch("/api/admin/highlights/media", { method: "POST", body: formData });
       const result = await response.json() as UploadResult;
       if (!response.ok) throw new Error(result.error || "上传失败，请重试。");
 

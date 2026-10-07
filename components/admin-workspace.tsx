@@ -16,6 +16,7 @@ import { ShowcaseManager } from "@/components/showcase-manager";
 import { ProfileAvatarUpload } from "@/components/profile-avatar-upload";
 import { ApplicationScripts } from "@/components/application-scripts";
 import { VisitorRadar } from "@/components/visitor-radar";
+import { adminFetch } from "@/components/admin-fetch";
 
 type AdminPanelKey = "layout" | "content" | "scripts" | "radar";
 type CollectionKey = "socialLinks" | "strengths" | "showcaseItems" | "projects" | "achievements" | "blogs" | "talks" | "podcasts" | "metrics" | "recommendations";
@@ -94,7 +95,7 @@ export function AdminWorkspace({ onLogout }: { onLogout: () => Promise<void> }) 
 
   useEffect(() => {
     let active = true;
-    fetch("/api/profile", { cache: "no-store" })
+    adminFetch("/api/profile", { cache: "no-store" })
       .then(async (response) => {
         if (!response.ok) throw new Error("暂时无法读取档案内容。");
         return await response.json() as PortfolioProfile;
@@ -163,7 +164,7 @@ export function AdminWorkspace({ onLogout }: { onLogout: () => Promise<void> }) 
     setError("");
     setMessage("");
     try {
-      const response = await fetch("/api/profile", {
+      const response = await adminFetch("/api/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(profile),

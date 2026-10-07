@@ -2,6 +2,7 @@
 
 import { useRef, useState, type ChangeEvent } from "react";
 import { Glyph } from "@/components/glyph";
+import { adminFetch } from "@/components/admin-fetch";
 import { showcaseMediaItems, type PortfolioContentItem, type PortfolioMediaItem } from "@/lib/profile";
 
 const ACCEPTED_MEDIA = "image/jpeg,image/png,image/webp,image/gif,image/avif,video/mp4,video/webm,video/ogg,video/quicktime,video/x-m4v";
@@ -65,7 +66,7 @@ export function ShowcaseManager({ items, onChange }: { items: PortfolioContentIt
         const formData = new FormData();
         formData.set("file", file);
         try {
-          const response = await fetch("/api/admin/showcase/media", { method: "POST", body: formData });
+          const response = await adminFetch("/api/admin/showcase/media", { method: "POST", body: formData });
           const result = await response.json() as UploadResult;
           if (!response.ok) throw new Error(result.error || "上传失败。");
           mediaItems.push({ id: crypto.randomUUID(), url: result.url, kind: result.kind });

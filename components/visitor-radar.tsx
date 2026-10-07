@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { PROFILE_MODULES, type PortfolioModuleKey } from "@/lib/profile";
+import { adminFetch } from "@/components/admin-fetch";
 
 type ShareLink = {
   token: string;
@@ -74,8 +75,8 @@ export function VisitorRadar() {
 
   const refresh = useCallback(async () => {
     const [linksResponse, visitsResponse] = await Promise.all([
-      fetch("/api/admin/share-links", { cache: "no-store" }),
-      fetch("/api/admin/visits", { cache: "no-store" }),
+      adminFetch("/api/admin/share-links", { cache: "no-store" }),
+      adminFetch("/api/admin/visits", { cache: "no-store" }),
     ]);
     const linksResult = await readJson<ShareLink[]>(linksResponse);
     const visitsResult = await readJson<VisitorRecordsResponse>(visitsResponse);
@@ -101,7 +102,7 @@ export function VisitorRadar() {
     setError("");
     setMessage("");
     try {
-      const response = await fetch("/api/admin/share-links", {
+      const response = await adminFetch("/api/admin/share-links", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ label }),
@@ -138,7 +139,7 @@ export function VisitorRadar() {
     setExpandedToken(token);
     if (visits[token]) return;
     try {
-      const response = await fetch(`/api/admin/share-links/${token}/visits`, { cache: "no-store" });
+      const response = await adminFetch(`/api/admin/share-links/${token}/visits`, { cache: "no-store" });
       const result = await readJson<ShareVisit[]>(response);
       if (!response.ok) throw new Error(result.error || "无法读取访问详情。");
       setVisits((current) => ({ ...current, [token]: result }));
@@ -152,7 +153,7 @@ export function VisitorRadar() {
     setError("");
     setMessage("");
     try {
-      const response = await fetch(`/api/admin/share-links/${token}`, { method: "PATCH" });
+      const response = await adminFetch(`/api/admin/share-links/${token}`, { method: "PATCH" });
       const result = await readJson<{ ok?: boolean }>(response);
       if (!response.ok) throw new Error(result.error || "停用链接失败。");
       setMessage("专属链接已停用，访问者将无法再打开该链接。");
@@ -170,7 +171,7 @@ export function VisitorRadar() {
     setError("");
     setMessage("");
     try {
-      const response = await fetch(`/api/admin/share-links/${token}`, { method: "DELETE" });
+      const response = await adminFetch(`/api/admin/share-links/${token}`, { method: "DELETE" });
       const result = await readJson<{ ok?: boolean }>(response);
       if (!response.ok) throw new Error(result.error || "删除链接失败。");
       setMessage("专属链接已删除，已有访问记录已保留。");

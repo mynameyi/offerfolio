@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, type ChangeEvent } from "react";
+import { adminFetch } from "@/components/admin-fetch";
 
 type UploadResult = { url?: string; error?: string };
 
@@ -31,7 +32,7 @@ export function ProfileAvatarUpload({
     formData.set("file", file);
 
     try {
-      const response = await fetch("/api/admin/profile/avatar", { method: "POST", body: formData });
+      const response = await adminFetch("/api/admin/profile/avatar", { method: "POST", body: formData });
       const result = await response.json() as UploadResult;
       if (!response.ok || !result.url) throw new Error(result.error || "头像上传失败，请重试。");
       onChange(result.url);

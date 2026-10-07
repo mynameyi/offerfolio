@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { adminFetch } from "@/components/admin-fetch";
 
 type ApplicationScript = {
   id: string;
@@ -36,7 +37,7 @@ export function ApplicationScripts() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   async function refresh() {
-    const response = await fetch("/api/admin/application-scripts", { cache: "no-store" });
+    const response = await adminFetch("/api/admin/application-scripts", { cache: "no-store" });
     const result = await readJson<ApplicationScript[]>(response);
     if (!response.ok) throw new Error(result.error || "暂时无法读取投递话术。");
     setScripts(result);
@@ -72,7 +73,7 @@ export function ApplicationScripts() {
     setError("");
     setMessage("");
     try {
-      const response = await fetch(editingId ? `/api/admin/application-scripts/${editingId}` : "/api/admin/application-scripts", {
+      const response = await adminFetch(editingId ? `/api/admin/application-scripts/${editingId}` : "/api/admin/application-scripts", {
         method: editingId ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(draft),
@@ -97,7 +98,7 @@ export function ApplicationScripts() {
     setError("");
     setMessage("");
     try {
-      const response = await fetch(`/api/admin/application-scripts/${script.id}`, { method: "DELETE" });
+      const response = await adminFetch(`/api/admin/application-scripts/${script.id}`, { method: "DELETE" });
       const result = await readJson<{ ok?: boolean }>(response);
       if (!response.ok) throw new Error(result.error || "删除话术失败。");
       if (editingId === script.id) {
