@@ -75,6 +75,14 @@ export function HighlightManager({ items, onChange }: { items: PortfolioContentI
     onChange(items.filter((item) => item.id !== id));
   }
 
+  function moveItem(index: number, direction: -1 | 1) {
+    const nextIndex = index + direction;
+    if (nextIndex < 0 || nextIndex >= items.length) return;
+    const reordered = [...items];
+    [reordered[index], reordered[nextIndex]] = [reordered[nextIndex], reordered[index]];
+    onChange(reordered);
+  }
+
   return (
     <section className="editor-panel highlight-manager">
       <div className="editor-panel-title"><span>02</span><div><h2>高光时刻</h2><p>添加一张图片或一段视频，再写一句描述。</p></div></div>
@@ -96,7 +104,13 @@ export function HighlightManager({ items, onChange }: { items: PortfolioContentI
               {item.imageUrl ? <img src={item.imageUrl} alt="" /> : item.embedUrl ? <video src={item.embedUrl} muted playsInline preload="metadata" /> : <span aria-hidden="true" />}
             </div>
             <label className="field-label highlight-description-field">描述<textarea className="field-input field-textarea" value={item.summary || item.title} onChange={(event) => updateDescription(item.id, event.target.value)} maxLength={800} rows={2} /></label>
-            <button className="icon-button danger-button highlight-remove-button" type="button" aria-label={`删除高光时刻 ${index + 1}`} onClick={() => removeItem(item.id)}><Glyph name="trash" /></button>
+            <div className="highlight-list-actions">
+              <div className="item-reorder-controls" role="group" aria-label={`调整高光时刻 ${index + 1} 的顺序`}>
+                <button className="icon-button item-reorder-button" type="button" aria-label={`上移高光时刻 ${index + 1}`} title="上移" disabled={index === 0} onClick={() => moveItem(index, -1)}><Glyph name="arrow" className="item-order-arrow item-order-arrow-up" /></button>
+                <button className="icon-button item-reorder-button" type="button" aria-label={`下移高光时刻 ${index + 1}`} title="下移" disabled={index === items.length - 1} onClick={() => moveItem(index, 1)}><Glyph name="arrow" className="item-order-arrow item-order-arrow-down" /></button>
+              </div>
+              <button className="icon-button danger-button highlight-remove-button" type="button" aria-label={`删除高光时刻 ${index + 1}`} onClick={() => removeItem(item.id)}><Glyph name="trash" /></button>
+            </div>
           </article>
         ))}
         {!items.length ? <p className="editor-empty-note">还没有添加高光时刻。</p> : null}

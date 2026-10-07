@@ -52,6 +52,14 @@ export function ShowcaseManager({ items, onChange }: { items: PortfolioContentIt
     onChange(items.filter((item) => item.id !== id));
   }
 
+  function moveItem(index: number, direction: -1 | 1) {
+    const nextIndex = index + direction;
+    if (nextIndex < 0 || nextIndex >= items.length) return;
+    const reordered = [...items];
+    [reordered[index], reordered[nextIndex]] = [reordered[nextIndex], reordered[index]];
+    onChange(reordered);
+  }
+
   async function upload(id: string, event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.currentTarget.files ?? []);
     event.currentTarget.value = "";
@@ -101,6 +109,10 @@ export function ShowcaseManager({ items, onChange }: { items: PortfolioContentIt
                     <option value="open-source">开源作品</option>
                     <option value="company-project">企业项目</option>
                   </select>
+                  <div className="item-reorder-controls" role="group" aria-label={`调整作品 ${index + 1} 的顺序`}>
+                    <button className="icon-button item-reorder-button" type="button" aria-label={`上移作品 ${index + 1}`} title="上移" disabled={index === 0} onClick={() => moveItem(index, -1)}><Glyph name="arrow" className="item-order-arrow item-order-arrow-up" /></button>
+                    <button className="icon-button item-reorder-button" type="button" aria-label={`下移作品 ${index + 1}`} title="下移" disabled={index === items.length - 1} onClick={() => moveItem(index, 1)}><Glyph name="arrow" className="item-order-arrow item-order-arrow-down" /></button>
+                  </div>
                   <button className="icon-button danger-button" type="button" aria-label={`删除作品 ${index + 1}`} onClick={() => removeItem(item.id)}><Glyph name="trash" /></button>
                 </div>
               </div>
