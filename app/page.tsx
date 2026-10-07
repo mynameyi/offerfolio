@@ -174,7 +174,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           <div className="df-greeting-copy">
             <p className="df-greeting-title">{profile.headline || `你好，我是${profile.displayName}`} <span className="df-wave" aria-hidden="true">👋</span></p>
             <p className="df-greeting-subtitle">{profile.introduction}</p>
-            <p className="df-greeting-role">{profile.title}</p>
+            {profile.title ? <p className="df-greeting-role">{profile.title}</p> : null}
             <div className="df-greeting-buttons">
               {profile.resumeUrl ? <a className="df-button" href={profile.resumeUrl} {...externalLinkProps(profile.resumeUrl)}>下载简历 <Glyph name="arrow" /></a> : null}
               {modules.contact ? <a className="df-button df-button-outline" href="#contact">联系我 <Glyph name="arrow" /></a> : null}
@@ -266,7 +266,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       ) : null}
 
       {modules.contact ? (
-        <section className="df-main df-contact-section" id="contact" data-module-key="contact" style={sectionOrder("contact")}><SectionHeading eyebrow="联系方式" title="联系我" subtitle="如需了解项目细节或工作经历，可通过邮件或社交平台联系。" /><div className="df-contact-card"><div className="df-contact-avatar">{profile.displayName.slice(0, 1) || "你"}</div><div className="df-contact-info"><h3>{profile.displayName}</h3><p>{profile.title}</p><div className="df-contact-details">{profile.email ? <a href={`mailto:${profile.email}`}>{profile.email}</a> : null}{profile.phone ? <a href={`tel:${profile.phone}`}>{profile.phone}</a> : null}{profile.location ? <span><Glyph name="pin" />{profile.location}</span> : null}</div>{socialItems.length ? <div className="df-contact-social">{socialItems.map((item) => <a href={item.url} key={`contact-${item.id}`} {...externalLinkProps(item.url)}>{item.title}</a>)}</div> : null}</div></div></section>
+        <section className="df-main df-contact-section" id="contact" data-module-key="contact" style={sectionOrder("contact")}><SectionHeading eyebrow="联系方式" title="联系我" subtitle="如需了解项目细节或工作经历，可通过邮件或社交平台联系。" /><div className="df-contact-card"><div className="df-contact-avatar">{profile.displayName.slice(0, 1) || "你"}</div><div className="df-contact-info"><h3>{profile.displayName}</h3>{profile.title ? <p>{profile.title}</p> : null}<div className="df-contact-details">{profile.email ? <a href={`mailto:${profile.email}`}>{profile.email}</a> : null}{profile.phone ? <a href={`tel:${profile.phone}`}>{profile.phone}</a> : null}{profile.location ? <span><Glyph name="pin" />{profile.location}</span> : null}</div>{socialItems.length ? <div className="df-contact-social">{socialItems.map((item) => <a href={item.url} key={`contact-${item.id}`} {...externalLinkProps(item.url)}>{item.title}</a>)}</div> : null}</div></div></section>
       ) : null}
       </div>
 

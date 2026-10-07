@@ -134,7 +134,7 @@ const emptyContentItem = (id: string, title = ""): PortfolioContentItem => ({
 
 export const DEFAULT_PROFILE: PortfolioProfile = {
   displayName: "你的姓名",
-  title: "全栈开发工程师",
+  title: "",
   headline: "你好，我是你的姓名 👋",
   introduction: "专注于构建清晰、可靠、好用的数字产品。欢迎浏览我的项目、经历与技术实践。",
   location: "",
