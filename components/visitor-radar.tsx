@@ -164,14 +164,30 @@ export function VisitorRadar() {
     }
   }
 
+  async function deleteLink(token: string, linkLabel: string) {
+    if (!window.confirm(`确定删除“${linkLabel || "未命名链接"}”？该链接将从列表移除，已有访客记录会保留并继续显示其投递备注。`)) return;
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const response = await fetch(`/api/admin/share-links/${token}`, { method: "DELETE" });
+      const result = await readJson<{ ok?: boolean }>(response);
+      if (!response.ok) throw new Error(result.error || "删除链接失败。");
+      setMessage("专属链接已删除，已有访问记录已保留。");
+      setVisits((current) => { const next = { ...current }; delete next[token]; return next; });
+      if (expandedToken === token) setExpandedToken(null);
+      await refresh();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "删除链接失败。");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <section className="visitor-radar">
       <div className="editor-panel radar-intro-panel">
-        <div className="editor-panel-title"><span>03</span><div><h2>访问雷达</h2><p>所有公开主页访问都会记录。专属链接额外标记投递来源；直接访问也会出现在访客记录中。</p></div></div>
-        <form className="radar-create-form" onSubmit={createLink}>
-          <label className="field-label" htmlFor="share-link-label">链接备注 <span className="field-hint">可选，仅自己可见，用于区分链接</span></label>
-          <div className="radar-create-controls"><input id="share-link-label" className="field-input" value={label} onChange={(event) => setLabel(event.target.value)} maxLength={120} placeholder="备注这条链接" /><button className="button button-dark" type="submit" disabled={busy}>生成专属链接</button></div>
-        </form>
+        <div className="editor-panel-title"><span>04</span><div><h2>访问雷达</h2><p>所有公开主页访问都会记录。专属链接额外标记投递来源；直接访问也会出现在访客记录中。</p></div></div>
         {error ? <p className="form-error" role="alert">{error}</p> : null}
         {message ? <p className="form-success" role="status">{message}</p> : null}
       </div>
@@ -184,7 +200,7 @@ export function VisitorRadar() {
               <div className="radar-visit-meta">
                 <time>{formatDate(visit.visitedAt)}</time>
                 <span>IP：{visit.ipAddress || "未获取"}</span>
-                <span>{visit.token ? `专属链接：${visit.linkLabel || "未命名"}` : "普通访问"}</span>
+                <span>{visit.token || visit.linkLabel || visit.entryPath.startsWith("/r/") ? `专属链接：${visit.linkLabel || "未命名"}` : "普通访问"}</span>
                 <span>页面停留：{formatDuration(visit.durationSeconds)}</span>
                 {visit.isAutomated ? <span className="radar-automated-tag">可能是机器人或链接预览</span> : null}
               </div>
@@ -204,12 +220,16 @@ export function VisitorRadar() {
 
       <div className="radar-list-heading"><div><p className="section-kicker">SHARE LINKS</p><h2>专属投递链接</h2></div><span>{links.length} 条链接 · {links.reduce((total, link) => total + link.visitCount, 0)} 次访问</span></div>
       <p className="radar-scope-note">专属链接用于识别具体投递来源；所有访客记录也会汇总显示在上方。</p>
+      <form className="editor-panel radar-create-form" onSubmit={createLink}>
+        <label className="field-label" htmlFor="share-link-label">链接备注 <span className="field-hint">可选，仅自己可见，用于区分投递</span></label>
+        <div className="radar-create-controls"><input id="share-link-label" className="field-input" value={label} onChange={(event) => setLabel(event.target.value)} maxLength={120} placeholder="例如：前端工程师 · A 公司" /><button className="button button-dark" type="submit" disabled={busy}>生成专属链接</button></div>
+      </form>
       {loading ? <div className="radar-empty"><span className="loading-spinner" />正在读取链接…</div> : error ? null : links.length ? (
         <div className="radar-link-list">
           {links.map((link) => (
             <article className={`radar-link-card ${!link.active ? "is-revoked" : ""}`} key={link.token}>
               <div className="radar-link-top"><div><div className="radar-link-name"><h3>{link.label || "未命名链接"}</h3><span className={`radar-link-status ${link.active ? "is-active" : ""}`}>{link.active ? "有效" : "已停用"}</span></div><p>创建于 {formatDate(link.createdAt)}</p></div><strong className="radar-visit-count">{link.visitCount}<small>次访问</small></strong></div>
-              <div className="radar-link-url"><code>{origin ? `${origin}/r/${link.token}` : `/r/${link.token}`}</code><div><button className="button button-quiet" type="button" onClick={() => void copyLink(link.token)}>{copiedToken === link.token ? "已复制" : "复制链接"}</button><button className="button button-quiet" type="button" onClick={() => void toggleVisits(link.token)}>{expandedToken === link.token ? "收起记录" : "访问记录"}</button>{link.active ? <button className="button button-quiet radar-revoke" type="button" disabled={busy} onClick={() => void revokeLink(link.token)}>停用</button> : null}</div></div>
+              <div className="radar-link-url"><code>{origin ? `${origin}/r/${link.token}` : `/r/${link.token}`}</code><div><button className="button button-quiet" type="button" onClick={() => void copyLink(link.token)}>{copiedToken === link.token ? "已复制" : "复制链接"}</button><button className="button button-quiet" type="button" onClick={() => void toggleVisits(link.token)}>{expandedToken === link.token ? "收起记录" : "访问记录"}</button>{link.active ? <button className="button button-quiet radar-revoke" type="button" disabled={busy} onClick={() => void revokeLink(link.token)}>停用</button> : null}<button className="button button-quiet radar-delete" type="button" disabled={busy} onClick={() => void deleteLink(link.token, link.label)}>删除</button></div></div>
               <p className="radar-last-visit">最近访问：{formatDate(link.lastVisitedAt)}</p>
               {expandedToken === link.token ? <div className="radar-visit-history"><strong>最近 50 次访问 · 时间 / IP / 停留 / 模块</strong>{visits[link.token] ? visits[link.token].length ? <div className="radar-visit-entries">{visits[link.token].map((visit) => <article className="radar-visit-entry" key={visit.visitKey}><div className="radar-visit-meta"><time>{formatDate(visit.visitedAt)}</time><span>IP：{visit.ipAddress || "未获取"}</span><span>页面停留：{formatDuration(visit.durationSeconds)}</span></div>{visit.modules.length ? <ul>{visit.modules.map((module) => <li key={module.key}><strong>{moduleLabels.get(module.key) || module.key}</strong><span>{module.clickCount ? `导航点击 ${module.clickCount} 次` : "未点击导航"}</span><span>停留 {formatDuration(module.dwellSeconds)}</span></li>)}</ul> : <p className="radar-no-engagement">尚无模块点击或可见停留记录。</p>}</article>)}</div> : <p>这条专属链接还没有访问记录。请将卡片中的链接用于简历投递；访客打开后，记录会显示在这里。</p> : <p><span className="loading-spinner" />正在读取记录…</p>}</div> : null}
             </article>

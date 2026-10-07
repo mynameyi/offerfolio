@@ -138,14 +138,18 @@ function isAutomatedUserAgent(value: string): boolean {
 
 export function recordVisitorVisit(context: VisitContext): string | null {
   if (context.token && !getActiveShareLink(context.token)) return null;
+  const linkLabel = context.token
+    ? (db.prepare("SELECT label FROM share_links WHERE token = ?").get(context.token) as { label: string } | undefined)?.label || "未命名链接"
+    : "";
   const visitKey = randomUUID();
   db.prepare(`
     INSERT INTO share_visits (
-      token, visited_at, ip_address, visit_key, entry_path, referrer, user_agent,
+      token, link_label, visited_at, ip_address, visit_key, entry_path, referrer, user_agent,
       accept_language, is_automated, utm_source, utm_medium, utm_campaign
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     context.token,
+    linkLabel,
     new Date().toISOString(),
     context.ipAddress.slice(0, 64),
     visitKey,
@@ -221,7 +225,7 @@ function listVisits(where: string, params: unknown[], limit: number): ShareVisit
       recent.ip_address AS ipAddress,
       recent.duration_seconds AS durationSeconds,
       recent.token AS token,
-      COALESCE(share_links.label, '') AS linkLabel,
+      COALESCE(NULLIF(recent.link_label, ''), share_links.label, '') AS linkLabel,
       recent.entry_path AS entryPath,
       recent.referrer AS referrer,
       recent.user_agent AS userAgent,
@@ -234,7 +238,7 @@ function listVisits(where: string, params: unknown[], limit: number): ShareVisit
       share_visit_modules.click_count AS clickCount,
       share_visit_modules.dwell_seconds AS dwellSeconds
     FROM (
-      SELECT id, visit_key, visited_at, ip_address, duration_seconds, token,
+      SELECT id, visit_key, visited_at, ip_address, duration_seconds, token, link_label,
         entry_path, referrer, user_agent, accept_language, is_automated,
         utm_source, utm_medium, utm_campaign
       FROM share_visits
@@ -302,4 +306,8 @@ function listVisits(where: string, params: unknown[], limit: number): ShareVisit
 
 export function revokeShareLink(token: string): boolean {
   return db.prepare("UPDATE share_links SET active = 0 WHERE token = ? AND active = 1").run(token).changes > 0;
+}
+
+export function deleteShareLink(token: string): boolean {
+  return db.prepare("DELETE FROM share_links WHERE token = ?").run(token).changes > 0;
 }

@@ -11,9 +11,10 @@ import {
 } from "@/lib/profile";
 import { Glyph } from "@/components/glyph";
 import { ContentListEditor, type ContentField } from "@/components/content-list-editor";
+import { ApplicationScripts } from "@/components/application-scripts";
 import { VisitorRadar } from "@/components/visitor-radar";
 
-type AdminPanelKey = "layout" | "content" | "radar";
+type AdminPanelKey = "layout" | "content" | "scripts" | "radar";
 type CollectionKey = "socialLinks" | "strengths" | "showcaseItems" | "projects" | "achievements" | "blogs" | "talks" | "podcasts" | "metrics" | "recommendations";
 
 async function readJson<T>(response: Response): Promise<T & { error?: string }> {
@@ -265,7 +266,8 @@ export function AdminWorkspace({ onLogout }: { onLogout: () => Promise<void> }) 
   const adminPanels: Array<{ key: AdminPanelKey; number: string; label: string; description: string }> = [
     { key: "layout", number: "01", label: "布局调整", description: "模块顺序与显示状态" },
     { key: "content", number: "02", label: "内容设置", description: "编辑展示页内容" },
-    { key: "radar", number: "03", label: "访问雷达", description: "全部访客记录与投递归因" },
+    { key: "scripts", number: "03", label: "投递话术", description: "管理不同岗位的打招呼话术" },
+    { key: "radar", number: "04", label: "访问雷达", description: "全部访客记录与投递归因" },
   ];
 
   return (
@@ -295,7 +297,7 @@ export function AdminWorkspace({ onLogout }: { onLogout: () => Promise<void> }) 
         </nav>
 
         <div className="admin-workspace-main">
-          {activePanel === "radar" ? <VisitorRadar /> : (
+          {activePanel === "radar" ? <VisitorRadar /> : activePanel === "scripts" ? <ApplicationScripts /> : (
             <form className="editor-form" onSubmit={saveProfile}>
               {activePanel === "layout" ? (
                 <section className="editor-panel layout-panel">
