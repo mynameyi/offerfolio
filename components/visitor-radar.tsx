@@ -158,19 +158,20 @@ export function VisitorRadar() {
         {message ? <p className="form-success" role="status">{message}</p> : null}
       </div>
 
-      <div className="radar-list-heading"><div><p className="section-kicker">SHARE LINKS</p><h2>投递链接</h2></div><span>{links.length} 条</span></div>
-      {loading ? <div className="radar-empty"><span className="loading-spinner" />正在读取链接…</div> : links.length ? (
+      <div className="radar-list-heading"><div><p className="section-kicker">SHARE LINKS</p><h2>投递链接与访客记录</h2></div><span>{links.length} 条链接 · {links.reduce((total, link) => total + link.visitCount, 0)} 次访问</span></div>
+      <p className="radar-scope-note">只统计通过下方 <code>/r/…</code> 专属链接打开的访问。直接打开主页地址不会计入投递记录。</p>
+      {loading ? <div className="radar-empty"><span className="loading-spinner" />正在读取链接…</div> : error ? null : links.length ? (
         <div className="radar-link-list">
           {links.map((link) => (
             <article className={`radar-link-card ${!link.active ? "is-revoked" : ""}`} key={link.token}>
               <div className="radar-link-top"><div><div className="radar-link-name"><h3>{link.label || "未命名链接"}</h3><span className={`radar-link-status ${link.active ? "is-active" : ""}`}>{link.active ? "有效" : "已停用"}</span></div><p>创建于 {formatDate(link.createdAt)}</p></div><strong className="radar-visit-count">{link.visitCount}<small>次访问</small></strong></div>
               <div className="radar-link-url"><code>{origin ? `${origin}/r/${link.token}` : `/r/${link.token}`}</code><div><button className="button button-quiet" type="button" onClick={() => void copyLink(link.token)}>{copiedToken === link.token ? "已复制" : "复制链接"}</button><button className="button button-quiet" type="button" onClick={() => void toggleVisits(link.token)}>{expandedToken === link.token ? "收起记录" : "访问记录"}</button>{link.active ? <button className="button button-quiet radar-revoke" type="button" disabled={busy} onClick={() => void revokeLink(link.token)}>停用</button> : null}</div></div>
               <p className="radar-last-visit">最近访问：{formatDate(link.lastVisitedAt)}</p>
-              {expandedToken === link.token ? <div className="radar-visit-history"><strong>最近 50 次访问 · 时间 / IP / 停留 / 模块</strong>{visits[link.token] ? visits[link.token].length ? <div className="radar-visit-entries">{visits[link.token].map((visit) => <article className="radar-visit-entry" key={visit.visitKey}><div className="radar-visit-meta"><time>{formatDate(visit.visitedAt)}</time><span>IP：{visit.ipAddress || "未获取"}</span><span>页面停留：{formatDuration(visit.durationSeconds)}</span></div>{visit.modules.length ? <ul>{visit.modules.map((module) => <li key={module.key}><strong>{moduleLabels.get(module.key) || module.key}</strong><span>{module.clickCount ? `导航点击 ${module.clickCount} 次` : "未点击导航"}</span><span>停留 {formatDuration(module.dwellSeconds)}</span></li>)}</ul> : <p className="radar-no-engagement">尚无模块点击或可见停留记录。</p>}</article>)}</div> : <p>还没有访问记录。</p> : <p><span className="loading-spinner" />正在读取记录…</p>}</div> : null}
+              {expandedToken === link.token ? <div className="radar-visit-history"><strong>最近 50 次访问 · 时间 / IP / 停留 / 模块</strong>{visits[link.token] ? visits[link.token].length ? <div className="radar-visit-entries">{visits[link.token].map((visit) => <article className="radar-visit-entry" key={visit.visitKey}><div className="radar-visit-meta"><time>{formatDate(visit.visitedAt)}</time><span>IP：{visit.ipAddress || "未获取"}</span><span>页面停留：{formatDuration(visit.durationSeconds)}</span></div>{visit.modules.length ? <ul>{visit.modules.map((module) => <li key={module.key}><strong>{moduleLabels.get(module.key) || module.key}</strong><span>{module.clickCount ? `导航点击 ${module.clickCount} 次` : "未点击导航"}</span><span>停留 {formatDuration(module.dwellSeconds)}</span></li>)}</ul> : <p className="radar-no-engagement">尚无模块点击或可见停留记录。</p>}</article>)}</div> : <p>这条专属链接还没有访问记录。请将卡片中的链接用于简历投递；访客打开后，记录会显示在这里。</p> : <p><span className="loading-spinner" />正在读取记录…</p>}</div> : null}
             </article>
           ))}
         </div>
-      ) : <div className="radar-empty">还没有专属链接。生成后可把链接附在简历投递中，并在这里查看访问情况。</div>}
+      ) : <div className="radar-empty">{loading ? null : "当前还没有专属链接，因此没有访客记录可显示。先生成专属链接并将其用于简历投递；访客通过该链接打开后，访问记录会出现在这里。直接访问主页不会计入投递统计。"}</div>}
       <p className="radar-footnote">同一浏览器 30 分钟内重复打开按一次访问计数。模块点击记录展示页内导航点击；停留时长仅在页面处于前台且模块可见时累计。IP 从 X-Real-IP / X-Forwarded-For 请求头读取，反向代理需正确转发。</p>
     </section>
   );

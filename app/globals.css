@@ -859,6 +859,8 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
 .radar-list-heading .section-kicker { margin: 0 0 5px; color: #9aa49b; font-size: 8px; letter-spacing: .14em; }
 .radar-list-heading h2 { margin: 0; color: #34483c; font-size: 20px; font-weight: 560; }
 .radar-list-heading > span { color: #87938a; font-size: 10px; }
+.radar-scope-note { margin: -14px 0 0; color: #87938a; font-size: 9px; line-height: 1.7; }
+.radar-scope-note code { color: #62736a; }
 .radar-link-list { display: grid; gap: 12px; }
 .radar-link-card { padding: 20px; border: 1px solid #dfe2d9; background: #fbfaf6; }
 .radar-link-card.is-revoked { opacity: .76; }
@@ -924,6 +926,7 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
   .selected-module-editor .editor-panel, .radar-intro-panel { padding: 19px 15px; }
   .radar-create-controls { grid-template-columns: 1fr; }
   .radar-create-controls .button { width: 100%; }
+  .radar-list-heading { align-items: start; flex-direction: column; gap: 5px; }
   .radar-link-card { padding: 15px 12px; }
   .radar-link-url { align-items: stretch; flex-direction: column; }
   .radar-link-url > div { flex-wrap: wrap; }
