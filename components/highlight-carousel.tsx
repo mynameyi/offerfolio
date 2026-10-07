@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import type { PortfolioContentItem } from "@/lib/profile";
 
 function isVideoFile(url: string) {
-  return /\.(mp4|webm|ogg)(\?.*)?$/i.test(url);
+  return /\.(mp4|webm|ogg|ogv|mov|m4v)(\?.*)?$/i.test(url);
 }
 
 export function HighlightCarousel({ items }: { items: PortfolioContentItem[] }) {
@@ -39,7 +39,9 @@ export function HighlightCarousel({ items }: { items: PortfolioContentItem[] }) 
             >
               {item.imageUrl
                 ? <img src={item.imageUrl} alt="" loading="lazy" />
-                : <span className="df-highlight-card-placeholder" aria-hidden="true" />}
+                : isVideoFile(item.embedUrl)
+                  ? <video src={item.embedUrl} muted playsInline preload="metadata" />
+                  : <span className="df-highlight-card-placeholder" aria-hidden="true" />}
               {item.embedUrl ? <span className="df-highlight-play" aria-hidden="true">▶</span> : null}
             </button>
           ))}
@@ -48,16 +50,15 @@ export function HighlightCarousel({ items }: { items: PortfolioContentItem[] }) 
 
       {activeItem ? (
         <div className="df-highlight-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setActiveItem(null); }}>
-          <section className="df-highlight-modal" role="dialog" aria-modal="true" aria-labelledby="df-highlight-modal-title">
+          <section className="df-highlight-modal" role="dialog" aria-modal="true" aria-label="高光时刻详情">
             <button className="df-highlight-modal-close" type="button" onClick={() => setActiveItem(null)} aria-label="关闭高光时刻详情">×</button>
             <div className="df-highlight-modal-media">
               {activeItem.embedUrl ? isVideoFile(activeItem.embedUrl)
                 ? <video src={activeItem.embedUrl} poster={activeItem.imageUrl || undefined} controls playsInline />
                 : <iframe src={activeItem.embedUrl} title={activeItem.title || "高光时刻视频"} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen />
-                : activeItem.imageUrl ? <img src={activeItem.imageUrl} alt={activeItem.title} /> : <div className="df-highlight-modal-placeholder">{activeItem.title}</div>}
+                : activeItem.imageUrl ? <img src={activeItem.imageUrl} alt={activeItem.title} /> : null}
             </div>
             <div className="df-highlight-modal-copy">
-              <h2 id="df-highlight-modal-title">{activeItem.title || "高光时刻"}</h2>
               {activeItem.summary ? <p>{activeItem.summary}</p> : null}
             </div>
           </section>

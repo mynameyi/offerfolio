@@ -11,6 +11,7 @@ import {
 } from "@/lib/profile";
 import { Glyph } from "@/components/glyph";
 import { ContentListEditor, type ContentField } from "@/components/content-list-editor";
+import { HighlightManager } from "@/components/highlight-manager";
 import { ApplicationScripts } from "@/components/application-scripts";
 import { VisitorRadar } from "@/components/visitor-radar";
 
@@ -72,14 +73,6 @@ const podcastFields: ContentField[] = [
   { key: "url", label: "收听链接", kind: "url" },
   { key: "urlLabel", label: "链接文字" },
   { key: "embedUrl", label: "播放器嵌入地址", kind: "url", fullWidth: true },
-];
-const metricFields: ContentField[] = [
-  { key: "title", label: "高光标题", placeholder: "例如：发布会现场 / 项目上线" },
-  { key: "subtitle", label: "短标签 / 时间", placeholder: "例如：年度发布会" },
-  { key: "value", label: "成果数据或视觉短句", placeholder: "例如：从 0 到 1 的完整交付" },
-  { key: "imageUrl", label: "封面图片 URL", kind: "url", fullWidth: true },
-  { key: "embedUrl", label: "视频嵌入地址（可选）", kind: "url", fullWidth: true },
-  { key: "summary", label: "点击后显示的简单介绍", kind: "textarea", fullWidth: true },
 ];
 const recommendationFields: ContentField[] = [
   { key: "title", label: "评价人姓名" },
@@ -216,8 +209,7 @@ export function AdminWorkspace({ onLogout }: { onLogout: () => Promise<void> }) 
           </section>
         );
       case "highlights":
-        return <><ContentListEditor number="02" title="高光时刻内容" hint="优先添加吸引人的图片或视频封面，再写一段简短介绍。视频请填写可嵌入播放的地址；卡片点击后会弹出详情。" items={profile.metrics} fields={metricFields} onChange={(items) => setCollection("metrics", items)} itemLabel="高光" addLabel="添加高光时刻" />
-          {milestoneEditor("growth", "节点", "补充高光节点", "也可以添加没有媒体素材的关键经历节点。")}</>;
+        return <HighlightManager items={profile.metrics} onChange={(items) => setCollection("metrics", items)} />;
       case "showcase":
         return <ContentListEditor number="03" title="作品展示" hint="填写作品介绍、图片和可以直接访问的链接。" items={profile.showcaseItems} fields={projectFields} onChange={(items) => setCollection("showcaseItems", items)} itemLabel="作品" addLabel="添加作品" />;
       case "skills":
