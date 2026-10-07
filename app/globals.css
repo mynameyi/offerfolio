@@ -704,12 +704,12 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
 .df-showcase-repo-meta > span i { width: 8px; height: 8px; flex: 0 0 auto; border-radius: 50%; background: #6f63d8; }
 .df-showcase-repo-meta > a { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px; color: var(--df-purple); font-size: 10px; font-weight: 620; }
 .df-showcase-repo-meta > a svg { width: 13px; height: 13px; }
-.df-showcase-company-card { width: 100%; padding: 0; display: flex; flex-direction: column; border: 1px solid var(--df-border); }
-.df-showcase-company-cover { width: 100%; height: 190px; padding: 4px; display: grid; gap: 4px; overflow: hidden; background: #17151a; }
+.df-showcase-company-card { width: 100%; padding: 0; display: flex; flex-direction: column; border: 1px solid var(--df-border); color: inherit; text-align: left; font: inherit; cursor: pointer; }
+.df-showcase-company-cover { width: 100%; height: 190px; padding: 4px; position: relative; display: grid; gap: 4px; overflow: hidden; background: #17151a; }
 .df-showcase-company-thumb { min-width: 0; min-height: 0; position: relative; padding: 0; display: grid; place-items: center; overflow: hidden; border: 0; background: #17151a; cursor: pointer; }
 .df-showcase-company-thumb > img, .df-showcase-company-thumb > video { width: 100%; height: 100%; display: block; object-fit: contain; }
 .df-showcase-company-thumb:hover > img, .df-showcase-company-thumb:hover > video { filter: brightness(.82); }
-.df-showcase-company-video-play { width: 34px; height: 34px; position: absolute; top: 50%; left: 50%; display: grid; place-items: center; padding-left: 2px; border: 1px solid #ffffffa8; border-radius: 50%; color: #fff; background: #16151d78; font-size: 12px; transform: translate(-50%, -50%); pointer-events: none; }
+.df-showcase-company-video-play { width: 42px; height: 42px; position: absolute; z-index: 1; top: 50%; left: 50%; display: grid; place-items: center; padding-left: 2px; border: 1px solid #ffffffa8; border-radius: 50%; color: #fff; background: #16151d9c; font-size: 15px; transform: translate(-50%, -50%); pointer-events: none; }
 .df-showcase-company-more { position: absolute; inset: 0; display: grid; place-items: center; color: #fff; background: #101018a8; font-size: 18px; font-weight: 650; pointer-events: none; }
 .df-showcase-company-copy { width: 100%; min-height: 80px; padding: 13px 16px; display: flex; align-items: flex-start; justify-content: space-between; gap: 13px; border: 0; color: inherit; background: var(--df-card); text-align: left; font: inherit; cursor: pointer; }
 .df-showcase-company-copy > span:first-child { min-width: 0; display: -webkit-box; overflow: hidden; color: var(--df-card-subtitle); font-size: 11px; line-height: 1.7; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }

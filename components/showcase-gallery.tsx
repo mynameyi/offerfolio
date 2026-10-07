@@ -91,24 +91,25 @@ export function ShowcaseGallery({ items, emptyText }: { items: PortfolioContentI
             const media = mediaFor(item);
             const previewMedia = media.slice(0, 3);
             return (
-              <article className="df-showcase-card df-showcase-company-card" key={item.id}>
-                <div className="df-showcase-company-cover" style={{ gridTemplateColumns: `repeat(${previewMedia.length}, minmax(0, 1fr))` }}>
+              <button className="df-showcase-card df-showcase-company-card" key={item.id} type="button" onClick={() => openMedia(item.id, 0)} aria-label={`查看作品详情：${item.summary || item.title}`}>
+                <span className="df-showcase-company-cover" style={{ gridTemplateColumns: `repeat(${previewMedia.length}, minmax(0, 1fr))` }}>
                   {previewMedia.map((entry, index) => {
                     const isVideo = entry.kind === "video" || videoUrl(entry.url);
                     return (
-                      <button className="df-showcase-company-thumb" type="button" key={entry.id} onClick={() => openMedia(item.id, index)} aria-label={`查看作品素材 ${index + 1}`}>
+                      <span className="df-showcase-company-thumb" key={entry.id}>
                         {isVideo
-                          ? <><video src={entry.url} muted playsInline preload="metadata" aria-hidden="true" onLoadedMetadata={(event) => { const video = event.currentTarget; if (Number.isFinite(video.duration) && video.duration > 0) video.currentTime = Math.min(2, video.duration / 2); }} /><span className="df-showcase-company-video-play" aria-hidden="true">▶</span></>
+                          ? <video src={entry.url} muted playsInline preload="metadata" aria-hidden="true" onLoadedMetadata={(event) => { const video = event.currentTarget; if (Number.isFinite(video.duration) && video.duration > 0) video.currentTime = Math.min(2, video.duration / 2); }} />
                           : <img src={entry.url} alt="" loading="lazy" />}
                         {media.length > 3 && index === 2 ? <span className="df-showcase-company-more">+{media.length - 3}</span> : null}
-                      </button>
+                      </span>
                     );
                   })}
-                </div>
-                <button className="df-showcase-company-copy" type="button" onClick={() => openMedia(item.id, 0)} aria-label={`查看项目介绍：${item.summary || item.title}`}>
+                  <span className="df-showcase-company-video-play" aria-hidden="true">▶</span>
+                </span>
+                <span className="df-showcase-company-copy">
                   <span>{item.summary || item.title}</span><span>查看作品 <Glyph name="arrow" /></span>
-                </button>
-              </article>
+                </span>
+              </button>
             );
           })}
         </div>
