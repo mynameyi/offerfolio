@@ -210,7 +210,7 @@ export function AdminWorkspace({ onLogout }: { onLogout: () => Promise<void> }) 
             <div className="editor-panel-title"><span>01</span><div><h2>个人简介</h2><p>填写公开展示页的身份介绍和简历入口。</p></div></div>
             <div className="editor-fields editor-fields-two">
               <label className="field-label">姓名<input className="field-input" value={profile.displayName} onChange={(event) => setField("displayName", event.target.value)} maxLength={80} /></label>
-              <div className="field-label field-span-two profile-avatar-field"><span>个人头像</span><ProfileAvatarUpload value={profile.avatarUrl} onChange={(url) => setField("avatarUrl", url)} /></div>
+              <div className="field-label field-span-two profile-avatar-field"><span>个人头像</span><ProfileAvatarUpload value={profile.avatarUrl} positionX={profile.avatarPositionX} positionY={profile.avatarPositionY} onChange={(url) => setField("avatarUrl", url)} onPositionChange={(x, y) => setProfile((current) => ({ ...current, avatarPositionX: x, avatarPositionY: y }))} /></div>
               <label className="field-label">GitHub 主页<input className="field-input" type="url" placeholder="https://github.com/…" value={profile.githubUrl} onChange={(event) => setField("githubUrl", event.target.value)} /></label>
               <label className="field-label">Gitee 主页<input className="field-input" type="url" placeholder="https://gitee.com/…" value={profile.giteeUrl} onChange={(event) => setField("giteeUrl", event.target.value)} /></label>
               <label className="field-label field-span-two">首页标题<input className="field-input" value={profile.headline} onChange={(event) => setField("headline", event.target.value)} maxLength={240} /></label>

@@ -72,6 +72,8 @@ export type PortfolioMilestone = {
 export type PortfolioProfile = {
   displayName: string;
   avatarUrl: string;
+  avatarPositionX: number;
+  avatarPositionY: number;
   headline: string;
   introduction: string;
   location: string;
@@ -158,6 +160,8 @@ const emptyContentItem = (id: string, title = ""): PortfolioContentItem => ({
 export const DEFAULT_PROFILE: PortfolioProfile = {
   displayName: "你的姓名",
   avatarUrl: "",
+  avatarPositionX: 50,
+  avatarPositionY: 0,
   headline: "你好，我是你的姓名 👋",
   introduction: "专注于构建清晰、可靠、好用的数字产品。欢迎浏览我的项目、经历与技术实践。",
   location: "",
@@ -350,6 +354,8 @@ export function normalizeProfile(value: unknown): PortfolioProfile {
   return {
     displayName: text(input.displayName, DEFAULT_PROFILE.displayName, 80),
     avatarUrl: safeUrl(input.avatarUrl, DEFAULT_PROFILE.avatarUrl),
+    avatarPositionX: numberValue(input.avatarPositionX, DEFAULT_PROFILE.avatarPositionX),
+    avatarPositionY: numberValue(input.avatarPositionY, DEFAULT_PROFILE.avatarPositionY),
     headline: text(input.headline, DEFAULT_PROFILE.headline, 240),
     introduction: text(input.introduction, DEFAULT_PROFILE.introduction, 1600),
     location: location === "中国 · 可远程" ? "" : location,
