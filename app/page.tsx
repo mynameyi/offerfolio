@@ -8,6 +8,7 @@ import { HighlightCarousel } from "@/components/highlight-carousel";
 import { PortfolioNavigation } from "@/components/portfolio-navigation";
 import { VisitorAnalytics } from "@/components/visitor-analytics";
 import { ShowcaseGallery } from "@/components/showcase-gallery";
+import { AchievementGallery } from "@/components/achievement-gallery";
 
 export const dynamic = "force-dynamic";
 
@@ -241,7 +242,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       {modules.awards ? (
         <section className="df-main df-content-section" id="achievements" data-module-key="awards" style={sectionOrder("awards")}>
           <SectionHeading title={profile.moduleLabels.awards} subtitle="奖项、认证、公开成果以及值得记录的专业实践。" />
-          {profile.achievements.length ? <div className="df-achievement-grid">{profile.achievements.map((item) => <article className="df-achievement-card" key={item.id}>{item.imageUrl ? <img src={item.imageUrl} alt={item.title} loading="lazy" /> : <div className="df-achievement-placeholder">✦</div>}<div><p className="df-card-period">{item.period}</p><h3>{item.title}</h3><p>{item.summary}</p></div></article>)}</div> : <div className="df-empty-state">还没有添加证书或成就。可先关闭此模块，稍后再补充。</div>}
+          <AchievementGallery items={profile.achievements} emptyText="还没有添加证书或成就。可先关闭此模块，稍后再补充。" />
         </section>
       ) : null}
 
