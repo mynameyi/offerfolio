@@ -147,9 +147,10 @@ OfferFolio 面向个人本地部署：公开作品集和管理后台由同一个
 | 样式 | Tailwind CSS 4.3.3 |
 | 数据库 | SQLite，使用 better-sqlite3 13.0.3；WAL 模式 |
 | 运行时 | Node.js 24 |
-| 部署 | 本地 Node.js，或一个包含前台、后台和 SQLite 驱动的 Docker 镜像 |
+| 媒体转码 | ffmpeg-static 5.3.0；上传视频转为 MP4（H.264/AAC），图片原样保存 |
+| 部署 | 本地 Node.js，或一个包含前台、后台、SQLite 驱动和视频转码器的 Docker 镜像 |
 
-版本按 2026-10-07 查询到的稳定版锁定在依赖文件中，升级时以兼容性和安全修复为准。SQLite 不需要单独的服务容器：本地模式使用 `./data/offerfolio.sqlite`，Docker 模式使用持久化数据卷。应用不接入第三方分析 SDK。
+版本按 2026-10-07 查询到的稳定版锁定在依赖文件中，升级时以兼容性和安全修复为准。SQLite 不需要单独的服务容器：本地模式使用 `./data/offerfolio.sqlite`，Docker 模式使用持久化数据卷。应用不接入第三方分析 SDK。视频转码器随应用镜像打包；`ffmpeg-static` 及其 FFmpeg 二进制采用独立的 GPL-3.0-or-later 许可，镜像内保留对应许可文件。
 
 前台按 [DeveloperFolio](https://developerfolio.js.org/#contact) 的主要页面结构进行中文复刻：顶部导航、左右分栏问候区、技能矩阵与熟练度条、教育和工作经历、GitHub 仓库卡片、精选项目、成就证书、博客、演讲、Twitter/X、播客、简历、联系卡片和回到顶部；支持深浅色切换、移动端导航与响应式布局。OfferFolio 使用自有组件、插画和样式实现。
 
