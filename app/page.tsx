@@ -9,6 +9,7 @@ import { PortfolioNavigation } from "@/components/portfolio-navigation";
 import { VisitorAnalytics } from "@/components/visitor-analytics";
 import { ShowcaseGallery } from "@/components/showcase-gallery";
 import { AchievementGallery } from "@/components/achievement-gallery";
+import { PortfolioImage } from "@/components/portfolio-image";
 
 export const dynamic = "force-dynamic";
 
@@ -79,7 +80,7 @@ function ProjectGrid({ items, emptyText }: { items: PortfolioContentItem[]; empt
     <div className="df-project-grid">
       {items.map((project) => (
         <article className="df-project-card" key={project.id}>
-          {project.imageUrl ? <div className="df-project-image"><img src={project.imageUrl} alt={project.title} loading="lazy" /></div> : <div className="df-project-image df-project-image-placeholder"><span>{project.title.slice(0, 1) || "作"}</span></div>}
+          {project.imageUrl ? <div className="df-project-image"><PortfolioImage src={project.imageUrl} alt={project.title} width={900} height={570} sizes="(max-width: 768px) 90vw, (max-width: 1200px) 45vw, 32vw" /></div> : <div className="df-project-image df-project-image-placeholder"><span>{project.title.slice(0, 1) || "作"}</span></div>}
           <div className="df-project-body">
             <p className="df-project-subtitle">{project.subtitle || project.tags.slice(0, 2).join(" · ")}</p>
             <h3>{project.title}</h3>
@@ -166,7 +167,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   return (
     <main className="developerfolio-site" data-theme="light">
       <header className="df-header" id="top">
-        <Link href="/" className="df-logo" aria-label="OfferFolio 首页">{profile.avatarUrl ? <img className="df-logo-avatar" src={profile.avatarUrl} alt="" style={{ objectPosition: avatarObjectPosition }} /> : null}<span className="df-logo-muted">&lt;</span><span className="df-logo-name">{profile.displayName}</span><span className="df-logo-muted">/&gt;</span></Link>
+        <Link href="/" className="df-logo" aria-label="OfferFolio 首页">{profile.avatarUrl ? <PortfolioImage className="df-logo-avatar" src={profile.avatarUrl} alt="" width={64} height={64} sizes="48px" style={{ objectPosition: avatarObjectPosition }} /> : null}<span className="df-logo-muted">&lt;</span><span className="df-logo-name">{profile.displayName}</span><span className="df-logo-muted">/&gt;</span></Link>
         <PortfolioNavigation items={navItems} />
       </header>
 
@@ -183,7 +184,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               {profile.giteeUrl ? <a className="df-social-link df-social-link-gitee" href={profile.giteeUrl} title="Gitee" aria-label="Gitee" {...externalLinkProps(profile.giteeUrl)}><img src="/brand/gitee-mark.svg" alt="" /></a> : null}
             </div>
           </div>
-          <div className="df-greeting-image">{profile.avatarUrl ? <img className="df-profile-hero-avatar" src={profile.avatarUrl} alt={`${profile.displayName}的头像`} style={{ objectPosition: avatarObjectPosition }} /> : <DeveloperIllustration />}</div>
+          <div className="df-greeting-image">{profile.avatarUrl ? <PortfolioImage className="df-profile-hero-avatar" src={profile.avatarUrl} alt={`${profile.displayName}的头像`} width={900} height={900} sizes="(max-width: 767px) 68vw, 410px" style={{ objectPosition: avatarObjectPosition }} priority /> : <DeveloperIllustration />}</div>
         </section>
       ) : null}
 
@@ -269,7 +270,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       ) : null}
 
       {modules.contact ? (
-        <section className="df-main df-contact-section" id="contact" data-module-key="contact" style={sectionOrder("contact")}><SectionHeading title={profile.moduleLabels.contact} subtitle="如需了解项目细节或工作经历，可通过邮件或社交平台联系。" /><div className="df-contact-card"><div className="df-contact-avatar">{profile.avatarUrl ? <img src={profile.avatarUrl} alt={`${profile.displayName}的头像`} style={{ objectPosition: avatarObjectPosition }} /> : profile.displayName.slice(0, 1) || "你"}</div><div className="df-contact-info"><h3>{profile.displayName}</h3><div className="df-contact-details">{profile.email ? <a href={`mailto:${profile.email}`}>{profile.email}</a> : null}{profile.phone ? <a href={`tel:${profile.phone}`}>{profile.phone}</a> : null}{profile.location ? <span><Glyph name="pin" />{profile.location}</span> : null}</div>{socialItems.length ? <div className="df-contact-social">{socialItems.map((item) => <a href={item.url} key={`contact-${item.id}`} {...externalLinkProps(item.url)}>{item.title}</a>)}</div> : null}</div></div></section>
+        <section className="df-main df-contact-section" id="contact" data-module-key="contact" style={sectionOrder("contact")}><SectionHeading title={profile.moduleLabels.contact} subtitle="如需了解项目细节或工作经历，可通过邮件或社交平台联系。" /><div className="df-contact-card"><div className="df-contact-avatar">{profile.avatarUrl ? <PortfolioImage src={profile.avatarUrl} alt={`${profile.displayName}的头像`} width={180} height={180} sizes="110px" style={{ objectPosition: avatarObjectPosition }} /> : profile.displayName.slice(0, 1) || "你"}</div><div className="df-contact-info"><h3>{profile.displayName}</h3><div className="df-contact-details">{profile.email ? <a href={`mailto:${profile.email}`}>{profile.email}</a> : null}{profile.phone ? <a href={`tel:${profile.phone}`}>{profile.phone}</a> : null}{profile.location ? <span><Glyph name="pin" />{profile.location}</span> : null}</div>{socialItems.length ? <div className="df-contact-social">{socialItems.map((item) => <a href={item.url} key={`contact-${item.id}`} {...externalLinkProps(item.url)}>{item.title}</a>)}</div> : null}</div></div></section>
       ) : null}
       </div>
 

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { PortfolioContentItem, PortfolioMediaItem } from "@/lib/profile";
 import { showcaseMediaItems } from "@/lib/profile";
 import { Glyph } from "@/components/glyph";
+import { PortfolioImage } from "@/components/portfolio-image";
 
 function repositoryName(url: string) {
   try {
@@ -77,7 +78,7 @@ export function ShowcaseGallery({ items, emptyText }: { items: PortfolioContentI
             return (
               <button className="df-showcase-card df-showcase-company-card" key={item.id} type="button" onClick={() => setActiveItemId(item.id)} aria-label={`查看作品详情：${item.summary || item.title}`}>
                 <span className={`df-showcase-company-cover${item.showcaseCoverUrl ? " has-cover" : ""}`} aria-hidden="true">
-                  {item.showcaseCoverUrl ? <img src={item.showcaseCoverUrl} alt="" loading="lazy" /> : null}
+                  {item.showcaseCoverUrl ? <PortfolioImage src={item.showcaseCoverUrl} alt="" width={720} height={430} sizes="(max-width: 768px) 90vw, 33vw" /> : null}
                   <span className="df-showcase-company-video-play">▶</span>
                   {media.length > 1 ? <span className="df-showcase-company-more">{media.length} 项素材</span> : null}
                 </span>

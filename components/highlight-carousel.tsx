@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { formatHighlightTag, type PortfolioContentItem } from "@/lib/profile";
+import { PortfolioImage } from "@/components/portfolio-image";
 
 function isVideoFile(url: string) {
   return /\.(mp4|webm|ogg|ogv|mov|m4v)(\?.*)?$/i.test(url);
@@ -40,7 +41,7 @@ export function HighlightCarousel({ items }: { items: PortfolioContentItem[] }) 
                 aria-label={`查看高光时刻${tagLabel ? ` ${tagLabel}` : ""}：${item.title || "媒体内容"}`}
               >
                 {item.imageUrl
-                  ? <img src={item.imageUrl} alt="" loading="lazy" />
+                  ? <PortfolioImage src={item.imageUrl} alt="" width={560} height={350} sizes="(max-width: 768px) 78vw, 280px" />
                   : isVideoFile(item.embedUrl)
                     ? <video src={item.embedUrl} muted playsInline preload="metadata" />
                     : <span className="df-highlight-card-placeholder" aria-hidden="true" />}

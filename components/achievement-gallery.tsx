@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { PortfolioContentItem } from "@/lib/profile";
+import { PortfolioImage } from "@/components/portfolio-image";
 
 export function AchievementGallery({ items, emptyText }: { items: PortfolioContentItem[]; emptyText: string }) {
   const [activeItem, setActiveItem] = useState<PortfolioContentItem | null>(null);
@@ -34,7 +35,7 @@ export function AchievementGallery({ items, emptyText }: { items: PortfolioConte
                 onClick={() => setActiveItem(item)}
                 aria-label={`放大查看：${item.title}`}
               >
-                <img src={item.imageUrl} alt={item.title} loading="lazy" />
+                <PortfolioImage src={item.imageUrl} alt={item.title} width={480} height={640} sizes="(max-width: 600px) 45vw, (max-width: 900px) 30vw, (max-width: 1280px) 22vw, 16vw" />
               </button>
             ) : <div className="df-achievement-placeholder">✦</div>}
             <div className="df-achievement-copy">
