@@ -8,6 +8,8 @@
 >
 > *A portfolio that tells you who looked, what they read, and for how long.*
 
+系统用于求职投递阶段：把展示页链接附在简历或投递信息中，供招聘方查看个人经历、项目和能力证据。页面不配置求职状态或个人岗位意向，投递材料已经提供本次岗位的上下文。
+
 OfferFolio = **Offer** + **Folio**（portfolio 的词根，本义"一叠可携带的纸页"）。名字就是目的：作品集不是终点，拿到 offer 才是。
 
 ---

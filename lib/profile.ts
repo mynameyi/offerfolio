@@ -1,5 +1,5 @@
 export const PROFILE_MODULES = [
-  { key: "greeting", label: "自我介绍", description: "首页问候、求职方向与个人简介" },
+  { key: "greeting", label: "自我介绍", description: "首页问候、职业身份与个人简介" },
   { key: "social", label: "社交链接", description: "首页展示 GitHub、LinkedIn 等个人链接" },
   { key: "skills", label: "技能矩阵", description: "技能说明与技术图标" },
   { key: "skillProgress", label: "技能熟练度", description: "展示技术方向和熟练度进度条" },
@@ -64,7 +64,6 @@ export type PortfolioProfile = {
   linkedinUrl: string;
   twitterHandle: string;
   resumeUrl: string;
-  isHireable: boolean;
   skills: string[];
   socialLinks: PortfolioContentItem[];
   skillProgress: PortfolioContentItem[];
@@ -127,14 +126,13 @@ export const DEFAULT_PROFILE: PortfolioProfile = {
   title: "全栈开发工程师",
   headline: "你好，我是你的姓名 👋",
   introduction: "专注于构建清晰、可靠、好用的数字产品。欢迎浏览我的项目、经历与技术实践。",
-  location: "中国 · 可远程",
+  location: "",
   phone: "",
   email: "",
   githubUrl: "",
   linkedinUrl: "",
   twitterHandle: "",
   resumeUrl: "",
-  isHireable: true,
   skills: ["前端开发", "React", "TypeScript", "Next.js", "Node.js", "产品协作"],
   socialLinks: [],
   skillProgress: [
@@ -280,19 +278,20 @@ export function normalizeProfile(value: unknown): PortfolioProfile {
   ) as PortfolioModules;
   const projectsFallback = DEFAULT_PROFILE.projects;
 
+  const location = text(input.location, DEFAULT_PROFILE.location, 160);
+
   return {
     displayName: text(input.displayName, DEFAULT_PROFILE.displayName, 80),
     title: text(input.title, DEFAULT_PROFILE.title, 140),
     headline: text(input.headline, DEFAULT_PROFILE.headline, 240),
     introduction: text(input.introduction, DEFAULT_PROFILE.introduction, 1600),
-    location: text(input.location, DEFAULT_PROFILE.location, 160),
+    location: location === "中国 · 可远程" ? "" : location,
     phone: text(input.phone, DEFAULT_PROFILE.phone, 100),
     email: text(input.email, DEFAULT_PROFILE.email, 200),
     githubUrl: safeUrl(input.githubUrl, DEFAULT_PROFILE.githubUrl),
     linkedinUrl: safeUrl(input.linkedinUrl, DEFAULT_PROFILE.linkedinUrl),
     twitterHandle: text(input.twitterHandle, DEFAULT_PROFILE.twitterHandle, 80).replace(/^@/, ""),
     resumeUrl: safeUrl(input.resumeUrl, DEFAULT_PROFILE.resumeUrl),
-    isHireable: typeof input.isHireable === "boolean" ? input.isHireable : DEFAULT_PROFILE.isHireable,
     skills: textList(input.skills, DEFAULT_PROFILE.skills, 50),
     socialLinks: normalizeContentItems(input.socialLinks, DEFAULT_PROFILE.socialLinks, 16),
     skillProgress: normalizeContentItems(input.skillProgress, DEFAULT_PROFILE.skillProgress, 20),

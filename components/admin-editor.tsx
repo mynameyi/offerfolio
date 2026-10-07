@@ -267,13 +267,12 @@ export function AdminEditor() {
         </section>
 
         <section className="editor-panel">
-          <div className="editor-panel-title"><span>02</span><div><h2>问候与自我介绍</h2><p>首屏标题、个人方向、简介和求职状态。</p></div></div>
+          <div className="editor-panel-title"><span>02</span><div><h2>自我介绍</h2><p>填写首页介绍、职业身份与个人简介。</p></div></div>
           <div className="editor-fields editor-fields-two">
             <label className="field-label">姓名<input className="field-input" value={profile.displayName} onChange={(event) => setField("displayName", event.target.value)} maxLength={80} /></label>
-            <label className="field-label">职业 / 专业方向<input className="field-input" value={profile.title} onChange={(event) => setField("title", event.target.value)} maxLength={140} /></label>
+            <label className="field-label">职业身份 / 专业领域<input className="field-input" value={profile.title} onChange={(event) => setField("title", event.target.value)} maxLength={140} /></label>
             <label className="field-label field-span-two">首页问候标题<input className="field-input" value={profile.headline} onChange={(event) => setField("headline", event.target.value)} maxLength={240} /></label>
             <label className="field-label field-span-two">个人简介<textarea className="field-input field-textarea" value={profile.introduction} onChange={(event) => setField("introduction", event.target.value)} maxLength={1600} rows={4} /></label>
-            <label className="module-inline-check"><input type="checkbox" checked={profile.isHireable} onChange={(event) => setField("isHireable", event.target.checked)} /><span>显示“正在寻找新机会”状态</span></label>
           </div>
         </section>
 
