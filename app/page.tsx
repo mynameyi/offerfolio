@@ -115,7 +115,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   const { modules } = profile;
   const experience = profile.milestones.filter((item) => item.kind === "experience");
   const education = profile.milestones.filter((item) => item.kind === "education");
-  const growth = profile.milestones.filter((item) => item.kind === "growth");
+  const highlightMedia = profile.metrics.filter((item) => item.imageUrl || item.embedUrl);
   const sectionAnchors: Record<PortfolioModuleKey, string> = {
     intro: "#greeting",
     highlights: "#highlights",
@@ -135,7 +135,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   const moduleLabels = new Map(PROFILE_MODULES.map(({ key, label }) => [key, label]));
   const hasSection: Record<PortfolioModuleKey, boolean> = {
     intro: true,
-    highlights: profile.metrics.length > 0 || growth.length > 0,
+    highlights: true,
     showcase: true,
     skills: true,
     strengths: profile.strengths.length > 0,
@@ -185,11 +185,8 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       ) : null}
 
       {modules.highlights ? (
-        <section className="df-main df-content-section df-highlights-section" id="highlights" data-module-key="highlights" style={sectionOrder("highlights")}>
-          <SectionHeading eyebrow="高光时刻" title="值得被记住的瞬间" subtitle="精选作品、现场与成果片段，点击卡片查看背后的故事。" />
-          {profile.metrics.length ? <HighlightCarousel items={profile.metrics} /> : null}
-          {growth.length ? <div className="df-growth-list">{growth.map((item) => <article key={item.id}><span>{item.period}</span><i /><div><h3>{item.title}</h3><p>{item.organization}</p><small>{item.summary}</small></div></article>)}</div> : null}
-          {!profile.metrics.length && !growth.length ? <div className="df-empty-state">精彩内容正在整理中，敬请期待。</div> : null}
+        <section className={`df-main df-highlights-section${highlightMedia.length ? "" : " df-highlights-section-empty"}`} id="highlights" data-module-key="highlights" aria-label="高光时刻" style={sectionOrder("highlights")}>
+          {highlightMedia.length ? <HighlightCarousel items={highlightMedia} /> : null}
         </section>
       ) : null}
 
