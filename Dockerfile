@@ -10,6 +10,7 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 FROM base AS builder
+ENV DATABASE_PATH=:memory:
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build

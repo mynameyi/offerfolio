@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { PROFILE_MODULES, type PortfolioModuleKey } from "@/lib/profile";
 
 type ShareLink = {
   token: string;
@@ -11,11 +12,28 @@ type ShareLink = {
   lastVisitedAt: string | null;
 };
 
+type ShareVisit = {
+  visitKey: string;
+  visitedAt: string;
+  ipAddress: string;
+  durationSeconds: number;
+  modules: Array<{ key: PortfolioModuleKey; clickCount: number; dwellSeconds: number }>;
+};
+
+const moduleLabels = new Map(PROFILE_MODULES.map(({ key, label }) => [key, label]));
+
 function formatDate(value: string | null) {
   if (!value) return "暂无访问";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "时间未知";
   return new Intl.DateTimeFormat("zh-CN", { dateStyle: "medium", timeStyle: "short" }).format(date);
+}
+
+function formatDuration(seconds: number) {
+  if (seconds < 60) return `${seconds} 秒`;
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return remainingSeconds ? `${minutes} 分 ${remainingSeconds} 秒` : `${minutes} 分`;
 }
 
 async function readJson<T>(response: Response): Promise<T & { error?: string }> {
@@ -24,7 +42,7 @@ async function readJson<T>(response: Response): Promise<T & { error?: string }> 
 
 export function VisitorRadar() {
   const [links, setLinks] = useState<ShareLink[]>([]);
-  const [visits, setVisits] = useState<Record<string, string[]>>({});
+  const [visits, setVisits] = useState<Record<string, ShareVisit[]>>({});
   const [label, setLabel] = useState("");
   const [expandedToken, setExpandedToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -103,7 +121,7 @@ export function VisitorRadar() {
     if (visits[token]) return;
     try {
       const response = await fetch(`/api/admin/share-links/${token}/visits`, { cache: "no-store" });
-      const result = await readJson<string[]>(response);
+      const result = await readJson<ShareVisit[]>(response);
       if (!response.ok) throw new Error(result.error || "无法读取访问详情。");
       setVisits((current) => ({ ...current, [token]: result }));
     } catch (caught) {
@@ -131,7 +149,7 @@ export function VisitorRadar() {
   return (
     <section className="visitor-radar">
       <div className="editor-panel radar-intro-panel">
-        <div className="editor-panel-title"><span>03</span><div><h2>访问雷达</h2><p>为不同的简历投递生成专属链接，查看每条链接的访问次数和最近访问时间。</p></div></div>
+        <div className="editor-panel-title"><span>03</span><div><h2>访问雷达</h2><p>生成专属链接，查看每次访问的 IP、导航模块点击和页面停留时长。</p></div></div>
         <form className="radar-create-form" onSubmit={createLink}>
           <label className="field-label" htmlFor="share-link-label">链接备注 <span className="field-hint">可选，仅自己可见，用于区分链接</span></label>
           <div className="radar-create-controls"><input id="share-link-label" className="field-input" value={label} onChange={(event) => setLabel(event.target.value)} maxLength={120} placeholder="备注这条链接" /><button className="button button-dark" type="submit" disabled={busy}>生成专属链接</button></div>
@@ -148,12 +166,12 @@ export function VisitorRadar() {
               <div className="radar-link-top"><div><div className="radar-link-name"><h3>{link.label || "未命名链接"}</h3><span className={`radar-link-status ${link.active ? "is-active" : ""}`}>{link.active ? "有效" : "已停用"}</span></div><p>创建于 {formatDate(link.createdAt)}</p></div><strong className="radar-visit-count">{link.visitCount}<small>次访问</small></strong></div>
               <div className="radar-link-url"><code>{origin ? `${origin}/r/${link.token}` : `/r/${link.token}`}</code><div><button className="button button-quiet" type="button" onClick={() => void copyLink(link.token)}>{copiedToken === link.token ? "已复制" : "复制链接"}</button><button className="button button-quiet" type="button" onClick={() => void toggleVisits(link.token)}>{expandedToken === link.token ? "收起记录" : "访问记录"}</button>{link.active ? <button className="button button-quiet radar-revoke" type="button" disabled={busy} onClick={() => void revokeLink(link.token)}>停用</button> : null}</div></div>
               <p className="radar-last-visit">最近访问：{formatDate(link.lastVisitedAt)}</p>
-              {expandedToken === link.token ? <div className="radar-visit-history"><strong>最近 50 次访问</strong>{visits[link.token] ? visits[link.token].length ? <ol>{visits[link.token].map((visit, index) => <li key={`${visit}-${index}`}>{formatDate(visit)}</li>)}</ol> : <p>还没有访问记录。</p> : <p><span className="loading-spinner" />正在读取记录…</p>}</div> : null}
+              {expandedToken === link.token ? <div className="radar-visit-history"><strong>最近 50 次访问 · 时间 / IP / 停留 / 模块</strong>{visits[link.token] ? visits[link.token].length ? <div className="radar-visit-entries">{visits[link.token].map((visit) => <article className="radar-visit-entry" key={visit.visitKey}><div className="radar-visit-meta"><time>{formatDate(visit.visitedAt)}</time><span>IP：{visit.ipAddress || "未获取"}</span><span>页面停留：{formatDuration(visit.durationSeconds)}</span></div>{visit.modules.length ? <ul>{visit.modules.map((module) => <li key={module.key}><strong>{moduleLabels.get(module.key) || module.key}</strong><span>{module.clickCount ? `导航点击 ${module.clickCount} 次` : "未点击导航"}</span><span>停留 {formatDuration(module.dwellSeconds)}</span></li>)}</ul> : <p className="radar-no-engagement">尚无模块点击或可见停留记录。</p>}</article>)}</div> : <p>还没有访问记录。</p> : <p><span className="loading-spinner" />正在读取记录…</p>}</div> : null}
             </article>
           ))}
         </div>
       ) : <div className="radar-empty">还没有专属链接。生成后可把链接附在简历投递中，并在这里查看访问情况。</div>}
-      <p className="radar-footnote">访问次数按每个浏览器 30 分钟内首次打开计算，不采集访客身份信息。</p>
+      <p className="radar-footnote">同一浏览器 30 分钟内重复打开按一次访问计数。模块点击记录展示页内导航点击；停留时长仅在页面处于前台且模块可见时累计。IP 从 X-Real-IP / X-Forwarded-For 请求头读取，反向代理需正确转发。</p>
     </section>
   );
 }

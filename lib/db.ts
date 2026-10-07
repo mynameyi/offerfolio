@@ -1,5 +1,6 @@
 import "server-only";
 
+import { randomUUID } from "node:crypto";
 import Database from "better-sqlite3";
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -37,10 +38,37 @@ function openDatabase(): CachedDatabase {
     CREATE TABLE IF NOT EXISTS share_visits (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       token TEXT NOT NULL REFERENCES share_links(token) ON DELETE CASCADE,
-      visited_at TEXT NOT NULL
+      visited_at TEXT NOT NULL,
+      ip_address TEXT NOT NULL DEFAULT '',
+      duration_seconds INTEGER NOT NULL DEFAULT 0,
+      visit_key TEXT NOT NULL DEFAULT ''
+    );
+    CREATE TABLE IF NOT EXISTS share_visit_modules (
+      visit_id INTEGER NOT NULL REFERENCES share_visits(id) ON DELETE CASCADE,
+      module_key TEXT NOT NULL,
+      click_count INTEGER NOT NULL DEFAULT 0,
+      dwell_seconds INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (visit_id, module_key)
     );
     CREATE INDEX IF NOT EXISTS share_visits_token_idx ON share_visits(token, visited_at);
   `);
+
+  const visitColumns = new Set(
+    (connection.prepare("PRAGMA table_info(share_visits)").all() as Array<{ name: string }>).map(({ name }) => name),
+  );
+  if (!visitColumns.has("ip_address")) {
+    connection.exec("ALTER TABLE share_visits ADD COLUMN ip_address TEXT NOT NULL DEFAULT ''");
+  }
+  if (!visitColumns.has("duration_seconds")) {
+    connection.exec("ALTER TABLE share_visits ADD COLUMN duration_seconds INTEGER NOT NULL DEFAULT 0");
+  }
+  if (!visitColumns.has("visit_key")) {
+    connection.exec("ALTER TABLE share_visits ADD COLUMN visit_key TEXT NOT NULL DEFAULT ''");
+  }
+  const missingVisitKeys = connection.prepare("SELECT id FROM share_visits WHERE visit_key = ''").all() as Array<{ id: number }>;
+  const updateVisitKey = connection.prepare("UPDATE share_visits SET visit_key = ? WHERE id = ?");
+  for (const visit of missingVisitKeys) updateVisitKey.run(randomUUID(), visit.id);
+  connection.exec("CREATE UNIQUE INDEX IF NOT EXISTS share_visits_visit_key_idx ON share_visits(visit_key)");
 
   connection
     .prepare(

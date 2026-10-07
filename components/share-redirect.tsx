@@ -10,11 +10,20 @@ export function ShareRedirect({ token }: { token: string }) {
     let active = true;
     const fallback = window.setTimeout(() => router.replace("/"), 2500);
     fetch(`/api/radar/${token}/visit`, { method: "POST", cache: "no-store" })
-      .catch(() => undefined)
-      .finally(() => {
+      .then(async (response) => {
+        if (!response.ok) return null;
+        return await response.json() as { visitKey?: string };
+      })
+      .catch(() => null)
+      .then((result) => {
         if (!active) return;
         window.clearTimeout(fallback);
-        router.replace("/");
+        const query = new URLSearchParams();
+        if (result?.visitKey) {
+          query.set("of_token", token);
+          query.set("of_visit", result.visitKey);
+        }
+        router.replace(query.size ? `/?${query.toString()}` : "/");
       });
     return () => {
       active = false;
