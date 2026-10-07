@@ -591,16 +591,15 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
 @keyframes df-wave { 0%, 50%, 100% { transform: rotate(0); } 10% { transform: rotate(-10deg); } 20% { transform: rotate(12deg); } 30% { transform: rotate(-10deg); } 40% { transform: rotate(9deg); } }
 .df-greeting-subtitle { max-width: 570px; margin: 22px 0 0; color: var(--df-subtitle); font-size: clamp(15px, 1.5vw, 20px); line-height: 1.8; }
 .df-greeting-role { margin: 14px 0 0; color: var(--df-purple); font-size: 15px; font-weight: 650; }
-.df-greeting-buttons { margin-top: 29px; display: flex; flex-wrap: wrap; gap: 12px; }
+.df-greeting-buttons { margin-top: 29px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 .df-button { min-height: 44px; padding: 0 18px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; border: 1px solid var(--df-purple); border-radius: 4px; color: #fff !important; background: var(--df-purple); font-size: 12px; font-weight: 600; box-shadow: 0 5px 13px #55198b25; transition: background .17s ease, transform .17s ease; }
 .df-button:hover { border-color: var(--df-purple-hover); background: var(--df-purple-hover); transform: translateY(-2px); }
 .df-button svg { width: 14px; height: 14px; }
 .df-button-outline { color: var(--df-purple) !important; background: transparent; box-shadow: none; }
 .df-button-outline:hover { color: #fff !important; }
-.df-social-row { margin-top: 27px; display: flex; flex-wrap: wrap; gap: 10px; }
-.df-social-row > a { width: 35px; height: 35px; display: grid; place-items: center; border: 1px solid var(--df-purple); border-radius: 50%; color: var(--df-purple); transition: color .17s ease, background .17s ease, transform .17s ease; }
-.df-social-row > a:hover { color: #fff; background: var(--df-purple); transform: translateY(-2px); }
-.df-social-row > a span { font-size: 9px; font-weight: 700; }
+.df-social-link { width: 35px; height: 35px; display: grid; place-items: center; border: 1px solid var(--df-purple); border-radius: 50%; background: #fff; transition: transform .17s ease, box-shadow .17s ease; }
+.df-social-link img { width: 18px; height: 18px; display: block; object-fit: contain; }
+.df-social-link:hover { transform: translateY(-2px); box-shadow: 0 5px 12px var(--df-shadow); }
 .df-greeting-image { min-height: 355px; display: grid; place-items: center; }
 .df-illustration { display: block; width: min(100%, 470px); height: auto; }
 .df-profile-hero-avatar { width: min(100%, 410px); aspect-ratio: 1; display: block; border: 8px solid #f0e8f6; border-radius: 50%; object-fit: cover; box-shadow: 0 9px 28px var(--df-shadow); }
@@ -779,7 +778,7 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
   .df-greeting-title { font-size: clamp(34px, 8vw, 48px); text-align: center; }
   .df-greeting-subtitle { margin-top: 17px; font-size: 15px; text-align: center; }
   .df-greeting-role { justify-content: center; text-align: center; }
-  .df-greeting-buttons, .df-social-row { justify-content: center; }
+  .df-greeting-buttons { justify-content: center; }
   .df-greeting-image { min-height: 285px; }
   .df-illustration { width: min(100%, 420px); }
   .df-profile-hero-avatar { width: min(68vw, 300px); }
