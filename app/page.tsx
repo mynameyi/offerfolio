@@ -94,6 +94,53 @@ function ProjectGrid({ items, emptyText }: { items: PortfolioContentItem[]; empt
   );
 }
 
+function repositoryName(url: string) {
+  try {
+    const parsed = new URL(url);
+    const parts = parsed.pathname.split("/").filter(Boolean);
+    return (parts.at(-1) || parsed.hostname).replace(/\.git$/i, "");
+  } catch {
+    return "开源作品";
+  }
+}
+
+function ShowcaseGrid({ items, emptyText }: { items: PortfolioContentItem[]; emptyText: string }) {
+  const visibleItems = items.filter((item) => {
+    const type = item.showcaseType ?? (item.imageUrl || item.embedUrl ? "confidential" : "open-source");
+    return type === "open-source" ? Boolean(item.url) : Boolean((item.imageUrl || item.embedUrl) && (item.summary || item.title));
+  });
+  if (!visibleItems.length) return <div className="df-empty-state">{emptyText}</div>;
+  return (
+    <div className="df-showcase-grid">
+      {visibleItems.map((item) => {
+        const type = item.showcaseType ?? (item.imageUrl || item.embedUrl ? "confidential" : "open-source");
+        if (type === "open-source") {
+          const name = repositoryName(item.url);
+          let host = "源码仓库";
+          try { host = new URL(item.url).hostname.replace(/^www\./, ""); } catch { /* keep generic label */ }
+          return (
+            <article className="df-showcase-card df-showcase-repo-card" key={item.id}>
+              <div className="df-showcase-repo-heading">
+                <svg className="df-showcase-repo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="1" /><path d="M8 7h8M8 11h8M8 15h5M3 6v15" /></svg>
+                <h3 title={name}>{name}</h3>
+                <span className="df-showcase-public-badge">开源</span>
+              </div>
+              <p>开源作品，可通过源码链接查看项目内容。</p>
+              <div className="df-showcase-repo-meta"><span><i />{host}</span><a href={item.url} {...externalLinkProps(item.url)}>{item.urlLabel || "查看源码"}<Glyph name="arrow" /></a></div>
+            </article>
+          );
+        }
+        return (
+          <article className="df-showcase-card df-showcase-confidential-card" key={item.id}>
+            {item.imageUrl ? <img className="df-showcase-media" src={item.imageUrl} alt="作品图片" loading="lazy" /> : item.embedUrl ? <video className="df-showcase-media" src={item.embedUrl} controls playsInline preload="metadata" /> : <div className="df-showcase-media df-showcase-media-empty">保密作品</div>}
+            <div className="df-showcase-confidential-copy"><span>保密作品</span><p>{item.summary || item.title}</p></div>
+          </article>
+        );
+      })}
+    </div>
+  );
+}
+
 export default async function HomePage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const query = await searchParams;
   const linkedToken = typeof query.of_token === "string" ? query.of_token : "";
@@ -225,8 +272,8 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
       {modules.showcase ? (
         <section className="df-main df-content-section" id="showcase" data-module-key="showcase" style={sectionOrder("showcase")}>
-          <SectionHeading title={profile.moduleLabels.showcase} subtitle="通过可访问的作品和相关材料，了解实际构建与交付内容。" />
-          <ProjectGrid items={profile.showcaseItems} emptyText="尚未添加展示作品，可在后台补充作品介绍与链接。" />
+          <SectionHeading title={profile.moduleLabels.showcase} subtitle="开源作品可直达源码；涉密作品以图片或视频展示。" />
+          <ShowcaseGrid items={profile.showcaseItems} emptyText="尚未添加展示作品，可在后台添加源码链接或保密作品素材。" />
         </section>
       ) : null}
 

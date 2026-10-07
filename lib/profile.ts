@@ -41,6 +41,7 @@ const PREVIOUS_SECTION_LABELS: PortfolioModuleLabels = {
 
 export type PortfolioContentItem = {
   id: string;
+  showcaseType?: "open-source" | "confidential";
   title: string;
   subtitle: string;
   summary: string;
@@ -270,6 +271,13 @@ function normalizeContentItems(
     const base = fallback[index] ?? emptyContentItem(`item-${index + 1}`);
     return {
       id: text(record.id, base.id, 80) || base.id,
+      showcaseType: record.showcaseType === "open-source" || record.showcaseType === "confidential"
+        ? record.showcaseType
+        : record.imageUrl || record.image || record.embedUrl
+          ? "confidential"
+          : record.url || record.evidenceUrl
+            ? "open-source"
+            : undefined,
       title: text(record.title ?? record.projectName ?? record.Stack, base.title, 140),
       subtitle: text(record.subtitle, base.subtitle, 240),
       summary: text(record.summary ?? record.description ?? record.projectDesc ?? record.desc ?? record.subtitle, base.summary, 1200),

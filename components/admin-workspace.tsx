@@ -12,6 +12,7 @@ import {
 import { Glyph } from "@/components/glyph";
 import { ContentListEditor, type ContentField } from "@/components/content-list-editor";
 import { HighlightManager } from "@/components/highlight-manager";
+import { ShowcaseManager } from "@/components/showcase-manager";
 import { ProfileAvatarUpload } from "@/components/profile-avatar-upload";
 import { ApplicationScripts } from "@/components/application-scripts";
 import { VisitorRadar } from "@/components/visitor-radar";
@@ -222,7 +223,7 @@ export function AdminWorkspace({ onLogout }: { onLogout: () => Promise<void> }) 
       case "highlights":
         return <HighlightManager items={profile.metrics} onChange={(items) => setCollection("metrics", items)} />;
       case "showcase":
-        return <ContentListEditor number="03" title="作品展示" hint="填写作品介绍、图片和可以直接访问的链接。" items={profile.showcaseItems} fields={projectFields} onChange={(items) => setCollection("showcaseItems", items)} itemLabel="作品" addLabel="添加作品" />;
+        return <ShowcaseManager items={profile.showcaseItems} onChange={(items) => setCollection("showcaseItems", items)} />;
       case "skills":
         return (
           <section className="editor-panel">
