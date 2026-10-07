@@ -4,6 +4,7 @@ import { readProfile } from "@/lib/db";
 import { PROFILE_MODULES, type PortfolioContentItem, type PortfolioModuleKey } from "@/lib/profile";
 import { getVisitorVisitKey, recordVisitorVisit, visitContextFromHeaders } from "@/lib/radar";
 import { Glyph } from "@/components/glyph";
+import { HighlightCarousel } from "@/components/highlight-carousel";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { VisitorAnalytics } from "@/components/visitor-analytics";
 
@@ -183,11 +184,12 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         </section>
       ) : null}
 
-      {modules.highlights && (profile.metrics.length > 0 || growth.length > 0) ? (
+      {modules.highlights ? (
         <section className="df-main df-content-section df-highlights-section" id="highlights" data-module-key="highlights" style={sectionOrder("highlights")}>
-          <SectionHeading eyebrow="高光时刻" title="关键成果与节点" subtitle="用具体结果和重要经历呈现一路积累的专业价值。" />
-          {profile.metrics.length ? <div className="df-metrics-grid">{profile.metrics.map((metric) => <article key={metric.id}><strong>{metric.value}</strong><span>{metric.title}</span>{metric.summary ? <small>{metric.summary}</small> : null}</article>)}</div> : null}
+          <SectionHeading eyebrow="高光时刻" title="值得被记住的瞬间" subtitle="精选作品、现场与成果片段，点击卡片查看背后的故事。" />
+          {profile.metrics.length ? <HighlightCarousel items={profile.metrics} /> : null}
           {growth.length ? <div className="df-growth-list">{growth.map((item) => <article key={item.id}><span>{item.period}</span><i /><div><h3>{item.title}</h3><p>{item.organization}</p><small>{item.summary}</small></div></article>)}</div> : null}
+          {!profile.metrics.length && !growth.length ? <div className="df-empty-state">精彩内容正在整理中，敬请期待。</div> : null}
         </section>
       ) : null}
 
