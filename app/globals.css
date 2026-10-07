@@ -609,6 +609,7 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
 .df-social-link:hover { transform: translateY(-2px); box-shadow: 0 5px 12px var(--df-shadow); }
 .df-greeting-image { min-height: 355px; display: grid; place-items: center; }
 .df-illustration { display: block; width: min(100%, 470px); height: auto; }
+.df-profile-hero-avatar { width: min(100%, 410px); aspect-ratio: 1; display: block; border: 8px solid #f0e8f6; border-radius: 50%; object-fit: cover; box-shadow: 0 9px 28px var(--df-shadow); }
 .df-section-heading { margin: 0 0 32px; }
 .df-eyebrow { margin: 0 0 10px; color: var(--df-purple); font-family: "SFMono-Regular", Consolas, monospace; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
 .df-section-heading h2 { margin: 0; color: var(--df-text); font-size: clamp(31px, 4vw, 48px); font-weight: 500; line-height: 1.23; letter-spacing: -.055em; }
@@ -787,6 +788,7 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
   .df-greeting-buttons { justify-content: center; }
   .df-greeting-image { min-height: 285px; }
   .df-illustration { width: min(100%, 420px); }
+  .df-profile-hero-avatar { width: min(68vw, 300px); }
   .df-skills, .df-progress-section { padding-block: 48px; display: flex; flex-direction: column; gap: 20px; }
   .df-skills .df-illustration-side { max-width: 430px; order: 0; }
   .df-skills .df-section-content { order: 1; }

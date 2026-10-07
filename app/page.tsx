@@ -181,7 +181,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               {profile.giteeUrl ? <a className="df-social-link" href={profile.giteeUrl} title="Gitee" aria-label="Gitee" {...externalLinkProps(profile.giteeUrl)}><img src="/brand/gitee-mark.svg" alt="" /></a> : null}
             </div>
           </div>
-          <div className="df-greeting-image"><DeveloperIllustration /></div>
+          <div className="df-greeting-image">{profile.avatarUrl ? <img className="df-profile-hero-avatar" src={profile.avatarUrl} alt={`${profile.displayName}的头像`} style={{ objectPosition: avatarObjectPosition }} /> : <DeveloperIllustration />}</div>
         </section>
       ) : null}
 
