@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type ChangeEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { Glyph } from "@/components/glyph";
 import { adminFetch } from "@/components/admin-fetch";
 import { showcaseMediaItems, type PortfolioContentItem, type PortfolioMediaItem } from "@/lib/profile";
@@ -8,12 +8,110 @@ import { showcaseMediaItems, type PortfolioContentItem, type PortfolioMediaItem 
 const ACCEPTED_MEDIA = "image/jpeg,image/png,image/webp,image/gif,image/avif,video/mp4,video/webm,video/ogg,video/quicktime,video/x-m4v";
 type ShowcaseType = "open-source" | "company-project";
 type UploadResult = { url: string; kind: "image" | "video"; error?: string };
+type MediaFrame = { source: HTMLImageElement | HTMLVideoElement; width: number; height: number; cleanup: () => void };
+
+function loadImageFrame(url: string): Promise<MediaFrame> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    const timer = window.setTimeout(() => reject(new Error("读取图片缩略图超时。")), 20_000);
+    image.onload = () => {
+      window.clearTimeout(timer);
+      resolve({ source: image, width: image.naturalWidth, height: image.naturalHeight, cleanup: () => { image.src = ""; } });
+    };
+    image.onerror = () => {
+      window.clearTimeout(timer);
+      reject(new Error("无法读取图片缩略图。"));
+    };
+    image.src = url;
+  });
+}
+
+function loadVideoFrame(url: string): Promise<MediaFrame> {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement("video");
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = "auto";
+    const timer = window.setTimeout(() => finish(new Error("读取视频缩略图超时。")), 30_000);
+    let settled = false;
+    const cleanup = () => {
+      video.pause();
+      video.removeAttribute("src");
+      video.load();
+    };
+    const finish = (error?: Error) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timer);
+      video.removeEventListener("error", onError);
+      if (error) {
+        cleanup();
+        reject(error);
+      } else {
+        resolve({ source: video, width: video.videoWidth, height: video.videoHeight, cleanup });
+      }
+    };
+    const onError = () => finish(new Error("浏览器无法读取该视频格式的缩略图。"));
+    video.addEventListener("error", onError, { once: true });
+    video.addEventListener("loadedmetadata", () => {
+      const seekTo = Number.isFinite(video.duration) && video.duration > 0 ? Math.min(1, video.duration / 3) : 0;
+      if (seekTo <= 0) {
+        if (video.readyState >= 2) finish();
+        else video.addEventListener("loadeddata", () => finish(), { once: true });
+        return;
+      }
+      video.addEventListener("seeked", () => finish(), { once: true });
+      video.currentTime = seekTo;
+    }, { once: true });
+    video.src = url;
+    video.load();
+  });
+}
+
+async function createMontage(mediaItems: PortfolioMediaItem[]): Promise<Blob> {
+  const selected = mediaItems.slice(0, 3);
+  if (!selected.length) throw new Error("请先添加图片或视频。");
+  const frames: MediaFrame[] = [];
+  try {
+    for (const media of selected) {
+      frames.push(media.kind === "video" ? await loadVideoFrame(media.url) : await loadImageFrame(media.url));
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = 1200;
+    canvas.height = 675;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("无法生成缩略图。");
+    context.fillStyle = "#17151a";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    const gutter = 6;
+    const panelWidth = (canvas.width - gutter * (frames.length - 1)) / frames.length;
+    frames.forEach((frame, index) => {
+      const x = index * (panelWidth + gutter);
+      const scale = Math.max(panelWidth / frame.width, canvas.height / frame.height);
+      const cropWidth = panelWidth / scale;
+      const cropHeight = canvas.height / scale;
+      const cropX = (frame.width - cropWidth) / 2;
+      const cropY = (frame.height - cropHeight) / 2;
+      context.drawImage(frame.source, cropX, cropY, cropWidth, cropHeight, x, 0, panelWidth, canvas.height);
+    });
+    return await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("缩略图编码失败。")), "image/jpeg", 0.9);
+    });
+  } finally {
+    frames.forEach((frame) => frame.cleanup());
+  }
+}
+
+function mediaSignature(mediaItems: PortfolioMediaItem[]) {
+  return JSON.stringify(mediaItems.map(({ id, url, kind }) => [id, url, kind]));
+}
 
 function emptyItem(type: ShowcaseType): PortfolioContentItem {
   return {
     id: crypto.randomUUID(),
     showcaseType: type,
     mediaItems: [],
+    showcaseCoverUrl: "",
     title: "",
     subtitle: "",
     summary: "",
@@ -37,27 +135,77 @@ function emptyItem(type: ShowcaseType): PortfolioContentItem {
 export function ShowcaseManager({ items, onChange }: { items: PortfolioContentItem[]; onChange: (items: PortfolioContentItem[]) => void }) {
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
   const [error, setError] = useState<Record<string, string>>({});
+  const [coverStatus, setCoverStatus] = useState<Record<string, string>>({});
   const inputs = useRef<Record<string, HTMLInputElement | null>>({});
+  const itemsRef = useRef(items);
+  const onChangeRef = useRef(onChange);
+  const coverJobs = useRef(new Set<string>());
+  itemsRef.current = items;
+  onChangeRef.current = onChange;
+
+  const replaceItems = useCallback((nextItems: PortfolioContentItem[]) => {
+    itemsRef.current = nextItems;
+    onChangeRef.current(nextItems);
+  }, []);
 
   function update(id: string, changes: Partial<PortfolioContentItem>) {
-    onChange(items.map((item) => item.id === id ? { ...item, ...changes } : item));
+    replaceItems(itemsRef.current.map((item) => item.id === id ? { ...item, ...changes } : item));
   }
 
+  const generateCover = useCallback(async (itemId: string, mediaItems: PortfolioMediaItem[], force = false) => {
+    const signature = mediaSignature(mediaItems);
+    const jobKey = `${itemId}:${signature}`;
+    if (!mediaItems.length || coverJobs.current.has(jobKey)) return;
+    const currentItem = itemsRef.current.find((item) => item.id === itemId);
+    if (!force && currentItem?.showcaseCoverUrl) return;
+    coverJobs.current.add(jobKey);
+    setCoverStatus((current) => ({ ...current, [itemId]: "正在生成组合缩略图…" }));
+    try {
+      const blob = await createMontage(mediaItems);
+      const formData = new FormData();
+      formData.set("file", new File([blob], "showcase-cover.jpg", { type: "image/jpeg" }));
+      const response = await adminFetch("/api/admin/showcase/media", { method: "POST", body: formData });
+      const result = await response.json() as UploadResult;
+      if (!response.ok) throw new Error(result.error || "缩略图上传失败。");
+      const latestItems = itemsRef.current;
+      const latestItem = latestItems.find((item) => item.id === itemId);
+      if (latestItem && mediaSignature(showcaseMediaItems(latestItem)) === signature) {
+        replaceItems(latestItems.map((item) => item.id === itemId ? { ...item, showcaseCoverUrl: result.url } : item));
+        setCoverStatus((current) => ({ ...current, [itemId]: "卡片缩略图已生成，保存更改后会公开显示。" }));
+      } else {
+        setCoverStatus((current) => ({ ...current, [itemId]: "" }));
+      }
+    } catch (caught) {
+      const message = caught instanceof Error ? caught.message : "组合缩略图生成失败。";
+      setCoverStatus((current) => ({ ...current, [itemId]: message }));
+    } finally {
+      coverJobs.current.delete(jobKey);
+    }
+  }, [replaceItems]);
+
+  useEffect(() => {
+    for (const item of items) {
+      const type = item.showcaseType ?? (item.imageUrl || item.embedUrl || item.mediaItems?.length ? "company-project" : "open-source");
+      const mediaItems = showcaseMediaItems(item);
+      if (type === "company-project" && mediaItems.length && !item.showcaseCoverUrl) void generateCover(item.id, mediaItems);
+    }
+  }, [items, generateCover]);
+
   function addItem(type: ShowcaseType) {
-    if (items.length >= 30) return;
-    onChange([...items, emptyItem(type)]);
+    if (itemsRef.current.length >= 30) return;
+    replaceItems([...itemsRef.current, emptyItem(type)]);
   }
 
   function removeItem(id: string) {
-    onChange(items.filter((item) => item.id !== id));
+    replaceItems(itemsRef.current.filter((item) => item.id !== id));
   }
 
   function moveItem(index: number, direction: -1 | 1) {
     const nextIndex = index + direction;
-    if (nextIndex < 0 || nextIndex >= items.length) return;
-    const reordered = [...items];
+    if (nextIndex < 0 || nextIndex >= itemsRef.current.length) return;
+    const reordered = [...itemsRef.current];
     [reordered[index], reordered[nextIndex]] = [reordered[nextIndex], reordered[index]];
-    onChange(reordered);
+    replaceItems(reordered);
   }
 
   async function upload(id: string, event: ChangeEvent<HTMLInputElement>) {
@@ -68,7 +216,7 @@ export function ShowcaseManager({ items, onChange }: { items: PortfolioContentIt
     setError((current) => ({ ...current, [id]: "" }));
 
     try {
-      const mediaItems: PortfolioMediaItem[] = [...showcaseMediaItems(items.find((item) => item.id === id) ?? emptyItem("company-project"))];
+      const mediaItems: PortfolioMediaItem[] = [...showcaseMediaItems(itemsRef.current.find((item) => item.id === id) ?? emptyItem("company-project"))];
       const failures: string[] = [];
       for (const file of files) {
         const formData = new FormData();
@@ -82,7 +230,8 @@ export function ShowcaseManager({ items, onChange }: { items: PortfolioContentIt
           failures.push(caught instanceof Error ? `${file.name}：${caught.message}` : `${file.name}：上传失败`);
         }
       }
-      update(id, { mediaItems, imageUrl: "", embedUrl: "" });
+      update(id, { mediaItems, showcaseCoverUrl: "", imageUrl: "", embedUrl: "" });
+      setCoverStatus((current) => ({ ...current, [id]: "" }));
       if (failures.length) setError((current) => ({ ...current, [id]: failures.join("；") }));
     } finally {
       setUploading((current) => ({ ...current, [id]: false }));
@@ -90,7 +239,8 @@ export function ShowcaseManager({ items, onChange }: { items: PortfolioContentIt
   }
 
   function removeMedia(item: PortfolioContentItem, mediaId: string) {
-    update(item.id, { mediaItems: showcaseMediaItems(item).filter((media) => media.id !== mediaId), imageUrl: "", embedUrl: "" });
+    update(item.id, { mediaItems: showcaseMediaItems(item).filter((media) => media.id !== mediaId), showcaseCoverUrl: "", imageUrl: "", embedUrl: "" });
+    setCoverStatus((current) => ({ ...current, [item.id]: "" }));
   }
 
   return (
@@ -137,6 +287,8 @@ export function ShowcaseManager({ items, onChange }: { items: PortfolioContentIt
                     </div>
                     <input ref={(element) => { inputs.current[item.id] = element; }} className="showcase-hidden-file" type="file" accept={ACCEPTED_MEDIA} multiple onChange={(event) => void upload(item.id, event)} aria-label="添加项目图片或视频" />
                     {error[item.id] ? <span className="showcase-upload-error" role="alert">{error[item.id]}</span> : null}
+                    {coverStatus[item.id] ? <span className={`showcase-cover-status${coverStatus[item.id].includes("失败") || coverStatus[item.id].includes("超时") || coverStatus[item.id].includes("无法") ? " is-error" : ""}`} role="status">{coverStatus[item.id]}</span> : null}
+                    {coverStatus[item.id] && (coverStatus[item.id].includes("失败") || coverStatus[item.id].includes("超时") || coverStatus[item.id].includes("无法")) ? <button className="button button-quiet showcase-cover-retry" type="button" onClick={() => void generateCover(item.id, mediaItems, true)}>重试生成缩略图</button> : null}
                   </div>
                   <label className="field-label">项目介绍
                     <textarea className="field-input field-textarea" rows={3} value={item.summary} onChange={(event) => update(item.id, { summary: event.target.value })} placeholder="介绍项目背景、作用或值得关注的成果" />

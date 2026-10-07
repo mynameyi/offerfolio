@@ -49,6 +49,7 @@ export type PortfolioContentItem = {
   id: string;
   showcaseType?: "open-source" | "company-project";
   mediaItems?: PortfolioMediaItem[];
+  showcaseCoverUrl?: string;
   title: string;
   subtitle: string;
   summary: string;
@@ -309,7 +310,7 @@ function normalizeContentItems(
       : undefined;
     return {
       id: text(record.id, base.id, 80) || base.id,
-      ...(showcase ? { showcaseType, mediaItems } : {}),
+      ...(showcase ? { showcaseType, mediaItems, showcaseCoverUrl: safeUrl(record.showcaseCoverUrl, "") } : {}),
       title: text(record.title ?? record.projectName ?? record.Stack, base.title, 140),
       subtitle: text(record.subtitle, base.subtitle, 240),
       summary: text(record.summary ?? record.description ?? record.projectDesc ?? record.desc ?? record.subtitle, base.summary, 1200),

@@ -32,38 +32,23 @@ export function ShowcaseGallery({ items, emptyText }: { items: PortfolioContentI
     const type = item.showcaseType ?? (mediaFor(item).length ? "company-project" : "open-source");
     return type === "open-source" ? Boolean(item.url) : Boolean(mediaFor(item).length && (item.summary || item.title));
   });
-  const [active, setActive] = useState<{ itemId: string; mediaIndex: number } | null>(null);
-  const [activeMediaAspect, setActiveMediaAspect] = useState<number | null>(null);
-  const activeItem = active ? visibleItems.find((item) => item.id === active.itemId) ?? null : null;
+  const [activeItemId, setActiveItemId] = useState<string | null>(null);
+  const activeItem = activeItemId ? visibleItems.find((item) => item.id === activeItemId) ?? null : null;
   const activeMedia = activeItem ? mediaFor(activeItem) : [];
-  const mediaIndex = active ? Math.min(active.mediaIndex, Math.max(activeMedia.length - 1, 0)) : 0;
-  const currentMedia = activeMedia[mediaIndex];
-
-  function openMedia(itemId: string, nextMediaIndex: number) {
-    setActiveMediaAspect(null);
-    setActive({ itemId, mediaIndex: nextMediaIndex });
-  }
 
   useEffect(() => {
     if (!activeItem) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") { setActive(null); setActiveMediaAspect(null); }
-      if (event.key === "ArrowLeft" && active && activeMedia.length > 1) openMedia(active.itemId, (mediaIndex - 1 + activeMedia.length) % activeMedia.length);
-      if (event.key === "ArrowRight" && active && activeMedia.length > 1) openMedia(active.itemId, (mediaIndex + 1) % activeMedia.length);
+      if (event.key === "Escape") setActiveItemId(null);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [active, activeItem, activeMedia.length, mediaIndex]);
-
-  function moveMedia(amount: -1 | 1) {
-    if (!active || activeMedia.length < 2) return;
-    openMedia(active.itemId, (mediaIndex + amount + activeMedia.length) % activeMedia.length);
-  }
+  }, [activeItem]);
 
   return (
     <>
@@ -89,22 +74,12 @@ export function ShowcaseGallery({ items, emptyText }: { items: PortfolioContentI
             }
 
             const media = mediaFor(item);
-            const previewMedia = media.slice(0, 3);
             return (
-              <button className="df-showcase-card df-showcase-company-card" key={item.id} type="button" onClick={() => openMedia(item.id, 0)} aria-label={`查看作品详情：${item.summary || item.title}`}>
-                <span className="df-showcase-company-cover" style={{ gridTemplateColumns: `repeat(${previewMedia.length}, minmax(0, 1fr))` }}>
-                  {previewMedia.map((entry, index) => {
-                    const isVideo = entry.kind === "video" || videoUrl(entry.url);
-                    return (
-                      <span className="df-showcase-company-thumb" key={entry.id}>
-                        {isVideo
-                          ? <video src={entry.url} muted playsInline preload="metadata" aria-hidden="true" onLoadedMetadata={(event) => { const video = event.currentTarget; if (Number.isFinite(video.duration) && video.duration > 0) video.currentTime = Math.min(2, video.duration / 2); }} />
-                          : <img src={entry.url} alt="" loading="lazy" />}
-                        {media.length > 3 && index === 2 ? <span className="df-showcase-company-more">+{media.length - 3}</span> : null}
-                      </span>
-                    );
-                  })}
-                  <span className="df-showcase-company-video-play" aria-hidden="true">▶</span>
+              <button className="df-showcase-card df-showcase-company-card" key={item.id} type="button" onClick={() => setActiveItemId(item.id)} aria-label={`查看作品详情：${item.summary || item.title}`}>
+                <span className={`df-showcase-company-cover${item.showcaseCoverUrl ? " has-cover" : ""}`} aria-hidden="true">
+                  {item.showcaseCoverUrl ? <img src={item.showcaseCoverUrl} alt="" loading="lazy" /> : null}
+                  <span className="df-showcase-company-video-play">▶</span>
+                  {media.length > 1 ? <span className="df-showcase-company-more">{media.length} 项素材</span> : null}
                 </span>
                 <span className="df-showcase-company-copy">
                   <span>{item.summary || item.title}</span><span>查看作品 <Glyph name="arrow" /></span>
@@ -115,19 +90,18 @@ export function ShowcaseGallery({ items, emptyText }: { items: PortfolioContentI
         </div>
       )}
 
-      {activeItem && currentMedia ? (
-        <div className="df-highlight-modal-backdrop df-showcase-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setActive(null); }}>
-          <section className="df-highlight-modal df-showcase-modal" style={{ width: activeMediaAspect !== null && activeMediaAspect < 1 ? Math.max(300, Math.min(560, window.innerHeight * 0.7 * activeMediaAspect)) : undefined }} role="dialog" aria-modal="true" aria-label="项目展示详情">
-            <button className="df-highlight-modal-close" type="button" onClick={() => { setActive(null); setActiveMediaAspect(null); }} aria-label="关闭项目展示详情">×</button>
-            <div className="df-highlight-modal-media df-showcase-modal-media" style={{ aspectRatio: activeMediaAspect ? String(activeMediaAspect) : "16 / 9" }} key={currentMedia.id}>
-              {currentMedia.kind === "video" || videoUrl(currentMedia.url)
-                ? <video src={currentMedia.url} controls playsInline preload="metadata" onLoadedMetadata={(event) => { const video = event.currentTarget; if (video.videoWidth && video.videoHeight) setActiveMediaAspect(video.videoWidth / video.videoHeight); }} />
-                : <img src={currentMedia.url} alt="项目展示素材" onLoad={(event) => { const image = event.currentTarget; if (image.naturalWidth && image.naturalHeight) setActiveMediaAspect(image.naturalWidth / image.naturalHeight); }} />}
-              {activeMedia.length > 1 ? <>
-                <button className="df-showcase-media-nav df-showcase-media-prev" type="button" onClick={() => moveMedia(-1)} aria-label="查看上一项素材">‹</button>
-                <button className="df-showcase-media-nav df-showcase-media-next" type="button" onClick={() => moveMedia(1)} aria-label="查看下一项素材">›</button>
-                <span className="df-showcase-media-count">{mediaIndex + 1} / {activeMedia.length}</span>
-              </> : null}
+      {activeItem && activeMedia.length ? (
+        <div className="df-highlight-modal-backdrop df-showcase-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setActiveItemId(null); }}>
+          <section className="df-highlight-modal df-showcase-modal" role="dialog" aria-modal="true" aria-label="项目展示详情">
+            <button className="df-highlight-modal-close" type="button" onClick={() => setActiveItemId(null)} aria-label="关闭项目展示详情">×</button>
+            <div className={`df-showcase-modal-media-grid${activeMedia.length === 1 ? " is-single" : ""}`}>
+              {activeMedia.map((media, index) => (
+                <div className="df-showcase-modal-media" key={media.id}>
+                  {media.kind === "video" || videoUrl(media.url)
+                    ? <video src={media.url} controls playsInline preload="metadata" aria-label={`项目视频 ${index + 1}`} />
+                    : <img src={media.url} alt={`项目展示素材 ${index + 1}`} loading="lazy" />}
+                </div>
+              ))}
             </div>
             <div className="df-highlight-modal-copy df-showcase-modal-copy"><p>{activeItem.summary || activeItem.title}</p></div>
           </section>
