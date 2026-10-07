@@ -88,7 +88,7 @@ export function ShowcaseGallery({ items, emptyText }: { items: PortfolioContentI
             return (
               <button className="df-showcase-card df-showcase-company-card" type="button" key={item.id} onClick={() => setActive({ itemId: item.id, mediaIndex: coverIndex })} aria-label={`查看项目介绍：${item.summary || item.title}`}>
                 <span className="df-showcase-company-cover">
-                  {cover?.kind === "image" ? <img src={cover.url} alt="" loading="lazy" /> : cover?.kind === "video" ? <><video src={cover.url} muted playsInline preload="metadata" aria-hidden="true" /><span className="df-showcase-company-video-play" aria-hidden="true">▶</span></> : <span className="df-showcase-company-cover-placeholder" aria-hidden="true" />}
+                  {cover?.kind === "image" ? <img src={cover.url} alt="" loading="lazy" /> : cover?.kind === "video" ? <><video src={cover.url} muted playsInline preload="metadata" aria-hidden="true" onLoadedMetadata={(event) => { const video = event.currentTarget; if (Number.isFinite(video.duration) && video.duration > 0) video.currentTime = Math.min(0.25, video.duration / 2); }} /><span className="df-showcase-company-video-play" aria-hidden="true">▶</span></> : <span className="df-showcase-company-cover-placeholder" aria-hidden="true" />}
                   <span className="df-showcase-company-count">{media.length} 项素材</span>
                 </span>
                 <span className="df-showcase-company-copy"><span>{item.summary || item.title}</span><span>查看作品 <Glyph name="arrow" /></span></span>
