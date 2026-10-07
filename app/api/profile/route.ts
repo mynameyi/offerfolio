@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import {
   ADMIN_COOKIE_NAME,
-  adminPasswordHash,
+  configuredAdminPassword,
   isValidAdminSession,
 } from "@/lib/admin-session";
 import { readProfile, writeProfile } from "@/lib/db";
@@ -19,8 +19,7 @@ export async function GET() {
 export async function PUT(request: Request) {
   const cookieStore = await cookies();
   const token = cookieStore.get(ADMIN_COOKIE_NAME)?.value;
-  const passwordHash = adminPasswordHash();
-  if (!passwordHash || !isValidAdminSession(token, passwordHash)) {
+  if (!isValidAdminSession(token, configuredAdminPassword())) {
     return NextResponse.json({ error: "请先登录管理后台。" }, { status: 401 });
   }
 

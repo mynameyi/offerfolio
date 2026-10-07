@@ -195,11 +195,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .field-textarea { min-height: 90px; resize: vertical; line-height: 1.75; }
 .login-submit { width: 100%; margin-top: 15px; }
 .login-footnote { margin: 19px 0 0; color: #98a198; font-size: 9px; line-height: 1.7; }
-.password-setup-column { width: 100%; display: grid; gap: 12px; }
-.password-change-form { width: 100%; padding: 25px; }
-.password-change-form .editor-fields-two { grid-template-columns: 1fr; gap: 13px; }
-.password-change-panel { max-width: 760px; }
-.password-form-actions { margin-top: 18px; justify-content: flex-end; }
 .notice { margin-block: 17px; padding: 11px 12px; border-radius: 3px; font-size: 10px; line-height: 1.7; }
 .notice-error { color: #834e41; background: #f9e9e2; }
 .form-error, .form-success { font-size: 10px; line-height: 1.7; }
@@ -312,7 +307,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .editor-heading h1 { font-size: 33px; }
   .editor-heading-actions { margin-top: 17px; }
   .editor-heading-actions .button { flex: 1; }
-  .password-form-actions { flex-direction: column; }
   .editor-panel { padding: 21px 16px; }
   .editor-fields-two { grid-template-columns: 1fr; gap: 13px; }
   .field-span-two { grid-column: auto; }

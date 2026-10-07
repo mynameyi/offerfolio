@@ -2,31 +2,17 @@ import { NextResponse } from "next/server";
 import {
   ADMIN_COOKIE_NAME,
   ADMIN_SESSION_SECONDS,
-  adminPasswordHash,
-  clearLoginFailures,
   configuredAdminPassword,
   createAdminSession,
-  loginRetryAfter,
   passwordsMatch,
-  recordLoginFailure,
   secureCookie,
-  verifyAdminPassword,
 } from "@/lib/admin-session";
 
 export async function POST(request: Request) {
-  const retryAfter = loginRetryAfter(request);
-  if (retryAfter > 0) {
+  const expectedPassword = configuredAdminPassword();
+  if (!expectedPassword) {
     return NextResponse.json(
-      { error: "登录尝试次数过多，请稍后再试。" },
-      { status: 429, headers: { "Retry-After": String(retryAfter), "Cache-Control": "no-store" } },
-    );
-  }
-
-  const storedHash = adminPasswordHash();
-  const bootstrapPassword = configuredAdminPassword();
-  if (!storedHash && !bootstrapPassword) {
-    return NextResponse.json(
-      { error: "管理后台尚未启用，请先配置初始引导口令。" },
+      { error: "管理后台尚未启用，请先配置 ADMIN_PASSWORD。" },
       { status: 503 },
     );
   }
@@ -42,18 +28,12 @@ export async function POST(request: Request) {
     typeof body === "object" && body !== null
       ? (body as Record<string, unknown>).password
       : undefined;
-  const authenticated = storedHash
-    ? verifyAdminPassword(password, storedHash)
-    : Boolean(bootstrapPassword && passwordsMatch(password, bootstrapPassword));
-  if (!authenticated) {
-    recordLoginFailure(request);
+  if (!passwordsMatch(password, expectedPassword)) {
     return NextResponse.json({ error: "密码不正确。" }, { status: 401 });
   }
 
-  clearLoginFailures(request);
-  const sessionSecret = storedHash ?? bootstrapPassword!;
-  const response = NextResponse.json({ ok: true, mustChangePassword: !storedHash });
-  response.cookies.set(ADMIN_COOKIE_NAME, createAdminSession(sessionSecret), {
+  const response = NextResponse.json({ ok: true });
+  response.cookies.set(ADMIN_COOKIE_NAME, createAdminSession(expectedPassword), {
     httpOnly: true,
     secure: secureCookie(),
     sameSite: "lax",

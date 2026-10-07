@@ -153,7 +153,7 @@ cd offerfolio
 cp .env.example .env
 ```
 
-编辑 `.env`，把 `ADMIN_PASSWORD` 换成仅用于首次登录的随机引导口令后启动：
+编辑 `.env`，把 `ADMIN_PASSWORD` 改成长密码后启动：
 
 ```bash
 docker compose up --build -d
@@ -164,14 +164,6 @@ docker compose up --build -d
 - SQLite 数据保存在 Docker 本地数据卷 `offerfolio-data`
 - 停止服务：`docker compose down`；该命令会保留数据卷
 - 备份数据库：`docker compose cp offerfolio:/app/data/offerfolio.sqlite ./offerfolio-backup.sqlite`
-
-首次登录后台后，系统会要求设置至少 12 个字符的专属密码。新密码以 scrypt 摘要保存到 SQLite；设置完成后，初始引导口令不再能登录。后台支持随时修改密码，修改会立即撤销其他登录会话；会话最长 8 小时，连续 8 次登录失败后会暂时限制该来源继续尝试。Docker 默认只绑定 `127.0.0.1`；若通过 HTTPS 反向代理对外提供服务，请设置 `COOKIE_SECURE=true`，并让代理覆盖传入的 `X-Real-IP` 请求头。
-
-忘记专属密码时，可在服务器终端删除管理员凭据记录，再用 `.env` 中的初始引导口令重新设置；这不会删除作品集数据：
-
-```powershell
-docker compose exec offerfolio node -e "const Database=require('better-sqlite3');const db=new Database('/app/data/offerfolio.sqlite');db.prepare('DELETE FROM admin_credential WHERE id=1').run();db.close()"
-```
 
 镜像只运行一个应用容器，不依赖数据库镜像。Compose 默认将端口绑定到本机回环地址，外网访问需自行配置 HTTPS 反向代理，并在 `.env` 中设置 `COOKIE_SECURE=true`。
 
