@@ -73,7 +73,7 @@ export function AdminEditor() {
         <div className="login-intro">
           <p className="section-kicker">ECKYSTUDIO / OFFERFOLIO</p>
           <h1>让你的经历，<br /><em>说得更清楚。</em></h1>
-          <p>在这里调整展示布局、管理内容和查看访问记录。档案保存在本机 SQLite 数据库中。</p>
+          <p>在这里调整展示布局、管理内容和查看全部公开页面访问记录。档案保存在本机 SQLite 数据库中。</p>
           <div className="login-proof"><Glyph name="lock" /><span>仅本机管理员可修改档案</span></div>
         </div>
         <form className="login-card" onSubmit={submitLogin}>

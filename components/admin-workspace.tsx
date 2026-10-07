@@ -265,7 +265,7 @@ export function AdminWorkspace({ onLogout }: { onLogout: () => Promise<void> }) 
   const adminPanels: Array<{ key: AdminPanelKey; number: string; label: string; description: string }> = [
     { key: "layout", number: "01", label: "布局调整", description: "模块顺序与显示状态" },
     { key: "content", number: "02", label: "内容设置", description: "编辑展示页内容" },
-    { key: "radar", number: "03", label: "访问雷达", description: "专属链接与访问记录" },
+    { key: "radar", number: "03", label: "访问雷达", description: "全部访客记录与投递归因" },
   ];
 
   return (
@@ -274,7 +274,7 @@ export function AdminWorkspace({ onLogout }: { onLogout: () => Promise<void> }) 
         <div>
           <p className="section-kicker">ECKYSTUDIO / OFFERFOLIO</p>
           <h1>主页管理</h1>
-          <p>调整展示布局、编辑内容并查看专属链接访问情况。</p>
+          <p>调整展示布局、编辑内容并查看公开页面访问情况。</p>
         </div>
         <div className="editor-heading-actions">
           <a className="button button-quiet" href="/" target="_blank" rel="noreferrer">预览公开页面 <Glyph name="arrow" /></a>

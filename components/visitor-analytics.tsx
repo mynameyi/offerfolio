@@ -5,34 +5,11 @@ import { PROFILE_MODULES, type PortfolioModuleKey } from "@/lib/profile";
 
 const moduleKeys = new Set<string>(PROFILE_MODULES.map(({ key }) => key));
 
-export function VisitorAnalytics() {
+export function VisitorAnalytics({ visitKey: initialVisitKey }: { visitKey: string }) {
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
-    const queryToken = query.get("of_token") || "";
-    const queryVisitKey = query.get("of_visit") || "";
-    const queryHasValidVisit = /^[A-Za-z0-9_-]{16}$/.test(queryToken) && /^[0-9a-f-]{36}$/i.test(queryVisitKey);
-    let token = queryHasValidVisit ? queryToken : "";
-    let visitKey = queryHasValidVisit ? queryVisitKey : "";
-    if (queryHasValidVisit) {
-      try {
-        sessionStorage.setItem("offerfolio_tracking", JSON.stringify({ token, visitKey, expiresAt: Date.now() + 30 * 60_000 }));
-      } catch {
-        // The query parameters still provide this page's tracking context.
-      }
-    } else {
-      try {
-        const stored = JSON.parse(sessionStorage.getItem("offerfolio_tracking") || "null") as { token?: unknown; visitKey?: unknown; expiresAt?: unknown } | null;
-        if (stored && typeof stored.token === "string" && /^[A-Za-z0-9_-]{16}$/.test(stored.token) && typeof stored.visitKey === "string" && /^[0-9a-f-]{36}$/i.test(stored.visitKey) && typeof stored.expiresAt === "number" && stored.expiresAt > Date.now()) {
-          token = stored.token;
-          visitKey = stored.visitKey;
-        } else {
-          sessionStorage.removeItem("offerfolio_tracking");
-        }
-      } catch {
-        // Storage may be disabled; tracking remains active for linked entry pages.
-      }
-    }
-    if (!token || !visitKey) return;
+    const visitKey = initialVisitKey;
+    if (!/^[0-9a-f-]{36}$/i.test(visitKey)) return;
 
     if (query.has("of_token") || query.has("of_visit")) {
       query.delete("of_token");
@@ -47,7 +24,7 @@ export function VisitorAnalytics() {
     const moduleMilliseconds = new Map<PortfolioModuleKey, number>();
     const activeModules = new Set<PortfolioModuleKey>();
     const pendingClicks: PortfolioModuleKey[] = [];
-    const endpoint = `/api/radar/${token}/engagement`;
+    const endpoint = "/api/radar/engagement";
 
     function tick() {
       const now = Date.now();
@@ -130,7 +107,7 @@ export function VisitorAnalytics() {
       document.removeEventListener("click", handleClick, true);
       observer.disconnect();
     };
-  }, []);
+  }, [initialVisitKey]);
 
   return null;
 }

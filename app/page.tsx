@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { readProfile } from "@/lib/db";
 import { PROFILE_MODULES, type PortfolioContentItem, type PortfolioModuleKey } from "@/lib/profile";
+import { getVisitorVisitKey, recordVisitorVisit, visitContextFromHeaders } from "@/lib/radar";
 import { Glyph } from "@/components/glyph";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { VisitorAnalytics } from "@/components/visitor-analytics";
@@ -91,7 +93,23 @@ function ProjectGrid({ items, emptyText }: { items: PortfolioContentItem[]; empt
   );
 }
 
-export default function HomePage() {
+export default async function HomePage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const query = await searchParams;
+  const linkedToken = typeof query.of_token === "string" ? query.of_token : "";
+  const linkedVisitKey = typeof query.of_visit === "string" ? query.of_visit : "";
+  const existingLinkedVisit = /^[A-Za-z0-9_-]{16}$/.test(linkedToken)
+    && /^[0-9a-f-]{36}$/i.test(linkedVisitKey)
+    && getVisitorVisitKey(linkedVisitKey, linkedToken);
+  let visitKey = existingLinkedVisit ? linkedVisitKey : "";
+  if (!visitKey) {
+    const requestHeaders = await headers();
+    const recordedVisitKey = recordVisitorVisit(visitContextFromHeaders(requestHeaders, "/", null, {
+      source: typeof query.utm_source === "string" ? query.utm_source : "",
+      medium: typeof query.utm_medium === "string" ? query.utm_medium : "",
+      name: typeof query.utm_campaign === "string" ? query.utm_campaign : "",
+    }));
+    visitKey = recordedVisitKey || "";
+  }
   const profile = readProfile();
   const { modules } = profile;
   const experience = profile.milestones.filter((item) => item.kind === "experience");
@@ -253,8 +271,8 @@ export default function HomePage() {
       ) : null}
       </div>
 
-      <VisitorAnalytics />
-      <footer className="df-footer"><p>用真实作品与清晰经历，展示每一份专业价值。</p><span>© {new Date().getFullYear()} {profile.displayName} · EckyStudio</span><small className="df-analytics-notice">通过专属链接访问时，本页会记录来源 IP、点击的内容模块及在各模块的停留时长。</small></footer>
+      <VisitorAnalytics visitKey={visitKey} />
+      <footer className="df-footer"><p>用真实作品与清晰经历，展示每一份专业价值。</p><span>© {new Date().getFullYear()} {profile.displayName} · EckyStudio</span><small className="df-analytics-notice">所有公开页面访问都会记录访问时间、来源 IP、来源页面、终端信息和模块阅读情况。专属链接用于标记具体投递来源。</small></footer>
       <a className="df-back-to-top" href="#top" aria-label="返回顶部">↑</a>
     </main>
   );
