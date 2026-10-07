@@ -12,6 +12,7 @@ import {
 import { Glyph } from "@/components/glyph";
 import { ContentListEditor, type ContentField } from "@/components/content-list-editor";
 import { HighlightManager } from "@/components/highlight-manager";
+import { ProfileAvatarUpload } from "@/components/profile-avatar-upload";
 import { ApplicationScripts } from "@/components/application-scripts";
 import { VisitorRadar } from "@/components/visitor-radar";
 
@@ -209,7 +210,9 @@ export function AdminWorkspace({ onLogout }: { onLogout: () => Promise<void> }) 
             <div className="editor-panel-title"><span>01</span><div><h2>个人简介</h2><p>填写公开展示页的身份介绍和简历入口。</p></div></div>
             <div className="editor-fields editor-fields-two">
               <label className="field-label">姓名<input className="field-input" value={profile.displayName} onChange={(event) => setField("displayName", event.target.value)} maxLength={80} /></label>
-              <label className="field-label">职业身份 / 专业领域<input className="field-input" value={profile.title} onChange={(event) => setField("title", event.target.value)} maxLength={140} /></label>
+              <div className="field-label field-span-two profile-avatar-field"><span>个人头像</span><ProfileAvatarUpload value={profile.avatarUrl} onChange={(url) => setField("avatarUrl", url)} /></div>
+              <label className="field-label">GitHub 主页<input className="field-input" type="url" placeholder="https://github.com/…" value={profile.githubUrl} onChange={(event) => setField("githubUrl", event.target.value)} /></label>
+              <label className="field-label">Gitee 主页<input className="field-input" type="url" placeholder="https://gitee.com/…" value={profile.giteeUrl} onChange={(event) => setField("giteeUrl", event.target.value)} /></label>
               <label className="field-label field-span-two">首页标题<input className="field-input" value={profile.headline} onChange={(event) => setField("headline", event.target.value)} maxLength={240} /></label>
               <label className="field-label field-span-two">个人介绍<textarea className="field-input field-textarea" value={profile.introduction} onChange={(event) => setField("introduction", event.target.value)} maxLength={1600} rows={4} /></label>
               <label className="field-label field-span-two">简历 PDF 链接<input className="field-input" type="url" placeholder="https://…" value={profile.resumeUrl} onChange={(event) => setField("resumeUrl", event.target.value)} /></label>
@@ -253,7 +256,6 @@ export function AdminWorkspace({ onLogout }: { onLogout: () => Promise<void> }) 
               <label className="field-label">所在地<input className="field-input" value={profile.location} onChange={(event) => setField("location", event.target.value)} maxLength={160} /></label>
               <label className="field-label">联系邮箱<input className="field-input" type="email" value={profile.email} onChange={(event) => setField("email", event.target.value)} maxLength={200} /></label>
               <label className="field-label">联系电话<input className="field-input" value={profile.phone} onChange={(event) => setField("phone", event.target.value)} maxLength={100} /></label>
-              <label className="field-label">GitHub 主页<input className="field-input" type="url" placeholder="https://github.com/…" value={profile.githubUrl} onChange={(event) => setField("githubUrl", event.target.value)} /></label>
               <label className="field-label">LinkedIn 主页<input className="field-input" type="url" placeholder="https://linkedin.com/in/…" value={profile.linkedinUrl} onChange={(event) => setField("linkedinUrl", event.target.value)} /></label>
               <label className="field-label">X 用户名<input className="field-input" placeholder="不需要输入 @" value={profile.twitterHandle} onChange={(event) => setField("twitterHandle", event.target.value)} maxLength={80} /></label>
             </div>

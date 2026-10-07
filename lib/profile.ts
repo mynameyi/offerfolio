@@ -71,13 +71,14 @@ export type PortfolioMilestone = {
 
 export type PortfolioProfile = {
   displayName: string;
-  title: string;
+  avatarUrl: string;
   headline: string;
   introduction: string;
   location: string;
   phone: string;
   email: string;
   githubUrl: string;
+  giteeUrl: string;
   linkedinUrl: string;
   twitterHandle: string;
   resumeUrl: string;
@@ -156,13 +157,14 @@ const emptyContentItem = (id: string, title = ""): PortfolioContentItem => ({
 
 export const DEFAULT_PROFILE: PortfolioProfile = {
   displayName: "你的姓名",
-  title: "",
+  avatarUrl: "",
   headline: "你好，我是你的姓名 👋",
   introduction: "专注于构建清晰、可靠、好用的数字产品。欢迎浏览我的项目、经历与技术实践。",
   location: "",
   phone: "",
   email: "",
   githubUrl: "",
+  giteeUrl: "",
   linkedinUrl: "",
   twitterHandle: "",
   resumeUrl: "",
@@ -347,13 +349,14 @@ export function normalizeProfile(value: unknown): PortfolioProfile {
 
   return {
     displayName: text(input.displayName, DEFAULT_PROFILE.displayName, 80),
-    title: text(input.title, DEFAULT_PROFILE.title, 140),
+    avatarUrl: safeUrl(input.avatarUrl, DEFAULT_PROFILE.avatarUrl),
     headline: text(input.headline, DEFAULT_PROFILE.headline, 240),
     introduction: text(input.introduction, DEFAULT_PROFILE.introduction, 1600),
     location: location === "中国 · 可远程" ? "" : location,
     phone: text(input.phone, DEFAULT_PROFILE.phone, 100),
     email: text(input.email, DEFAULT_PROFILE.email, 200),
     githubUrl: safeUrl(input.githubUrl, DEFAULT_PROFILE.githubUrl),
+    giteeUrl: safeUrl(input.giteeUrl, DEFAULT_PROFILE.giteeUrl),
     linkedinUrl: safeUrl(input.linkedinUrl, DEFAULT_PROFILE.linkedinUrl),
     twitterHandle: text(input.twitterHandle, DEFAULT_PROFILE.twitterHandle, 80).replace(/^@/, ""),
     resumeUrl: safeUrl(input.resumeUrl, DEFAULT_PROFILE.resumeUrl),

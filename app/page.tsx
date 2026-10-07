@@ -155,6 +155,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   const socialItems = [
     ...profile.socialLinks,
     ...(profile.githubUrl ? [{ id: "profile-github", title: "GitHub", url: profile.githubUrl }] : []),
+    ...(profile.giteeUrl ? [{ id: "profile-gitee", title: "Gitee", url: profile.giteeUrl }] : []),
     ...(profile.linkedinUrl ? [{ id: "profile-linkedin", title: "LinkedIn", url: profile.linkedinUrl }] : []),
     ...(profile.twitterHandle ? [{ id: "profile-twitter", title: "X", url: `https://x.com/${profile.twitterHandle}` }] : []),
   ].filter((item, index, items) => item.url && items.findIndex((other) => other.url === item.url) === index);
@@ -172,13 +173,13 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           <div className="df-greeting-copy">
             <p className="df-greeting-title">{profile.headline || `你好，我是${profile.displayName}`} <span className="df-wave" aria-hidden="true">👋</span></p>
             <p className="df-greeting-subtitle">{profile.introduction}</p>
-            {profile.title ? <p className="df-greeting-role">{profile.title}</p> : null}
             <div className="df-greeting-buttons">
               {profile.resumeUrl ? <a className="df-button" href={profile.resumeUrl} {...externalLinkProps(profile.resumeUrl)}>下载简历 <Glyph name="arrow" /></a> : null}
               {modules.contact ? <a className="df-button df-button-outline" href="#contact">联系我 <Glyph name="arrow" /></a> : null}
             </div>
+            {socialItems.length ? <div className="df-social-row" aria-label="个人主页链接">{socialItems.map((item) => <a href={item.url} key={`hero-${item.id}`} title={item.title} aria-label={item.title} {...externalLinkProps(item.url)}><span>{item.title === "GitHub" ? "GH" : item.title === "Gitee" ? "GT" : item.title.slice(0, 2).toUpperCase()}</span></a>)}</div> : null}
           </div>
-          <div className="df-greeting-image"><DeveloperIllustration /></div>
+          <div className="df-greeting-image">{profile.avatarUrl ? <img className="df-profile-hero-avatar" src={profile.avatarUrl} alt={`${profile.displayName}的头像`} /> : <DeveloperIllustration />}</div>
         </section>
       ) : null}
 
@@ -264,7 +265,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       ) : null}
 
       {modules.contact ? (
-        <section className="df-main df-contact-section" id="contact" data-module-key="contact" style={sectionOrder("contact")}><SectionHeading title={profile.moduleLabels.contact} subtitle="如需了解项目细节或工作经历，可通过邮件或社交平台联系。" /><div className="df-contact-card"><div className="df-contact-avatar">{profile.displayName.slice(0, 1) || "你"}</div><div className="df-contact-info"><h3>{profile.displayName}</h3>{profile.title ? <p>{profile.title}</p> : null}<div className="df-contact-details">{profile.email ? <a href={`mailto:${profile.email}`}>{profile.email}</a> : null}{profile.phone ? <a href={`tel:${profile.phone}`}>{profile.phone}</a> : null}{profile.location ? <span><Glyph name="pin" />{profile.location}</span> : null}</div>{socialItems.length ? <div className="df-contact-social">{socialItems.map((item) => <a href={item.url} key={`contact-${item.id}`} {...externalLinkProps(item.url)}>{item.title}</a>)}</div> : null}</div></div></section>
+        <section className="df-main df-contact-section" id="contact" data-module-key="contact" style={sectionOrder("contact")}><SectionHeading title={profile.moduleLabels.contact} subtitle="如需了解项目细节或工作经历，可通过邮件或社交平台联系。" /><div className="df-contact-card"><div className="df-contact-avatar">{profile.avatarUrl ? <img src={profile.avatarUrl} alt={`${profile.displayName}的头像`} /> : profile.displayName.slice(0, 1) || "你"}</div><div className="df-contact-info"><h3>{profile.displayName}</h3><div className="df-contact-details">{profile.email ? <a href={`mailto:${profile.email}`}>{profile.email}</a> : null}{profile.phone ? <a href={`tel:${profile.phone}`}>{profile.phone}</a> : null}{profile.location ? <span><Glyph name="pin" />{profile.location}</span> : null}</div>{socialItems.length ? <div className="df-contact-social">{socialItems.map((item) => <a href={item.url} key={`contact-${item.id}`} {...externalLinkProps(item.url)}>{item.title}</a>)}</div> : null}</div></div></section>
       ) : null}
       </div>
 
