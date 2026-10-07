@@ -706,8 +706,9 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
 .df-showcase-repo-meta > a svg { width: 13px; height: 13px; }
 .df-showcase-company-card { width: 100%; padding: 0; display: flex; flex-direction: column; border: 1px solid var(--df-border); text-align: left; font: inherit; cursor: pointer; }
 .df-showcase-company-cover { width: 100%; height: 190px; position: relative; display: block; overflow: hidden; background: #eee9f3; }
-.df-showcase-company-cover > img, .df-showcase-company-cover > video { width: 100%; height: 100%; display: block; object-fit: cover; transition: transform .25s ease; }
-.df-showcase-company-card:hover .df-showcase-company-cover > img, .df-showcase-company-card:hover .df-showcase-company-cover > video { transform: scale(1.025); }
+.df-showcase-company-cover > img { width: 100%; height: 100%; display: block; object-fit: cover; transition: transform .25s ease; }
+.df-showcase-company-cover > video { width: 100%; height: 100%; display: block; object-fit: contain; background: #17151a; }
+.df-showcase-company-card:hover .df-showcase-company-cover > img { transform: scale(1.025); }
 .df-showcase-company-cover-placeholder { width: 100%; height: 100%; display: grid; align-content: center; justify-items: center; gap: 9px; color: #8f70a5; background: linear-gradient(145deg, #f2edf6, #e6dced); }
 .df-showcase-company-video-play { width: 48px; height: 48px; position: absolute; top: 50%; left: 50%; display: grid; place-items: center; padding-left: 3px; border: 1px solid #ffffffa8; border-radius: 50%; color: #fff; background: #16151d70; font-size: 16px; transform: translate(-50%, -50%); backdrop-filter: blur(5px); pointer-events: none; }
 .df-showcase-company-count { padding: 5px 8px; position: absolute; right: 10px; bottom: 10px; border-radius: 99px; color: #fff; background: #16131ca8; font-size: 9px; }
