@@ -112,6 +112,14 @@ export function AdminWorkspace({ onLogout }: { onLogout: () => Promise<void> }) 
     setProfile((current) => ({ ...current, modules: { ...current.modules, [key]: visible } }));
   }
 
+  function setModuleNavigation(key: PortfolioModuleKey, visible: boolean) {
+    setProfile((current) => ({ ...current, moduleNavigation: { ...current.moduleNavigation, [key]: visible } }));
+  }
+
+  function setModuleLabel(key: PortfolioModuleKey, label: string) {
+    setProfile((current) => ({ ...current, moduleLabels: { ...current.moduleLabels, [key]: label } }));
+  }
+
   function moveModule(key: PortfolioModuleKey, direction: -1 | 1) {
     if (key === "intro") return;
     setProfile((current) => {
@@ -296,7 +304,7 @@ export function AdminWorkspace({ onLogout }: { onLogout: () => Promise<void> }) 
             <form className="editor-form" onSubmit={saveProfile}>
               {activePanel === "layout" ? (
                 <section className="editor-panel layout-panel">
-                  <div className="editor-panel-title"><span>01</span><div><h2>展示模块布局</h2><p>简介固定在首位，其余模块可调整顺序和显示状态。</p></div></div>
+                  <div className="editor-panel-title"><span>01</span><div><h2>展示模块布局</h2><p>简介固定在首位；可调整页面显示状态、导航栏入口和导航名称。</p></div></div>
                   <ol className="layout-module-list">
                     {profile.moduleOrder.map((key, index) => {
                       const module = PROFILE_MODULES.find((item) => item.key === key);
@@ -306,7 +314,11 @@ export function AdminWorkspace({ onLogout }: { onLogout: () => Promise<void> }) 
                         <li className={`layout-module-row ${fixed ? "is-fixed" : ""}`} key={key}>
                           <span className="layout-module-index">{String(index + 1).padStart(2, "0")}</span>
                           <div className="layout-module-copy"><strong>{module.label}</strong><small>{module.description}</small></div>
-                          <label className="layout-module-visibility"><span>{fixed ? "固定显示" : profile.modules[key] ? "显示" : "隐藏"}</span><input type="checkbox" checked={fixed || profile.modules[key]} disabled={fixed} onChange={(event) => setModule(key, event.target.checked)} aria-label={`${profile.modules[key] ? "隐藏" : "显示"}${module.label}`} /></label>
+                          <div className="layout-module-nav-settings">
+                            <label className="layout-module-nav-toggle"><input type="checkbox" checked={profile.moduleNavigation[key]} onChange={(event) => setModuleNavigation(key, event.target.checked)} aria-label={`${profile.moduleNavigation[key] ? "从导航栏移除" : "在导航栏显示"}${module.label}`} /><span>导航栏</span></label>
+                            <label className="layout-module-label-field"><span>导航名称</span><input value={profile.moduleLabels[key]} onChange={(event) => setModuleLabel(key, event.target.value)} maxLength={30} aria-label={`${module.label}的导航名称`} /></label>
+                          </div>
+                          <label className="layout-module-visibility"><span>{fixed ? "固定显示" : profile.modules[key] ? "页面显示" : "页面隐藏"}</span><input type="checkbox" checked={fixed || profile.modules[key]} disabled={fixed} onChange={(event) => setModule(key, event.target.checked)} aria-label={`${profile.modules[key] ? "隐藏" : "显示"}${module.label}`} /></label>
                           <div className="layout-module-order"><button type="button" disabled={fixed || index === 1} aria-label={`上移${module.label}`} onClick={() => moveModule(key, -1)}>↑</button><button type="button" disabled={fixed || index === profile.moduleOrder.length - 1} aria-label={`下移${module.label}`} onClick={() => moveModule(key, 1)}>↓</button></div>
                         </li>
                       );

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { headers } from "next/headers";
 import { readProfile } from "@/lib/db";
-import { PROFILE_MODULES, type PortfolioContentItem, type PortfolioModuleKey } from "@/lib/profile";
+import { type PortfolioContentItem, type PortfolioModuleKey } from "@/lib/profile";
 import { getVisitorVisitKey, recordVisitorVisit, visitContextFromHeaders } from "@/lib/radar";
 import { Glyph } from "@/components/glyph";
 import { HighlightCarousel } from "@/components/highlight-carousel";
@@ -132,7 +132,6 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     reviews: "#recommendations",
     contact: "#contact",
   };
-  const moduleLabels = new Map(PROFILE_MODULES.map(({ key, label }) => [key, label]));
   const hasSection: Record<PortfolioModuleKey, boolean> = {
     intro: true,
     highlights: true,
@@ -150,8 +149,8 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     contact: true,
   };
   const navItems = profile.moduleOrder
-    .filter((key) => modules[key] && hasSection[key])
-    .map((key) => ({ key, label: moduleLabels.get(key) ?? key, href: sectionAnchors[key] }));
+    .filter((key) => profile.moduleNavigation[key] && modules[key] && hasSection[key])
+    .map((key) => ({ key, label: profile.moduleLabels[key], href: sectionAnchors[key] }));
   const sectionOrder = (key: PortfolioModuleKey) => ({ order: profile.moduleOrder.indexOf(key) });
   const socialItems = [
     ...profile.socialLinks,

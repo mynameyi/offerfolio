@@ -821,12 +821,17 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
 .admin-workspace-main, .content-settings-panel { min-width: 0; }
 .layout-panel { padding-bottom: 12px; }
 .layout-module-list { margin: 0; padding: 0; list-style: none; }
-.layout-module-row { min-height: 67px; padding: 10px 3px; display: grid; grid-template-columns: 35px minmax(0, 1fr) 86px 66px; align-items: center; gap: 12px; border-top: 1px solid #e7e9e2; }
+.layout-module-row { min-height: 74px; padding: 10px 3px; display: grid; grid-template-columns: 35px minmax(0, 1fr) minmax(230px, 290px) 82px 66px; align-items: center; gap: 12px; border-top: 1px solid #e7e9e2; }
 .layout-module-row.is-fixed { background: #f5f5ef; }
 .layout-module-index { color: #9aa49b; font-family: Georgia, serif; font-size: 14px; }
 .layout-module-copy strong, .layout-module-copy small { display: block; }
 .layout-module-copy strong { color: #394b40; font-size: 11px; font-weight: 650; }
 .layout-module-copy small { margin-top: 4px; color: #919b92; font-size: 9px; line-height: 1.5; }
+.layout-module-nav-settings { min-width: 0; display: flex; align-items: center; gap: 10px; }
+.layout-module-nav-toggle { display: flex; flex: 0 0 auto; align-items: center; gap: 5px; color: #77847b; font-size: 9px; white-space: nowrap; }
+.layout-module-nav-toggle input { width: 14px; height: 14px; margin: 0; accent-color: #5f8067; cursor: pointer; }
+.layout-module-label-field { min-width: 0; flex: 1; display: grid; gap: 4px; color: #89948b; font-size: 8px; }
+.layout-module-label-field input { width: 100%; min-width: 0; height: 29px; padding: 0 7px; border: 1px solid #dfe3dc; border-radius: 3px; color: #46564b; background: #fffefa; font-size: 9px; }
 .layout-module-visibility { display: flex; align-items: center; justify-content: flex-end; gap: 8px; color: #77847b; font-size: 9px; white-space: nowrap; }
 .layout-module-visibility input { width: 15px; height: 15px; accent-color: #5f8067; cursor: pointer; }
 .layout-module-visibility input:disabled { cursor: not-allowed; }
@@ -976,6 +981,11 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
   .admin-sidebar-item { min-height: 48px; grid-template-columns: 22px minmax(0, 1fr) 12px; }
   .admin-sidebar-arrow { display: block; }
   .layout-module-row { grid-template-columns: 27px minmax(0, 1fr) 72px 58px; gap: 7px; }
+  .layout-module-index { grid-column: 1; grid-row: 1 / 3; }
+  .layout-module-copy { grid-column: 2; grid-row: 1; }
+  .layout-module-visibility { grid-column: 3; grid-row: 1; }
+  .layout-module-order { grid-column: 4; grid-row: 1; }
+  .layout-module-nav-settings { grid-column: 2 / 5; grid-row: 2; }
   .layout-module-copy small { max-width: 180px; }
   .layout-module-visibility { gap: 5px; font-size: 8px; }
   .layout-module-order button { width: 24px; height: 25px; }

@@ -17,7 +17,11 @@ export const PROFILE_MODULES = [
 
 export type PortfolioModuleKey = (typeof PROFILE_MODULES)[number]["key"];
 export type PortfolioModules = Record<PortfolioModuleKey, boolean>;
+export type PortfolioModuleLabels = Record<PortfolioModuleKey, string>;
 export const DEFAULT_MODULE_ORDER: PortfolioModuleKey[] = PROFILE_MODULES.map(({ key }) => key);
+export const DEFAULT_MODULE_LABELS: PortfolioModuleLabels = Object.fromEntries(
+  PROFILE_MODULES.map(({ key, label }) => [key, label]),
+) as PortfolioModuleLabels;
 
 export type PortfolioContentItem = {
   id: string;
@@ -75,6 +79,8 @@ export type PortfolioProfile = {
   milestones: PortfolioMilestone[];
   modules: PortfolioModules;
   moduleOrder: PortfolioModuleKey[];
+  moduleNavigation: PortfolioModules;
+  moduleLabels: PortfolioModuleLabels;
 };
 
 export const DEFAULT_MODULES: PortfolioModules = {
@@ -190,6 +196,8 @@ export const DEFAULT_PROFILE: PortfolioProfile = {
   ],
   modules: { ...DEFAULT_MODULES },
   moduleOrder: [...DEFAULT_MODULE_ORDER],
+  moduleNavigation: { ...DEFAULT_MODULES },
+  moduleLabels: { ...DEFAULT_MODULE_LABELS },
 };
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -304,6 +312,20 @@ export function normalizeProfile(value: unknown): PortfolioProfile {
     ? input.moduleOrder.filter((key): key is PortfolioModuleKey => typeof key === "string" && allowedOrder.has(key as PortfolioModuleKey) && key !== "intro")
     : [];
   const moduleOrder = ["intro", ...new Set([...requestedOrder, ...DEFAULT_MODULE_ORDER.filter((key) => key !== "intro")])] as PortfolioModuleKey[];
+  const moduleNavigationInput = asRecord(input.moduleNavigation);
+  const moduleNavigation = Object.fromEntries(
+    PROFILE_MODULES.map(({ key }) => [
+      key,
+      typeof moduleNavigationInput[key] === "boolean" ? moduleNavigationInput[key] : DEFAULT_MODULES[key],
+    ]),
+  ) as PortfolioModules;
+  const moduleLabelsInput = asRecord(input.moduleLabels);
+  const moduleLabels = Object.fromEntries(
+    PROFILE_MODULES.map(({ key }) => [
+      key,
+      text(moduleLabelsInput[key], DEFAULT_MODULE_LABELS[key], 30) || DEFAULT_MODULE_LABELS[key],
+    ]),
+  ) as PortfolioModuleLabels;
 
   return {
     displayName: text(input.displayName, DEFAULT_PROFILE.displayName, 80),
@@ -331,5 +353,7 @@ export function normalizeProfile(value: unknown): PortfolioProfile {
     milestones,
     modules,
     moduleOrder,
+    moduleNavigation,
+    moduleLabels,
   };
 }
