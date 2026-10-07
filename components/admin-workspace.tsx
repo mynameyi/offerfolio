@@ -48,9 +48,7 @@ const achievementFields: ContentField[] = [
   { key: "title", label: "奖项 / 证书名称" },
   { key: "period", label: "获得时间" },
   { key: "summary", label: "说明", kind: "textarea", fullWidth: true },
-  { key: "imageUrl", label: "证书图片 URL", kind: "url", fullWidth: true },
-  { key: "url", label: "证明材料链接", kind: "url" },
-  { key: "urlLabel", label: "链接文字" },
+  { key: "imageUrl", label: "证书图片", kind: "image", uploadEndpoint: "/api/admin/achievements/image", fullWidth: true },
 ];
 const blogFields: ContentField[] = [
   { key: "title", label: "文章标题" },
@@ -241,7 +239,7 @@ export function AdminWorkspace({ onLogout }: { onLogout: () => Promise<void> }) 
       case "featuredProjects":
         return <ContentListEditor number="08" title="代表项目" hint="重点介绍项目背景、个人贡献和交付结果。" items={profile.projects} fields={projectFields} onChange={(items) => setCollection("projects", items)} itemLabel="项目" addLabel="添加代表项目" />;
       case "awards":
-        return <ContentListEditor number="09" title="成就与证书" hint="添加奖项、证书、证明材料和证书图片。" items={profile.achievements} fields={achievementFields} onChange={(items) => setCollection("achievements", items)} itemLabel="成就" addLabel="添加成就 / 证书" />;
+        return <ContentListEditor number="09" title="成就与证书" hint="添加奖项、证书图片和简要说明。" items={profile.achievements} fields={achievementFields} onChange={(items) => setCollection("achievements", items)} itemLabel="成就" addLabel="添加成就 / 证书" />;
       case "blogs":
         return <ContentListEditor number="10" title="博客" hint="展示文章标题、摘要、标签和原文链接。" items={profile.blogs} fields={blogFields} onChange={(items) => setCollection("blogs", items)} itemLabel="文章" addLabel="添加文章" />;
       case "talks":
