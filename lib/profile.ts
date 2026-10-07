@@ -19,9 +19,22 @@ export type PortfolioModuleKey = (typeof PROFILE_MODULES)[number]["key"];
 export type PortfolioModules = Record<PortfolioModuleKey, boolean>;
 export type PortfolioModuleLabels = Record<PortfolioModuleKey, string>;
 export const DEFAULT_MODULE_ORDER: PortfolioModuleKey[] = PROFILE_MODULES.map(({ key }) => key);
-export const DEFAULT_MODULE_LABELS: PortfolioModuleLabels = Object.fromEntries(
-  PROFILE_MODULES.map(({ key, label }) => [key, label]),
-) as PortfolioModuleLabels;
+export const DEFAULT_MODULE_LABELS: PortfolioModuleLabels = {
+  intro: "简介",
+  highlights: "高光时刻",
+  showcase: "作品一览",
+  skills: "我能做什么",
+  strengths: "专业能力",
+  education: "学习经历",
+  career: "职业经历",
+  featuredProjects: "代表项目",
+  awards: "荣誉与认证",
+  blogs: "近期文章",
+  talks: "演讲活动",
+  podcasts: "播客与访谈",
+  reviews: "来自合作伙伴的评价",
+  contact: "联系我",
+};
 
 export type PortfolioContentItem = {
   id: string;
@@ -321,10 +334,11 @@ export function normalizeProfile(value: unknown): PortfolioProfile {
   ) as PortfolioModules;
   const moduleLabelsInput = asRecord(input.moduleLabels);
   const moduleLabels = Object.fromEntries(
-    PROFILE_MODULES.map(({ key }) => [
-      key,
-      text(moduleLabelsInput[key], DEFAULT_MODULE_LABELS[key], 30) || DEFAULT_MODULE_LABELS[key],
-    ]),
+    PROFILE_MODULES.map(({ key, label }) => {
+      const savedLabel = text(moduleLabelsInput[key], DEFAULT_MODULE_LABELS[key], 30);
+      const displayLabel = savedLabel === label ? DEFAULT_MODULE_LABELS[key] : savedLabel;
+      return [key, displayLabel || DEFAULT_MODULE_LABELS[key]];
+    }),
   ) as PortfolioModuleLabels;
 
   return {
