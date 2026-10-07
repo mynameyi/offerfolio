@@ -177,8 +177,8 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             <div className="df-greeting-buttons">
               {profile.resumeUrl ? <a className="df-button" href={profile.resumeUrl} {...externalLinkProps(profile.resumeUrl)}>下载简历 <Glyph name="arrow" /></a> : null}
               {modules.contact ? <a className="df-button df-button-outline" href="#contact">联系我 <Glyph name="arrow" /></a> : null}
-              {profile.githubUrl ? <a className="df-social-link" href={profile.githubUrl} title="GitHub" aria-label="GitHub" {...externalLinkProps(profile.githubUrl)}><img src="/brand/github-invertocat.svg" alt="" /></a> : null}
-              {profile.giteeUrl ? <a className="df-social-link" href={profile.giteeUrl} title="Gitee" aria-label="Gitee" {...externalLinkProps(profile.giteeUrl)}><img src="/brand/gitee-mark.svg" alt="" /></a> : null}
+              {profile.githubUrl ? <a className="df-social-link df-social-link-github" href={profile.githubUrl} title="GitHub" aria-label="GitHub" {...externalLinkProps(profile.githubUrl)}><img src="/brand/github-invertocat.svg" alt="" /></a> : null}
+              {profile.giteeUrl ? <a className="df-social-link df-social-link-gitee" href={profile.giteeUrl} title="Gitee" aria-label="Gitee" {...externalLinkProps(profile.giteeUrl)}><img src="/brand/gitee-mark.svg" alt="" /></a> : null}
             </div>
           </div>
           <div className="df-greeting-image">{profile.avatarUrl ? <img className="df-profile-hero-avatar" src={profile.avatarUrl} alt={`${profile.displayName}的头像`} style={{ objectPosition: avatarObjectPosition }} /> : <DeveloperIllustration />}</div>
