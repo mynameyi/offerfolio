@@ -1,26 +1,23 @@
 export const PROFILE_MODULES = [
-  { key: "greeting", label: "自我介绍", description: "首页问候、职业身份与个人简介" },
-  { key: "social", label: "社交链接", description: "首页展示 GitHub、LinkedIn 等个人链接" },
-  { key: "skills", label: "技能矩阵", description: "技能说明与技术图标" },
-  { key: "skillProgress", label: "技能熟练度", description: "展示技术方向和熟练度进度条" },
-  { key: "education", label: "教育背景", description: "学校、专业与学习经历" },
-  { key: "workExperience", label: "工作经历", description: "职位、公司与工作成果" },
-  { key: "openSource", label: "开源项目", description: "GitHub 仓库卡片与开源主页入口" },
-  { key: "bigProjects", label: "精选项目", description: "重点项目、图片与项目链接" },
-  { key: "achievements", label: "成就证书", description: "奖项、证书与荣誉成果" },
-  { key: "blogs", label: "博客文章", description: "文章标题、摘要与原文链接" },
-  { key: "talks", label: "演讲分享", description: "演讲、活动信息与演示材料" },
-  { key: "twitter", label: "Twitter / X", description: "社交动态展示入口" },
-  { key: "podcast", label: "播客", description: "播客节目与收听链接" },
-  { key: "growth", label: "成长时间线", description: "工作、学习或个人成长节点" },
-  { key: "metrics", label: "数据亮点", description: "用数字突出代表性成果" },
-  { key: "recommendations", label: "推荐语", description: "推荐人评价与身份链接" },
-  { key: "resume", label: "简历下载", description: "显示简历 PDF 下载入口" },
-  { key: "contact", label: "联系方式", description: "邮箱、电话、所在地与联系卡片" },
+  { key: "intro", label: "简介", description: "个人介绍、职业身份与简历入口" },
+  { key: "highlights", label: "高光时刻", description: "重要成果与关键节点" },
+  { key: "showcase", label: "作品展示", description: "作品卡片、简介与相关链接" },
+  { key: "skills", label: "技能", description: "技能标签与技术栈" },
+  { key: "strengths", label: "擅长", description: "擅长的技术方向及熟练度" },
+  { key: "education", label: "学习经历", description: "学校、专业与学习经历" },
+  { key: "career", label: "职业经历", description: "职位、公司与工作成果" },
+  { key: "featuredProjects", label: "代表项目", description: "重点项目、图片与项目链接" },
+  { key: "awards", label: "成就与证书", description: "奖项、证书与荣誉成果" },
+  { key: "blogs", label: "博客", description: "文章标题、摘要与原文链接" },
+  { key: "talks", label: "演讲", description: "演讲、活动信息与演示材料" },
+  { key: "podcasts", label: "播客", description: "播客节目与收听链接" },
+  { key: "reviews", label: "推荐语 & 评价", description: "推荐人评价与身份链接" },
+  { key: "contact", label: "联系我", description: "邮箱、电话、所在地与社交链接" },
 ] as const;
 
 export type PortfolioModuleKey = (typeof PROFILE_MODULES)[number]["key"];
 export type PortfolioModules = Record<PortfolioModuleKey, boolean>;
+export const DEFAULT_MODULE_ORDER: PortfolioModuleKey[] = PROFILE_MODULES.map(({ key }) => key);
 
 export type PortfolioContentItem = {
   id: string;
@@ -66,8 +63,8 @@ export type PortfolioProfile = {
   resumeUrl: string;
   skills: string[];
   socialLinks: PortfolioContentItem[];
-  skillProgress: PortfolioContentItem[];
-  openSourceProjects: PortfolioContentItem[];
+  strengths: PortfolioContentItem[];
+  showcaseItems: PortfolioContentItem[];
   projects: PortfolioContentItem[];
   achievements: PortfolioContentItem[];
   blogs: PortfolioContentItem[];
@@ -77,27 +74,41 @@ export type PortfolioProfile = {
   recommendations: PortfolioContentItem[];
   milestones: PortfolioMilestone[];
   modules: PortfolioModules;
+  moduleOrder: PortfolioModuleKey[];
 };
 
 export const DEFAULT_MODULES: PortfolioModules = {
-  greeting: true,
-  social: true,
+  intro: true,
+  highlights: true,
+  showcase: true,
   skills: true,
-  skillProgress: true,
+  strengths: true,
   education: true,
-  workExperience: true,
-  openSource: true,
-  bigProjects: true,
-  achievements: true,
+  career: true,
+  featuredProjects: true,
+  awards: true,
   blogs: true,
   talks: true,
-  twitter: true,
-  podcast: true,
-  growth: true,
-  metrics: true,
-  recommendations: true,
-  resume: true,
+  podcasts: true,
+  reviews: true,
   contact: true,
+};
+
+const LEGACY_MODULE_KEYS: Record<PortfolioModuleKey, string> = {
+  intro: "greeting",
+  highlights: "metrics",
+  showcase: "openSource",
+  skills: "skills",
+  strengths: "skillProgress",
+  education: "education",
+  career: "workExperience",
+  featuredProjects: "bigProjects",
+  awards: "achievements",
+  blogs: "blogs",
+  talks: "talks",
+  podcasts: "podcast",
+  reviews: "recommendations",
+  contact: "contact",
 };
 
 const emptyContentItem = (id: string, title = ""): PortfolioContentItem => ({
@@ -135,12 +146,12 @@ export const DEFAULT_PROFILE: PortfolioProfile = {
   resumeUrl: "",
   skills: ["前端开发", "React", "TypeScript", "Next.js", "Node.js", "产品协作"],
   socialLinks: [],
-  skillProgress: [
+  strengths: [
     { ...emptyContentItem("skill-frontend", "前端开发"), level: 85 },
     { ...emptyContentItem("skill-backend", "后端开发"), level: 70 },
     { ...emptyContentItem("skill-product", "产品与协作"), level: 75 },
   ],
-  openSourceProjects: [],
+  showcaseItems: [],
   projects: [
     {
       ...emptyContentItem("project-evidence", "把项目讲清楚"),
@@ -178,6 +189,7 @@ export const DEFAULT_PROFILE: PortfolioProfile = {
     },
   ],
   modules: { ...DEFAULT_MODULES },
+  moduleOrder: [...DEFAULT_MODULE_ORDER],
 };
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -269,16 +281,29 @@ export function normalizeProfile(value: unknown): PortfolioProfile {
         };
       })
     : DEFAULT_PROFILE.milestones;
-  const modulesInput = asRecord(input.modules);
-  const modules = Object.fromEntries(
-    PROFILE_MODULES.map(({ key }) => [
-      key,
-      typeof modulesInput[key] === "boolean" ? modulesInput[key] : DEFAULT_MODULES[key],
-    ]),
-  ) as PortfolioModules;
   const projectsFallback = DEFAULT_PROFILE.projects;
 
   const location = text(input.location, DEFAULT_PROFILE.location, 160);
+  const modulesInput = asRecord(input.modules);
+  const modules = Object.fromEntries(
+    PROFILE_MODULES.map(({ key }) => {
+      const currentValue = modulesInput[key];
+      const legacyValue = modulesInput[LEGACY_MODULE_KEYS[key]];
+      const visible = key === "intro"
+        ? true
+        : typeof currentValue === "boolean"
+          ? currentValue
+          : typeof legacyValue === "boolean"
+            ? legacyValue
+            : DEFAULT_MODULES[key];
+      return [key, visible];
+    }),
+  ) as PortfolioModules;
+  const allowedOrder = new Set<PortfolioModuleKey>(DEFAULT_MODULE_ORDER);
+  const requestedOrder = Array.isArray(input.moduleOrder)
+    ? input.moduleOrder.filter((key): key is PortfolioModuleKey => typeof key === "string" && allowedOrder.has(key as PortfolioModuleKey) && key !== "intro")
+    : [];
+  const moduleOrder = ["intro", ...new Set([...requestedOrder, ...DEFAULT_MODULE_ORDER.filter((key) => key !== "intro")])] as PortfolioModuleKey[];
 
   return {
     displayName: text(input.displayName, DEFAULT_PROFILE.displayName, 80),
@@ -294,8 +319,8 @@ export function normalizeProfile(value: unknown): PortfolioProfile {
     resumeUrl: safeUrl(input.resumeUrl, DEFAULT_PROFILE.resumeUrl),
     skills: textList(input.skills, DEFAULT_PROFILE.skills, 50),
     socialLinks: normalizeContentItems(input.socialLinks, DEFAULT_PROFILE.socialLinks, 16),
-    skillProgress: normalizeContentItems(input.skillProgress, DEFAULT_PROFILE.skillProgress, 20),
-    openSourceProjects: normalizeContentItems(input.openSourceProjects, DEFAULT_PROFILE.openSourceProjects, 30),
+    strengths: normalizeContentItems(input.strengths ?? input.skillProgress, DEFAULT_PROFILE.strengths, 20),
+    showcaseItems: normalizeContentItems(input.showcaseItems ?? input.openSourceProjects, DEFAULT_PROFILE.showcaseItems, 30),
     projects: normalizeContentItems(input.projects, projectsFallback, 30),
     achievements: normalizeContentItems(input.achievements, DEFAULT_PROFILE.achievements, 30),
     blogs: normalizeContentItems(input.blogs, DEFAULT_PROFILE.blogs, 30),
@@ -305,5 +330,6 @@ export function normalizeProfile(value: unknown): PortfolioProfile {
     recommendations: normalizeContentItems(input.recommendations, DEFAULT_PROFILE.recommendations, 20),
     milestones,
     modules,
+    moduleOrder,
   };
 }

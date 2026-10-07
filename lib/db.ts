@@ -28,6 +28,18 @@ function openDatabase(): CachedDatabase {
       profile_json TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS share_links (
+      token TEXT PRIMARY KEY,
+      label TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL,
+      active INTEGER NOT NULL DEFAULT 1
+    );
+    CREATE TABLE IF NOT EXISTS share_visits (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      token TEXT NOT NULL REFERENCES share_links(token) ON DELETE CASCADE,
+      visited_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS share_visits_token_idx ON share_visits(token, visited_at);
   `);
 
   connection

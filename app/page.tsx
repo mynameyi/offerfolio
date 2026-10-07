@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { readProfile } from "@/lib/db";
+import { PROFILE_MODULES, type PortfolioContentItem, type PortfolioModuleKey } from "@/lib/profile";
 import { Glyph } from "@/components/glyph";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -66,24 +67,72 @@ function DeveloperIllustration({ variant = "greeting" }: { variant?: "greeting" 
   );
 }
 
+function ProjectGrid({ items, emptyText }: { items: PortfolioContentItem[]; emptyText: string }) {
+  if (!items.length) return <div className="df-empty-state">{emptyText}</div>;
+  return (
+    <div className="df-project-grid">
+      {items.map((project) => (
+        <article className="df-project-card" key={project.id}>
+          {project.imageUrl ? <div className="df-project-image"><img src={project.imageUrl} alt={project.title} loading="lazy" /></div> : <div className="df-project-image df-project-image-placeholder"><span>{project.title.slice(0, 1) || "作"}</span></div>}
+          <div className="df-project-body">
+            <p className="df-project-subtitle">{project.subtitle || project.tags.slice(0, 2).join(" · ")}</p>
+            <h3>{project.title}</h3>
+            <p>{project.summary}</p>
+            {project.tags.length ? <div className="df-tag-row">{project.tags.map((tag) => <span key={tag}>{tag}</span>)}</div> : null}
+            <div className="df-project-links">
+              {project.url ? <a href={project.url} {...externalLinkProps(project.url)}>{project.urlLabel || "查看作品"} <Glyph name="arrow" /></a> : null}
+              {project.secondaryUrl ? <a href={project.secondaryUrl} {...externalLinkProps(project.secondaryUrl)}>{project.secondaryLabel || "了解更多"} <Glyph name="arrow" /></a> : null}
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+}
+
 export default function HomePage() {
   const profile = readProfile();
   const { modules } = profile;
   const experience = profile.milestones.filter((item) => item.kind === "experience");
   const education = profile.milestones.filter((item) => item.kind === "education");
   const growth = profile.milestones.filter((item) => item.kind === "growth");
-  const navItems = [
-    { key: "skills", label: "技能专长", href: "#skills", visible: modules.skills },
-    { key: "education", label: "教育背景", href: "#education", visible: modules.education && education.length > 0 },
-    { key: "workExperience", label: "工作经历", href: "#experience", visible: modules.workExperience && experience.length > 0 },
-    { key: "openSource", label: "开源项目", href: "#opensource", visible: modules.openSource },
-    { key: "bigProjects", label: "精选项目", href: "#projects", visible: modules.bigProjects },
-    { key: "achievements", label: "成就证书", href: "#achievements", visible: modules.achievements },
-    { key: "blogs", label: "文章博客", href: "#blogs", visible: modules.blogs },
-    { key: "talks", label: "演讲分享", href: "#talks", visible: modules.talks },
-    { key: "resume", label: "简历", href: "#resume", visible: modules.resume },
-    { key: "contact", label: "联系我", href: "#contact", visible: modules.contact },
-  ].filter((item) => item.visible);
+  const sectionAnchors: Record<PortfolioModuleKey, string> = {
+    intro: "#greeting",
+    highlights: "#highlights",
+    showcase: "#showcase",
+    skills: "#skills",
+    strengths: "#strengths",
+    education: "#education",
+    career: "#experience",
+    featuredProjects: "#projects",
+    awards: "#achievements",
+    blogs: "#blogs",
+    talks: "#talks",
+    podcasts: "#podcast",
+    reviews: "#recommendations",
+    contact: "#contact",
+  };
+  const moduleLabels = new Map(PROFILE_MODULES.map(({ key, label }) => [key, label]));
+  const hasSection: Record<PortfolioModuleKey, boolean> = {
+    intro: true,
+    highlights: profile.metrics.length > 0 || growth.length > 0,
+    showcase: true,
+    skills: true,
+    strengths: profile.strengths.length > 0,
+    education: education.length > 0,
+    career: experience.length > 0,
+    featuredProjects: true,
+    awards: true,
+    blogs: true,
+    talks: true,
+    podcasts: true,
+    reviews: profile.recommendations.length > 0,
+    contact: true,
+  };
+  const navItems = profile.moduleOrder
+    .filter((key) => modules[key] && hasSection[key])
+    .map((key) => ({ key, label: moduleLabels.get(key) ?? key, href: sectionAnchors[key] }));
+  const sectionOrder = (key: PortfolioModuleKey) => ({ order: profile.moduleOrder.indexOf(key) });
   const socialItems = [
     ...profile.socialLinks,
     ...(profile.githubUrl ? [{ id: "profile-github", title: "GitHub", url: profile.githubUrl }] : []),
@@ -99,26 +148,32 @@ export default function HomePage() {
         <nav className="df-nav" aria-label="主导航">{navItems.map((item) => <a key={item.key} href={item.href}>{item.label}</a>)}<ThemeToggle /></nav>
       </header>
 
-      {modules.greeting ? (
-        <section className="df-main df-greeting" id="greeting">
+      <div className="df-section-stack">
+      {modules.intro ? (
+        <section className="df-main df-greeting" id="greeting" style={sectionOrder("intro")}>
           <div className="df-greeting-copy">
             <p className="df-greeting-title">{profile.headline || `你好，我是${profile.displayName}`} <span className="df-wave" aria-hidden="true">👋</span></p>
             <p className="df-greeting-subtitle">{profile.introduction}</p>
             <p className="df-greeting-role">{profile.title}</p>
             <div className="df-greeting-buttons">
-              {modules.resume && profile.resumeUrl ? <a className="df-button" href={profile.resumeUrl} {...externalLinkProps(profile.resumeUrl)}>下载简历 <Glyph name="arrow" /></a> : null}
+              {profile.resumeUrl ? <a className="df-button" href={profile.resumeUrl} {...externalLinkProps(profile.resumeUrl)}>下载简历 <Glyph name="arrow" /></a> : null}
               {modules.contact ? <a className="df-button df-button-outline" href="#contact">联系我 <Glyph name="arrow" /></a> : null}
             </div>
-            {modules.social && socialItems.length ? <div className="df-social-row" aria-label="社交链接">{socialItems.map((item) => <a key={item.id} href={item.url} aria-label={item.title} title={item.title} {...externalLinkProps(item.url)}><span>{item.title === "GitHub" ? "GH" : item.title.slice(0, 2).toUpperCase()}</span></a>)}</div> : null}
           </div>
           <div className="df-greeting-image"><DeveloperIllustration /></div>
         </section>
       ) : null}
 
-      {modules.metrics && profile.metrics.length ? <section className="df-metrics-strip" aria-label="数据亮点"><div className="df-metrics-grid">{profile.metrics.map((metric) => <article key={metric.id}><strong>{metric.value}</strong><span>{metric.title}</span>{metric.summary ? <small>{metric.summary}</small> : null}</article>)}</div></section> : null}
+      {modules.highlights && (profile.metrics.length > 0 || growth.length > 0) ? (
+        <section className="df-main df-content-section df-highlights-section" id="highlights" style={sectionOrder("highlights")}>
+          <SectionHeading eyebrow="高光时刻" title="关键成果与节点" subtitle="用具体结果和重要经历呈现一路积累的专业价值。" />
+          {profile.metrics.length ? <div className="df-metrics-grid">{profile.metrics.map((metric) => <article key={metric.id}><strong>{metric.value}</strong><span>{metric.title}</span>{metric.summary ? <small>{metric.summary}</small> : null}</article>)}</div> : null}
+          {growth.length ? <div className="df-growth-list">{growth.map((item) => <article key={item.id}><span>{item.period}</span><i /><div><h3>{item.title}</h3><p>{item.organization}</p><small>{item.summary}</small></div></article>)}</div> : null}
+        </section>
+      ) : null}
 
       {modules.skills ? (
-        <section className="df-main df-skills" id="skills">
+        <section className="df-main df-skills" id="skills" style={sectionOrder("skills")}>
           <div className="df-illustration-side"><DeveloperIllustration variant="skills" /></div>
           <div className="df-section-content">
             <SectionHeading eyebrow="技能专长" title="我能做什么" subtitle="持续探索技术边界，将想法变成可靠、好用的产品体验。" />
@@ -128,86 +183,74 @@ export default function HomePage() {
         </section>
       ) : null}
 
-      {modules.skillProgress && profile.skillProgress.length ? (
-        <section className="df-main df-progress-section" id="skill-progress">
-          <div className="df-progress-copy"><SectionHeading eyebrow="技术方向" title="专业能力" subtitle="将长期实践的技术领域与项目经验直观呈现。" /><div className="df-progress-list">{profile.skillProgress.map((item) => <div className="df-progress-item" key={item.id}><div><span>{item.title}</span><strong>{item.level}%</strong></div><span className="df-progress-track"><i style={{ width: `${item.level}%` }} /></span></div>)}</div></div>
+      {modules.strengths && profile.strengths.length ? (
+        <section className="df-main df-progress-section" id="strengths" style={sectionOrder("strengths")}>
+          <div className="df-progress-copy"><SectionHeading eyebrow="擅长" title="专业能力" subtitle="将长期实践的技术领域与项目经验直观呈现。" /><div className="df-progress-list">{profile.strengths.map((item) => <div className="df-progress-item" key={item.id}><div><span>{item.title}</span><strong>{item.level}%</strong></div><span className="df-progress-track"><i style={{ width: `${item.level}%` }} /></span></div>)}</div></div>
           <div className="df-illustration-side"><DeveloperIllustration variant="progress" /></div>
         </section>
       ) : null}
 
       {modules.education && education.length ? (
-        <section className="df-main df-content-section" id="education">
+        <section className="df-main df-content-section" id="education" style={sectionOrder("education")}>
           <SectionHeading eyebrow="教育背景" title="学习经历" subtitle="专业训练、持续学习与实践积累。" />
           <div className="df-education-grid">{education.map((item) => <article className="df-education-card" key={item.id}><div className="df-institution-mark">{item.organization.slice(0, 1) || "学"}</div><div><p className="df-card-period">{item.period}</p><h3>{item.organization}</h3><h4>{item.title}</h4><p>{item.summary}</p></div></article>)}</div>
         </section>
       ) : null}
 
-      {modules.workExperience && experience.length ? (
-        <section className="df-main df-content-section df-experience-section" id="experience">
+      {modules.career && experience.length ? (
+        <section className="df-main df-content-section df-experience-section" id="experience" style={sectionOrder("career")}>
           <SectionHeading eyebrow="工作经历" title="职业经历" subtitle="承担责任、解决问题，并与团队一起交付有价值的成果。" />
           <div className="df-experience-list">{experience.map((item) => <article className="df-experience-card" key={item.id}><div className="df-company-mark">{item.organization.slice(0, 1) || "工"}</div><div className="df-experience-content"><div className="df-experience-title"><div><h3>{item.title}</h3><p>{item.organization}</p></div><span>{item.period}</span></div><p>{item.summary}</p></div></article>)}</div>
         </section>
       ) : null}
 
-      {modules.openSource ? (
-        <section className="df-main df-content-section" id="opensource">
-          <SectionHeading eyebrow="开源项目" title="开源作品" subtitle="在公开代码与协作中持续学习、构建和分享。" />
-          {profile.openSourceProjects.length ? <div className="df-repo-grid">{profile.openSourceProjects.map((repo) => <article className="df-repo-card" key={repo.id}><div className="df-repo-heading"><span className="df-repo-icon">⌘</span><h3>{repo.url ? <a href={repo.url} {...externalLinkProps(repo.url)}>{repo.title}</a> : repo.title}</h3><span className="df-public-badge">公开</span></div><p>{repo.summary}</p><div className="df-repo-meta">{repo.language ? <span><i className="df-language-dot" />{repo.language}</span> : null}{repo.stars ? <span>☆ {repo.stars}</span> : null}{repo.forks ? <span>⑂ {repo.forks}</span> : null}</div>{repo.tags.length ? <div className="df-tag-row">{repo.tags.map((tag) => <span key={tag}>{tag}</span>)}</div> : null}</article>)}</div> : <div className="df-empty-state">尚未添加开源仓库，可在管理后台填写仓库名称、描述与 GitHub 地址。</div>}
-          {profile.githubUrl ? <a className="df-button df-more-button" href={profile.githubUrl} {...externalLinkProps(profile.githubUrl)}>查看更多 GitHub 项目 <Glyph name="arrow" /></a> : null}
+      {modules.showcase ? (
+        <section className="df-main df-content-section" id="showcase" style={sectionOrder("showcase")}>
+          <SectionHeading eyebrow="作品展示" title="作品一览" subtitle="通过可访问的作品和相关材料，了解实际构建与交付内容。" />
+          <ProjectGrid items={profile.showcaseItems} emptyText="尚未添加展示作品，可在后台补充作品介绍与链接。" />
         </section>
       ) : null}
 
-      {modules.bigProjects ? (
-        <section className="df-main df-content-section df-projects-section" id="projects">
+      {modules.featuredProjects ? (
+        <section className="df-main df-content-section df-projects-section" id="projects" style={sectionOrder("featuredProjects")}>
           <SectionHeading eyebrow="精选项目" title="代表项目" subtitle="参与设计与构建的项目，以及其中的思考和成果。" />
-          {profile.projects.length ? <div className="df-project-grid">{profile.projects.map((project) => <article className="df-project-card" key={project.id}>{project.imageUrl ? <div className="df-project-image"><img src={project.imageUrl} alt={project.title} loading="lazy" /></div> : <div className="df-project-image df-project-image-placeholder"><span>{project.title.slice(0, 1) || "项"}</span></div>}<div className="df-project-body"><p className="df-project-subtitle">{project.subtitle || project.tags.slice(0, 2).join(" · ")}</p><h3>{project.title}</h3><p>{project.summary}</p>{project.tags.length ? <div className="df-tag-row">{project.tags.map((tag) => <span key={tag}>{tag}</span>)}</div> : null}<div className="df-project-links">{project.url ? <a href={project.url} {...externalLinkProps(project.url)}>{project.urlLabel || "查看项目"} <Glyph name="arrow" /></a> : null}{project.secondaryUrl ? <a href={project.secondaryUrl} {...externalLinkProps(project.secondaryUrl)}>{project.secondaryLabel || "了解更多"} <Glyph name="arrow" /></a> : null}</div></div></article>)}</div> : <div className="df-empty-state">尚未添加项目，可在管理后台添加介绍、图片与链接。</div>}
+          <ProjectGrid items={profile.projects} emptyText="尚未添加代表项目，可在后台添加介绍、图片与链接。" />
         </section>
       ) : null}
 
-      {modules.achievements ? (
-        <section className="df-main df-content-section" id="achievements">
+      {modules.awards ? (
+        <section className="df-main df-content-section" id="achievements" style={sectionOrder("awards")}>
           <SectionHeading eyebrow="成就与证书" title="荣誉与认证" subtitle="奖项、认证、公开成果以及值得记录的专业实践。" />
           {profile.achievements.length ? <div className="df-achievement-grid">{profile.achievements.map((item) => <article className="df-achievement-card" key={item.id}>{item.imageUrl ? <img src={item.imageUrl} alt={item.title} loading="lazy" /> : <div className="df-achievement-placeholder">✦</div>}<div><p className="df-card-period">{item.period}</p><h3>{item.title}</h3><p>{item.summary}</p><div className="df-project-links">{item.url ? <a href={item.url} {...externalLinkProps(item.url)}>{item.urlLabel || "查看证明"} <Glyph name="arrow" /></a> : null}{item.secondaryUrl ? <a href={item.secondaryUrl} {...externalLinkProps(item.secondaryUrl)}>{item.secondaryLabel || "相关链接"} <Glyph name="arrow" /></a> : null}</div></div></article>)}</div> : <div className="df-empty-state">还没有添加证书或成就。可先关闭此模块，稍后再补充。</div>}
         </section>
       ) : null}
 
       {modules.blogs ? (
-        <section className="df-main df-content-section df-blogs-section" id="blogs">
+        <section className="df-main df-content-section df-blogs-section" id="blogs" style={sectionOrder("blogs")}>
           <SectionHeading eyebrow="文章博客" title="近期文章" subtitle="写下实践经验，整理值得分享的技术思考。" />
           {profile.blogs.length ? <div className="df-blog-grid">{profile.blogs.map((blog) => <article className="df-blog-card" key={blog.id}><div className="df-blog-card-top"><span>文章</span><span>{blog.period}</span></div><h3>{blog.title}</h3><p>{blog.summary}</p>{blog.tags.length ? <div className="df-tag-row">{blog.tags.map((tag) => <span key={tag}>{tag}</span>)}</div> : null}{blog.url ? <a href={blog.url} {...externalLinkProps(blog.url)}>{blog.urlLabel || "阅读文章"} <Glyph name="arrow" /></a> : null}</article>)}</div> : <div className="df-empty-state">尚未添加文章，可在后台添加文章标题、摘要和链接。</div>}
         </section>
       ) : null}
 
       {modules.talks ? (
-        <section className="df-main df-content-section" id="talks">
+        <section className="df-main df-content-section" id="talks" style={sectionOrder("talks")}>
           <SectionHeading eyebrow="演讲与分享" title="演讲活动" subtitle="分享实践经验，也从交流中获得新的启发。" />
           {profile.talks.length ? <div className="df-talk-list">{profile.talks.map((talk) => <article className="df-talk-card" key={talk.id}><div className="df-talk-icon">◉</div><div className="df-talk-copy"><p className="df-card-period">{talk.period}{talk.organization ? ` · ${talk.organization}` : ""}</p><h3>{talk.title}</h3><p>{talk.summary || talk.subtitle}</p><div className="df-project-links">{talk.url ? <a href={talk.url} {...externalLinkProps(talk.url)}>{talk.urlLabel || "活动详情"} <Glyph name="arrow" /></a> : null}{talk.secondaryUrl ? <a href={talk.secondaryUrl} {...externalLinkProps(talk.secondaryUrl)}>{talk.secondaryLabel || "演示文稿"} <Glyph name="arrow" /></a> : null}</div></div></article>)}</div> : <div className="df-empty-state">尚未添加演讲或活动，可在后台补充信息。</div>}
         </section>
       ) : null}
 
-      {modules.twitter ? (
-        <section className="df-main df-twitter-section" id="twitter"><SectionHeading eyebrow="社交动态" title="保持联系" subtitle="关注我的公开动态与近期分享。" />{profile.twitterHandle ? <a className="df-twitter-card" href={`https://x.com/${profile.twitterHandle}`} target="_blank" rel="noreferrer"><span className="df-twitter-mark">𝕏</span><span><strong>@{profile.twitterHandle}</strong><small>在 X 查看近期动态</small></span><Glyph name="arrow" /></a> : <p className="df-empty-state">在后台填写 Twitter / X 用户名后，这里会显示个人动态入口。</p>}</section>
+      {modules.podcasts ? (
+        <section className="df-main df-content-section df-podcast-section" id="podcast" style={sectionOrder("podcasts")}><SectionHeading eyebrow="播客" title="播客与访谈" subtitle="关于技术实践、产品构建与成长经历的交流。" />{profile.podcasts.length ? <div className="df-podcast-grid">{profile.podcasts.map((episode) => <article className="df-podcast-card" key={episode.id}><div className="df-podcast-icon">♫</div><div><h3>{episode.title}</h3><p>{episode.summary}</p>{episode.embedUrl ? <iframe src={episode.embedUrl} title={`${episode.title} 播放器`} loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" referrerPolicy="strict-origin-when-cross-origin" /> : episode.url ? <a href={episode.url} {...externalLinkProps(episode.url)}>{episode.urlLabel || "收听节目"} <Glyph name="arrow" /></a> : null}</div></article>)}</div> : <div className="df-empty-state">尚未添加播客节目，可在后台填写播放或收听链接。</div>}</section>
       ) : null}
 
-      {modules.podcast ? (
-        <section className="df-main df-content-section df-podcast-section" id="podcast"><SectionHeading eyebrow="播客节目" title="播客与访谈" subtitle="关于技术实践、产品构建与成长经历的交流。" />{profile.podcasts.length ? <div className="df-podcast-grid">{profile.podcasts.map((episode) => <article className="df-podcast-card" key={episode.id}><div className="df-podcast-icon">♫</div><div><h3>{episode.title}</h3><p>{episode.summary}</p>{episode.embedUrl ? <iframe src={episode.embedUrl} title={`${episode.title} 播放器`} loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" referrerPolicy="strict-origin-when-cross-origin" /> : episode.url ? <a href={episode.url} {...externalLinkProps(episode.url)}>{episode.urlLabel || "收听节目"} <Glyph name="arrow" /></a> : null}</div></article>)}</div> : <div className="df-empty-state">尚未添加播客节目，可在后台填写播放或收听链接。</div>}</section>
-      ) : null}
-
-      {modules.growth && growth.length ? (
-        <section className="df-main df-content-section df-growth-section" id="growth"><SectionHeading eyebrow="成长时间线" title="一路走来的节点" subtitle="学习、实践和职业成长中的重要片段。" /><div className="df-growth-list">{growth.map((item) => <article key={item.id}><span>{item.period}</span><i /><div><h3>{item.title}</h3><p>{item.organization}</p><small>{item.summary}</small></div></article>)}</div></section>
-      ) : null}
-
-      {modules.recommendations && profile.recommendations.length ? (
-        <section className="df-main df-content-section df-recommendations-section" id="recommendations"><SectionHeading eyebrow="推荐语" title="来自合作伙伴的评价" subtitle="共同工作过的人，最了解合作过程与实际贡献。" /><div className="df-recommendation-grid">{profile.recommendations.map((item) => <blockquote className="df-recommendation-card" key={item.id}><span aria-hidden="true">“</span><p>{item.summary}</p><footer><strong>{item.title}</strong><small>{item.organization}</small>{item.url ? <a href={item.url} {...externalLinkProps(item.url)}>查看身份 <Glyph name="arrow" /></a> : null}</footer></blockquote>)}</div></section>
-      ) : null}
-
-      {modules.resume ? (
-        <section className="df-resume-section" id="resume"><div className="df-resume-inner"><div><p className="df-eyebrow">简历下载</p><h2>想进一步了解我的经历？</h2><p>查看完整履历、项目背景与专业经验。</p></div>{profile.resumeUrl ? <a className="df-button" href={profile.resumeUrl} {...externalLinkProps(profile.resumeUrl)}>下载简历 <Glyph name="arrow" /></a> : <span className="df-resume-note">请在管理后台添加简历 PDF 链接</span>}</div></section>
+      {modules.reviews && profile.recommendations.length ? (
+        <section className="df-main df-content-section df-recommendations-section" id="recommendations" style={sectionOrder("reviews")}><SectionHeading eyebrow="推荐语 & 评价" title="来自合作伙伴的评价" subtitle="共同工作过的人，最了解合作过程与实际贡献。" /><div className="df-recommendation-grid">{profile.recommendations.map((item) => <blockquote className="df-recommendation-card" key={item.id}><span aria-hidden="true">“</span><p>{item.summary}</p><footer><strong>{item.title}</strong><small>{item.organization}</small>{item.url ? <a href={item.url} {...externalLinkProps(item.url)}>查看身份 <Glyph name="arrow" /></a> : null}</footer></blockquote>)}</div></section>
       ) : null}
 
       {modules.contact ? (
-        <section className="df-main df-contact-section" id="contact"><SectionHeading eyebrow="联系方式" title="联系我" subtitle="如需了解项目细节或工作经历，可通过邮件或社交平台联系。" /><div className="df-contact-card"><div className="df-contact-avatar">{profile.displayName.slice(0, 1) || "你"}</div><div className="df-contact-info"><h3>{profile.displayName}</h3><p>{profile.title}</p><div className="df-contact-details">{profile.email ? <a href={`mailto:${profile.email}`}>{profile.email}</a> : null}{profile.phone ? <a href={`tel:${profile.phone}`}>{profile.phone}</a> : null}{profile.location ? <span><Glyph name="pin" />{profile.location}</span> : null}</div>{modules.social && socialItems.length ? <div className="df-contact-social">{socialItems.map((item) => <a href={item.url} key={`contact-${item.id}`} {...externalLinkProps(item.url)}>{item.title}</a>)}</div> : null}</div></div></section>
+        <section className="df-main df-contact-section" id="contact" style={sectionOrder("contact")}><SectionHeading eyebrow="联系方式" title="联系我" subtitle="如需了解项目细节或工作经历，可通过邮件或社交平台联系。" /><div className="df-contact-card"><div className="df-contact-avatar">{profile.displayName.slice(0, 1) || "你"}</div><div className="df-contact-info"><h3>{profile.displayName}</h3><p>{profile.title}</p><div className="df-contact-details">{profile.email ? <a href={`mailto:${profile.email}`}>{profile.email}</a> : null}{profile.phone ? <a href={`tel:${profile.phone}`}>{profile.phone}</a> : null}{profile.location ? <span><Glyph name="pin" />{profile.location}</span> : null}</div>{socialItems.length ? <div className="df-contact-social">{socialItems.map((item) => <a href={item.url} key={`contact-${item.id}`} {...externalLinkProps(item.url)}>{item.title}</a>)}</div> : null}</div></div></section>
       ) : null}
+      </div>
 
       <footer className="df-footer"><p>用真实作品与清晰经历，展示每一份专业价值。</p><span>© {new Date().getFullYear()} {profile.displayName} · EckyStudio</span></footer>
       <a className="df-back-to-top" href="#top" aria-label="返回顶部">↑</a>
