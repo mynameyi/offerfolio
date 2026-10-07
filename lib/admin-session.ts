@@ -3,7 +3,7 @@ import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 export const ADMIN_COOKIE_NAME = "offerfolio_admin";
-export const ADMIN_SESSION_SECONDS = 60 * 60 * 12;
+export const ADMIN_SESSION_SECONDS = 60 * 60;
 
 export function configuredAdminPassword(): string | null {
   const password = process.env.ADMIN_PASSWORD?.trim();
