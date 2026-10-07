@@ -570,7 +570,7 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
 .df-logo { display: flex; align-items: center; flex: 0 0 auto; font-size: 22px; font-weight: 700; line-height: 1; }
 .df-logo-name { padding: 0 8px; color: var(--df-purple); }
 .df-logo-muted { color: var(--df-subtitle); font-family: Georgia, serif; font-weight: 400; }
-.df-logo-avatar { width: 30px; height: 30px; margin-right: 9px; display: block; border: 1px solid #e7d8f1; border-radius: 50%; object-fit: cover; object-position: center 30%; }
+.df-logo-avatar { width: 30px; height: 30px; margin-right: 9px; display: block; border: 1px solid #e7d8f1; border-radius: 50%; object-fit: cover; object-position: center top; }
 .df-nav { position: relative; display: flex; align-items: center; gap: 2px; }
 .df-nav { max-width: calc(100% - 180px); overflow-x: auto; scrollbar-width: none; }
 .df-nav::-webkit-scrollbar { display: none; }
@@ -739,7 +739,7 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
 .df-contact-section > .df-section-heading { text-align: center; }
 .df-contact-card { width: min(100%, 750px); min-height: 220px; padding: 29px; display: flex; align-items: center; gap: 27px; border: 1px solid var(--df-border); border-radius: 6px; background: var(--df-card); box-shadow: 0 8px 25px var(--df-shadow); }
 .df-contact-avatar { width: 110px; height: 110px; flex: 0 0 auto; display: grid; place-items: center; border: 8px solid #f1eaf6; border-radius: 50%; color: #fff; background: linear-gradient(145deg, #9f78bc, #55198b); font-family: Georgia, "Noto Serif SC", serif; font-size: 46px; }
-.df-contact-avatar img { width: 100%; height: 100%; display: block; border-radius: inherit; object-fit: cover; object-position: center 30%; }
+.df-contact-avatar img { width: 100%; height: 100%; display: block; border-radius: inherit; object-fit: cover; object-position: center top; }
 .df-contact-info { min-width: 0; }
 .df-contact-info > .df-card-period { color: var(--df-purple); }
 .df-contact-info h3 { margin: 0; color: var(--df-text); font-size: 23px; }
