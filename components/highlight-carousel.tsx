@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { formatYearMonth, type PortfolioContentItem } from "@/lib/profile";
+import { formatHighlightTag, type PortfolioContentItem } from "@/lib/profile";
 
 function isVideoFile(url: string) {
   return /\.(mp4|webm|ogg|ogv|mov|m4v)(\?.*)?$/i.test(url);
@@ -30,14 +30,14 @@ export function HighlightCarousel({ items }: { items: PortfolioContentItem[] }) 
       <div className="df-highlight-carousel">
         <div className={`df-highlight-track${visibleItems.length > 3 ? " df-highlight-track-many" : " df-highlight-track-static"}`}>
           {visibleItems.map((item) => {
-            const dateLabel = formatYearMonth(item.period);
+            const tagLabel = formatHighlightTag(item.period);
             return (
               <button
                 className="df-highlight-card"
                 type="button"
                 key={item.id}
                 onClick={() => setActiveItem(item)}
-                aria-label={`查看高光时刻${dateLabel ? ` ${dateLabel}` : ""}：${item.title || "媒体内容"}`}
+                aria-label={`查看高光时刻${tagLabel ? ` ${tagLabel}` : ""}：${item.title || "媒体内容"}`}
               >
                 {item.imageUrl
                   ? <img src={item.imageUrl} alt="" loading="lazy" />
@@ -45,7 +45,7 @@ export function HighlightCarousel({ items }: { items: PortfolioContentItem[] }) 
                     ? <video src={item.embedUrl} muted playsInline preload="metadata" />
                     : <span className="df-highlight-card-placeholder" aria-hidden="true" />}
                 {item.embedUrl ? <span className="df-highlight-play" aria-hidden="true">▶</span> : null}
-                {dateLabel ? <time className="df-highlight-date" dateTime={item.period.replace(".", "-")}>{dateLabel}</time> : null}
+                {tagLabel ? <span className="df-highlight-date">{tagLabel}</span> : null}
               </button>
             );
           })}
@@ -63,7 +63,7 @@ export function HighlightCarousel({ items }: { items: PortfolioContentItem[] }) 
                 : activeItem.imageUrl ? <img src={activeItem.imageUrl} alt={activeItem.title} /> : null}
             </div>
             <div className="df-highlight-modal-copy">
-              {formatYearMonth(activeItem.period) ? <time className="df-highlight-modal-date" dateTime={activeItem.period.replace(".", "-")}>{formatYearMonth(activeItem.period)}</time> : null}
+              {formatHighlightTag(activeItem.period) ? <span className="df-highlight-modal-date">{formatHighlightTag(activeItem.period)}</span> : null}
               {activeItem.summary ? <p>{activeItem.summary}</p> : null}
             </div>
           </section>

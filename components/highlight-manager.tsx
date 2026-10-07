@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, type ChangeEvent } from "react";
-import { formatYearMonth, type PortfolioContentItem } from "@/lib/profile";
+import { type PortfolioContentItem } from "@/lib/profile";
 import { Glyph } from "@/components/glyph";
 import { adminFetch } from "@/components/admin-fetch";
 
@@ -96,7 +96,7 @@ export function HighlightManager({ items, onChange }: { items: PortfolioContentI
       <div className="highlight-add-form">
         <label className="field-label">图片或视频<input ref={fileInputRef} className="field-input highlight-file-input" type="file" accept={ACCEPTED_MEDIA} onChange={selectFile} /></label>
         {file ? <p className="highlight-file-name">{file.name}</p> : null}
-        <label className="field-label">日期（年月，可选）<input className="field-input" type="month" value={period} onChange={(event) => setPeriod(event.target.value)} /></label>
+        <label className="field-label">标签（可选）<input className="field-input" type="text" value={period} onChange={(event) => setPeriod(event.target.value)} maxLength={100} placeholder="如 2025.08、广东省、获奖" /></label>
         <label className="field-label">描述<textarea className="field-input field-textarea" value={description} onChange={(event) => setDescription(event.target.value)} maxLength={800} rows={3} placeholder="简单介绍这个瞬间" /></label>
         {error ? <p className="highlight-upload-error" role="alert">{error}</p> : null}
         <button className="button button-quiet highlight-add-button" type="button" onClick={addHighlight} disabled={!file || !description.trim() || busy || items.length >= 20}>
@@ -111,7 +111,7 @@ export function HighlightManager({ items, onChange }: { items: PortfolioContentI
               {item.imageUrl ? <img src={item.imageUrl} alt="" /> : item.embedUrl ? <video src={item.embedUrl} muted playsInline preload="metadata" /> : <span aria-hidden="true" />}
             </div>
             <div className="highlight-list-fields">
-              <label className="field-label">日期<input className="field-input" type="month" value={formatYearMonth(item.period).replace(".", "-")} onChange={(event) => updatePeriod(item.id, event.target.value)} /></label>
+              <label className="field-label">标签<input className="field-input" type="text" value={item.period || ""} onChange={(event) => updatePeriod(item.id, event.target.value)} maxLength={100} placeholder="可填时间、地点或其他说明" /></label>
               <label className="field-label highlight-description-field">描述<textarea className="field-input field-textarea" value={item.summary || item.title} onChange={(event) => updateDescription(item.id, event.target.value)} maxLength={800} rows={2} /></label>
             </div>
             <div className="highlight-list-actions">

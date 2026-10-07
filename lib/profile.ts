@@ -339,9 +339,10 @@ export function showcaseMediaItems(item: PortfolioContentItem): PortfolioMediaIt
   ];
 }
 
-export function formatYearMonth(value: string): string {
-  const match = /^(\d{4})[-.](0[1-9]|1[0-2])$/.exec(value.trim());
-  return match ? `${match[1]}.${match[2]}` : "";
+export function formatHighlightTag(value: string): string {
+  const tag = value.trim();
+  const legacyMonth = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(tag);
+  return legacyMonth ? `${legacyMonth[1]}.${legacyMonth[2]}` : tag;
 }
 
 export function normalizeProfile(value: unknown): PortfolioProfile {
