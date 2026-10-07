@@ -163,7 +163,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   return (
     <main className="developerfolio-site" data-theme="light">
       <header className="df-header" id="top">
-        <Link href="/" className="df-logo" aria-label="OfferFolio 首页"><span className="df-logo-muted">&lt;</span><span>{profile.displayName}</span><span className="df-logo-muted">/&gt;</span></Link>
+        <Link href="/" className="df-logo" aria-label="OfferFolio 首页">{profile.avatarUrl ? <img className="df-logo-avatar" src={profile.avatarUrl} alt="" /> : null}<span className="df-logo-muted">&lt;</span><span className="df-logo-name">{profile.displayName}</span><span className="df-logo-muted">/&gt;</span></Link>
         <PortfolioNavigation items={navItems} />
       </header>
 

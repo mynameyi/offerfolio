@@ -568,8 +568,9 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
 .developerfolio-site a { color: inherit; text-decoration: none; }
 .df-header { min-height: 74px; padding: 10px max(5%, calc((100vw - 1280px) / 2)); position: sticky; top: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between; gap: 22px; color: var(--df-text); background: var(--df-bg); box-shadow: 0 3px 12px var(--df-shadow); }
 .df-logo { display: flex; align-items: center; flex: 0 0 auto; font-size: 22px; font-weight: 700; line-height: 1; }
-.df-logo > span:nth-child(2) { padding: 0 8px; color: var(--df-purple); }
+.df-logo-name { padding: 0 8px; color: var(--df-purple); }
 .df-logo-muted { color: var(--df-subtitle); font-family: Georgia, serif; font-weight: 400; }
+.df-logo-avatar { width: 30px; height: 30px; margin-right: 9px; display: block; border: 1px solid #e7d8f1; border-radius: 50%; object-fit: cover; object-position: center 30%; }
 .df-nav { position: relative; display: flex; align-items: center; gap: 2px; }
 .df-nav { max-width: calc(100% - 180px); overflow-x: auto; scrollbar-width: none; }
 .df-nav::-webkit-scrollbar { display: none; }
@@ -602,7 +603,7 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
 .df-social-link:hover { transform: translateY(-2px); box-shadow: 0 5px 12px var(--df-shadow); }
 .df-greeting-image { min-height: 355px; display: grid; place-items: center; }
 .df-illustration { display: block; width: min(100%, 470px); height: auto; }
-.df-profile-hero-avatar { width: min(100%, 410px); aspect-ratio: 1; display: block; border: 8px solid #f0e8f6; border-radius: 50%; object-fit: cover; box-shadow: 0 9px 28px var(--df-shadow); }
+.df-profile-hero-avatar { width: min(100%, 410px); aspect-ratio: 1; display: block; border: 8px solid #f0e8f6; border-radius: 50%; object-fit: cover; object-position: center 30%; box-shadow: 0 9px 28px var(--df-shadow); }
 .df-section-heading { margin: 0 0 32px; }
 .df-eyebrow { margin: 0 0 10px; color: var(--df-purple); font-family: "SFMono-Regular", Consolas, monospace; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
 .df-section-heading h2 { margin: 0; color: var(--df-text); font-size: clamp(31px, 4vw, 48px); font-weight: 500; line-height: 1.23; letter-spacing: -.055em; }
@@ -738,7 +739,7 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
 .df-contact-section > .df-section-heading { text-align: center; }
 .df-contact-card { width: min(100%, 750px); min-height: 220px; padding: 29px; display: flex; align-items: center; gap: 27px; border: 1px solid var(--df-border); border-radius: 6px; background: var(--df-card); box-shadow: 0 8px 25px var(--df-shadow); }
 .df-contact-avatar { width: 110px; height: 110px; flex: 0 0 auto; display: grid; place-items: center; border: 8px solid #f1eaf6; border-radius: 50%; color: #fff; background: linear-gradient(145deg, #9f78bc, #55198b); font-family: Georgia, "Noto Serif SC", serif; font-size: 46px; }
-.df-contact-avatar img { width: 100%; height: 100%; display: block; border-radius: inherit; object-fit: cover; }
+.df-contact-avatar img { width: 100%; height: 100%; display: block; border-radius: inherit; object-fit: cover; object-position: center 30%; }
 .df-contact-info { min-width: 0; }
 .df-contact-info > .df-card-period { color: var(--df-purple); }
 .df-contact-info h3 { margin: 0; color: var(--df-text); font-size: 23px; }
