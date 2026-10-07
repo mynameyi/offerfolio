@@ -4,7 +4,6 @@ import { useRef, useState, type ChangeEvent } from "react";
 import type { PortfolioContentItem } from "@/lib/profile";
 import { Glyph } from "@/components/glyph";
 
-const MAX_FILE_SIZE = 80 * 1024 * 1024;
 const ACCEPTED_MEDIA = "image/jpeg,image/png,image/webp,image/gif,image/avif,video/mp4,video/webm,video/ogg,video/quicktime,video/x-m4v";
 
 type UploadResult = { url: string; kind: "image" | "video"; error?: string };
@@ -42,12 +41,6 @@ export function HighlightManager({ items, onChange }: { items: PortfolioContentI
   function selectFile(event: ChangeEvent<HTMLInputElement>) {
     const selected = event.currentTarget.files?.[0] ?? null;
     setError("");
-    if (selected && selected.size > MAX_FILE_SIZE) {
-      setFile(null);
-      event.currentTarget.value = "";
-      setError("文件不能超过 80 MB。");
-      return;
-    }
     setFile(selected);
   }
 

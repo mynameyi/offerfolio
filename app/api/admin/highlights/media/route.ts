@@ -7,7 +7,6 @@ import { isAdminAuthenticated } from "@/lib/admin-auth";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-const MAX_FILE_SIZE = 80 * 1024 * 1024;
 const MIME_EXTENSIONS: Record<string, { extension: string; kind: "image" | "video" }> = {
   "image/jpeg": { extension: ".jpg", kind: "image" },
   "image/png": { extension: ".png", kind: "image" },
@@ -26,11 +25,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "请先登录管理后台。" }, { status: 401 });
   }
 
-  const contentLength = Number(request.headers.get("content-length") || 0);
-  if (contentLength > MAX_FILE_SIZE + 1024 * 1024) {
-    return NextResponse.json({ error: "文件不能超过 80 MB。" }, { status: 413 });
-  }
-
   let formData: FormData;
   try {
     formData = await request.formData();
@@ -42,10 +36,6 @@ export async function POST(request: Request) {
   if (!(file instanceof File) || file.size === 0) {
     return NextResponse.json({ error: "请选择图片或视频文件。" }, { status: 400 });
   }
-  if (file.size > MAX_FILE_SIZE) {
-    return NextResponse.json({ error: "文件不能超过 80 MB。" }, { status: 413 });
-  }
-
   const media = MIME_EXTENSIONS[file.type.toLowerCase()];
   if (!media) {
     return NextResponse.json({ error: "支持 JPG、PNG、WebP、GIF、AVIF 图片，以及 MP4、WebM、OGG、MOV 视频。" }, { status: 415 });
