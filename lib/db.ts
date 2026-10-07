@@ -28,6 +28,11 @@ function openDatabase(): CachedDatabase {
       profile_json TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS admin_credential (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      password_hash TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
   `);
 
   connection
@@ -64,4 +69,21 @@ export function writeProfile(profile: PortfolioProfile): PortfolioProfile {
        updated_at = excluded.updated_at`,
   ).run(JSON.stringify(normalized), new Date().toISOString());
   return normalized;
+}
+
+export function readAdminPasswordHash(): string | null {
+  const row = db
+    .prepare("SELECT password_hash FROM admin_credential WHERE id = 1")
+    .get() as { password_hash: string } | undefined;
+  return row?.password_hash || null;
+}
+
+export function writeAdminPasswordHash(passwordHash: string): void {
+  db.prepare(
+    `INSERT INTO admin_credential (id, password_hash, updated_at)
+     VALUES (1, ?, ?)
+     ON CONFLICT(id) DO UPDATE SET
+       password_hash = excluded.password_hash,
+       updated_at = excluded.updated_at`,
+  ).run(passwordHash, new Date().toISOString());
 }

@@ -5,7 +5,7 @@ import { DEFAULT_PROFILE, PROFILE_MODULES, type PortfolioContentItem, type Portf
 import { Glyph } from "@/components/glyph";
 import { ContentListEditor, type ContentField } from "@/components/content-list-editor";
 
-type EditorMode = "checking" | "login" | "editing";
+type EditorMode = "checking" | "login" | "change-password" | "editing";
 type CollectionKey = "socialLinks" | "skillProgress" | "openSourceProjects" | "projects" | "achievements" | "blogs" | "talks" | "podcasts" | "metrics" | "recommendations";
 
 async function readJson<T>(response: Response): Promise<T & { error?: string }> {
@@ -90,6 +90,10 @@ export function AdminEditor() {
   const [configured, setConfigured] = useState(true);
   const [profile, setProfile] = useState<PortfolioProfile>(DEFAULT_PROFILE);
   const [password, setPassword] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPasswordChange, setShowPasswordChange] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -105,10 +109,14 @@ export function AdminEditor() {
     async function checkSession() {
       try {
         const response = await fetch("/api/admin/session", { cache: "no-store" });
-        const session = await readJson<{ authenticated: boolean; configured: boolean }>(response);
+        const session = await readJson<{ authenticated: boolean; configured: boolean; mustChangePassword: boolean }>(response);
         if (!active) return;
         setConfigured(session.configured);
         if (session.authenticated) {
+          if (session.mustChangePassword) {
+            setMode("change-password");
+            return;
+          }
           await loadProfile();
           if (active) setMode("editing");
         } else {
@@ -155,12 +163,17 @@ export function AdminEditor() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password }),
       });
-      const result = await readJson<{ ok?: boolean }>(response);
+      const result = await readJson<{ ok?: boolean; mustChangePassword?: boolean }>(response);
       if (!response.ok) throw new Error(result.error || "登录失败。");
-      await loadProfile();
       setPassword("");
-      setMode("editing");
-      setMessage("已安全登录。档案内容将保存到本机 SQLite 数据库。");
+      if (result.mustChangePassword) {
+        setMode("change-password");
+        setMessage("首次登录需要先设置新的专属密码。");
+      } else {
+        await loadProfile();
+        setMode("editing");
+        setMessage("已安全登录。档案内容将保存到本机 SQLite 数据库。");
+      }
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "登录失败，请重试。");
     } finally {
@@ -192,8 +205,56 @@ export function AdminEditor() {
 
   async function logout() {
     await fetch("/api/admin/logout", { method: "POST" });
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setShowPasswordChange(false);
     setMode("login");
     setMessage("已退出管理后台。");
+  }
+
+  function closePasswordPanel() {
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setError("");
+    setShowPasswordChange(false);
+  }
+
+  async function changePassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError("");
+    setMessage("");
+    if (newPassword !== confirmPassword) {
+      setError("两次输入的新密码不一致。");
+      return;
+    }
+    if (newPassword.length < 12) {
+      setError("新密码至少需要 12 个字符。");
+      return;
+    }
+
+    setBusy(true);
+    try {
+      const response = await fetch("/api/admin/password", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      const result = await readJson<{ ok?: boolean }>(response);
+      if (!response.ok) throw new Error(result.error || "密码更新失败，请重试。");
+      await loadProfile();
+      setMode("editing");
+      setShowPasswordChange(false);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setMessage("管理员密码已更新，其他已登录会话已失效。");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "密码更新失败，请重试。");
+    } finally {
+      setBusy(false);
+    }
   }
 
   function addMilestone(kind: PortfolioMilestone["kind"]) {
@@ -208,8 +269,41 @@ export function AdminEditor() {
     setProfile((current) => ({ ...current, milestones: current.milestones.filter((_, itemIndex) => itemIndex !== index) }));
   }
 
+  const passwordForm = (
+    <form className={mode === "change-password" ? "login-card password-change-form" : "editor-panel password-change-panel"} onSubmit={changePassword}>
+      <div className="editor-panel-title"><span><Glyph name="lock" /></span><div><h2>{mode === "change-password" ? "设置专属管理员密码" : "修改管理员密码"}</h2><p>{mode === "change-password" ? "初始引导口令只用于首次进入。设置新密码后，引导口令将立即失效。" : "修改后，其他已登录会话会立即失效。"}</p></div></div>
+      <div className="editor-fields editor-fields-two">
+        <label className="field-label">当前密码<input className="field-input" type="password" autoComplete="current-password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} required /></label>
+        <label className="field-label">新密码（至少 12 个字符）<input className="field-input" type="password" autoComplete="new-password" minLength={12} maxLength={256} value={newPassword} onChange={(event) => setNewPassword(event.target.value)} required /></label>
+        <label className="field-label">再次输入新密码<input className="field-input" type="password" autoComplete="new-password" minLength={12} maxLength={256} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} required /></label>
+      </div>
+      <div className="editor-heading-actions password-form-actions">
+        <button className="button button-dark" type="submit" disabled={busy}>{busy ? "正在更新…" : "更新管理员密码"}<Glyph name="save" /></button>
+        {mode !== "change-password" ? <button className="button button-quiet" type="button" onClick={closePasswordPanel}>取消</button> : null}
+      </div>
+      {error ? <p className="form-error" role="alert">{error}</p> : null}
+    </form>
+  );
+
   if (mode === "checking") {
     return <section className="admin-loading"><span className="loading-spinner" />正在验证管理会话…</section>;
+  }
+
+  if (mode === "change-password") {
+    return (
+      <section className="login-layout">
+        <div className="login-intro">
+          <p className="section-kicker">ECKYSTUDIO / OFFERFOLIO</p>
+          <h1>先设好你的<br /><em>专属密码。</em></h1>
+          <p>初始引导口令仅用于进入设置页。新密码会以 scrypt 摘要保存，之后不再接受引导口令。</p>
+          <div className="login-proof"><Glyph name="lock" /><span>仅保存密码摘要，不保存明文新密码</span></div>
+        </div>
+        <div className="password-setup-column">
+          {passwordForm}
+          {message ? <p className="form-success" role="status">{message}</p> : null}
+        </div>
+      </section>
+    );
   }
 
   if (mode === "login") {
@@ -225,14 +319,14 @@ export function AdminEditor() {
           <span className="login-card-mark"><Glyph name="lock" /></span>
           <p className="section-kicker">管理后台</p>
           <h2>欢迎回来</h2>
-          <p className="muted-text">输入本地配置的管理密码以继续。</p>
-          {!configured ? <div className="notice notice-error">后台尚未启用。请从 .env.example 创建 .env 并设置 ADMIN_PASSWORD。</div> : null}
+          <p className="muted-text">输入初始引导口令或你设置的专属密码。</p>
+          {!configured ? <div className="notice notice-error">后台尚未启用。请在服务器配置初始引导口令后重启服务。</div> : null}
           <label className="field-label" htmlFor="admin-password">管理密码</label>
           <input id="admin-password" className="field-input" type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} disabled={!configured} required />
           <button className="button button-dark login-submit" type="submit" disabled={busy || !configured}>{busy ? "正在验证…" : "进入档案管理"}<Glyph name="arrow" /></button>
           {error ? <p className="form-error" role="alert">{error}</p> : null}
           {message ? <p className="form-success" role="status">{message}</p> : null}
-          <p className="login-footnote">忘记密码？在 .env 中修改 ADMIN_PASSWORD 后重启服务。</p>
+          <p className="login-footnote">首次登录后会要求设置专属密码；引导口令此后不再有效。</p>
         </form>
       </section>
     );
@@ -248,9 +342,12 @@ export function AdminEditor() {
         </div>
         <div className="editor-heading-actions">
           <a className="button button-quiet" href="/" target="_blank" rel="noreferrer">预览公开页面 <Glyph name="arrow" /></a>
+          <button className="button button-quiet" type="button" onClick={() => setShowPasswordChange((visible) => !visible)}>修改密码 <Glyph name="lock" /></button>
           <button className="button button-quiet" type="button" onClick={logout}>退出 <Glyph name="logout" /></button>
         </div>
       </div>
+
+      {showPasswordChange ? passwordForm : null}
 
       <form className="editor-form" onSubmit={saveProfile}>
         <section className="editor-panel">
