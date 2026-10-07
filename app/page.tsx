@@ -5,7 +5,7 @@ import { type PortfolioContentItem, type PortfolioModuleKey } from "@/lib/profil
 import { getVisitorVisitKey, recordVisitorVisit, visitContextFromHeaders } from "@/lib/radar";
 import { Glyph } from "@/components/glyph";
 import { HighlightCarousel } from "@/components/highlight-carousel";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { PortfolioNavigation } from "@/components/portfolio-navigation";
 import { VisitorAnalytics } from "@/components/visitor-analytics";
 
 export const dynamic = "force-dynamic";
@@ -163,8 +163,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     <main className="developerfolio-site" data-theme="light">
       <header className="df-header" id="top">
         <Link href="/" className="df-logo" aria-label="OfferFolio 首页"><span className="df-logo-muted">&lt;</span><span>{profile.displayName}</span><span className="df-logo-muted">/&gt;</span></Link>
-        <details className="df-mobile-menu"><summary aria-label="打开导航"><span /><span /><span /></summary><nav aria-label="移动导航">{navItems.map((item) => <a key={item.key} href={item.href}>{item.label}</a>)}<ThemeToggle /></nav></details>
-        <nav className="df-nav" aria-label="主导航">{navItems.map((item) => <a key={item.key} href={item.href}>{item.label}</a>)}<ThemeToggle /></nav>
+        <PortfolioNavigation items={navItems} />
       </header>
 
       <div className="df-section-stack">
