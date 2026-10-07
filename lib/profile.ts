@@ -39,9 +39,16 @@ const PREVIOUS_SECTION_LABELS: PortfolioModuleLabels = {
   contact: "联系我",
 };
 
+export type PortfolioMediaItem = {
+  id: string;
+  url: string;
+  kind: "image" | "video";
+};
+
 export type PortfolioContentItem = {
   id: string;
-  showcaseType?: "open-source" | "confidential";
+  showcaseType?: "open-source" | "company-project";
+  mediaItems?: PortfolioMediaItem[];
   title: string;
   subtitle: string;
   summary: string;
@@ -264,20 +271,45 @@ function normalizeContentItems(
   value: unknown,
   fallback: PortfolioContentItem[],
   limit = 30,
+  showcase = false,
 ): PortfolioContentItem[] {
   if (!Array.isArray(value)) return fallback.map((item) => ({ ...item, tags: [...item.tags] }));
   return value.slice(0, limit).map((item, index) => {
     const record = asRecord(item);
     const base = fallback[index] ?? emptyContentItem(`item-${index + 1}`);
+    const legacyImageUrl = safeUrl(record.imageUrl ?? record.image, "");
+    const legacyVideoUrl = safeUrl(record.embedUrl, "");
+    const legacyMediaItems: PortfolioMediaItem[] = [
+      ...(legacyImageUrl ? [{ id: `${text(record.id, base.id, 80)}-image`, url: legacyImageUrl, kind: "image" as const }] : []),
+      ...(legacyVideoUrl ? [{ id: `${text(record.id, base.id, 80)}-video`, url: legacyVideoUrl, kind: "video" as const }] : []),
+    ];
+    const mediaItems: PortfolioMediaItem[] = Array.isArray(record.mediaItems)
+      ? record.mediaItems.map((value, mediaIndex): PortfolioMediaItem => {
+          const media = asRecord(value);
+          const url = safeUrl(media.url, "");
+          const videoByExtension = /\.(mp4|webm|ogg|ogv|mov|m4v)(?:\?.*)?$/i.test(url);
+          const kind: PortfolioMediaItem["kind"] = media.kind === "video" || (media.kind !== "image" && videoByExtension) ? "video" : "image";
+          return {
+            id: text(media.id, `${text(record.id, base.id, 80)}-media-${mediaIndex + 1}`, 100),
+            url,
+            kind,
+          };
+        }).filter((media) => Boolean(media.url))
+      : legacyMediaItems;
+    const showcaseType = showcase
+      ? record.showcaseType === "open-source"
+        ? "open-source"
+        : record.showcaseType === "company-project" || record.showcaseType === "confidential"
+          ? "company-project"
+          : mediaItems.length
+            ? "company-project"
+            : record.url || record.evidenceUrl
+              ? "open-source"
+              : undefined
+      : undefined;
     return {
       id: text(record.id, base.id, 80) || base.id,
-      showcaseType: record.showcaseType === "open-source" || record.showcaseType === "confidential"
-        ? record.showcaseType
-        : record.imageUrl || record.image || record.embedUrl
-          ? "confidential"
-          : record.url || record.evidenceUrl
-            ? "open-source"
-            : undefined,
+      ...(showcase ? { showcaseType, mediaItems } : {}),
       title: text(record.title ?? record.projectName ?? record.Stack, base.title, 140),
       subtitle: text(record.subtitle, base.subtitle, 240),
       summary: text(record.summary ?? record.description ?? record.projectDesc ?? record.desc ?? record.subtitle, base.summary, 1200),
@@ -297,6 +329,14 @@ function normalizeContentItems(
       forks: numberValue(record.forks, base.forks, 100000000),
     };
   });
+}
+
+export function showcaseMediaItems(item: PortfolioContentItem): PortfolioMediaItem[] {
+  if (item.mediaItems?.length) return item.mediaItems;
+  return [
+    ...(item.imageUrl ? [{ id: `${item.id}-image`, url: item.imageUrl, kind: "image" as const }] : []),
+    ...(item.embedUrl ? [{ id: `${item.id}-video`, url: item.embedUrl, kind: "video" as const }] : []),
+  ];
 }
 
 export function normalizeProfile(value: unknown): PortfolioProfile {
@@ -377,7 +417,7 @@ export function normalizeProfile(value: unknown): PortfolioProfile {
     skills: textList(input.skills, DEFAULT_PROFILE.skills, 50),
     socialLinks: normalizeContentItems(input.socialLinks, DEFAULT_PROFILE.socialLinks, 16),
     strengths: normalizeContentItems(input.strengths ?? input.skillProgress, DEFAULT_PROFILE.strengths, 20),
-    showcaseItems: normalizeContentItems(input.showcaseItems ?? input.openSourceProjects, DEFAULT_PROFILE.showcaseItems, 30),
+    showcaseItems: normalizeContentItems(input.showcaseItems ?? input.openSourceProjects, DEFAULT_PROFILE.showcaseItems, 30, true),
     projects: normalizeContentItems(input.projects, projectsFallback, 30),
     achievements: normalizeContentItems(input.achievements, DEFAULT_PROFILE.achievements, 30),
     blogs: normalizeContentItems(input.blogs, DEFAULT_PROFILE.blogs, 30),
