@@ -209,7 +209,7 @@ export default function HomePage() {
         <section className="df-main df-contact-section" id="contact"><SectionHeading eyebrow="联系方式" title="联系我" subtitle="如需了解项目细节或工作经历，可通过邮件或社交平台联系。" /><div className="df-contact-card"><div className="df-contact-avatar">{profile.displayName.slice(0, 1) || "你"}</div><div className="df-contact-info"><h3>{profile.displayName}</h3><p>{profile.title}</p><div className="df-contact-details">{profile.email ? <a href={`mailto:${profile.email}`}>{profile.email}</a> : null}{profile.phone ? <a href={`tel:${profile.phone}`}>{profile.phone}</a> : null}{profile.location ? <span><Glyph name="pin" />{profile.location}</span> : null}</div>{modules.social && socialItems.length ? <div className="df-contact-social">{socialItems.map((item) => <a href={item.url} key={`contact-${item.id}`} {...externalLinkProps(item.url)}>{item.title}</a>)}</div> : null}</div></div></section>
       ) : null}
 
-      <footer className="df-footer"><p>用真实作品与清晰经历，展示每一份专业价值。</p><span>© {new Date().getFullYear()} {profile.displayName} · EckyStudio</span><Link href="/admin">管理主页</Link></footer>
+      <footer className="df-footer"><p>用真实作品与清晰经历，展示每一份专业价值。</p><span>© {new Date().getFullYear()} {profile.displayName} · EckyStudio</span></footer>
       <a className="df-back-to-top" href="#top" aria-label="返回顶部">↑</a>
     </main>
   );
