@@ -1017,6 +1017,7 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
 .df-highlight-card > video { width: 100%; height: 100%; display: block; object-fit: cover; }
 .df-highlight-card:hover > img { transform: scale(1.035); }
 .df-highlight-card-placeholder { position: absolute; inset: 0; display: block; background: linear-gradient(135deg, #55198b, #b08bc9 58%, #efaa88); }
+.df-highlight-date { position: absolute; right: 12px; bottom: 12px; padding: 6px 9px; border: 1px solid #ffffff55; border-radius: 999px; color: #fff; background: #201a2bbd; backdrop-filter: blur(8px); font-size: 10px; font-variant-numeric: tabular-nums; line-height: 1; }
 .df-highlight-play { width: 47px; height: 47px; position: absolute; top: 50%; left: 50%; display: grid; place-items: center; padding-left: 3px; border: 1px solid #ffffffa8; border-radius: 50%; color: #fff; background: #16151d70; font-size: 14px; transform: translate(-50%, -50%); backdrop-filter: blur(5px); }
 .df-highlight-modal-backdrop { padding: 26px; position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; background: #101018b8; backdrop-filter: blur(8px); }
 .df-highlight-modal { width: min(920px, 100%); max-height: min(92vh, 900px); position: relative; overflow: auto; border: 1px solid var(--df-border); border-radius: 8px; color: var(--df-text); background: var(--df-bg); box-shadow: 0 24px 80px #0006; }
@@ -1024,6 +1025,7 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
 .df-highlight-modal-media { width: 100%; aspect-ratio: 16 / 9; display: grid; place-items: center; overflow: hidden; background: #090a10; }
 .df-highlight-modal-media > img, .df-highlight-modal-media > video, .df-highlight-modal-media > iframe { width: 100%; height: 100%; display: block; border: 0; object-fit: contain; }
 .df-highlight-modal-copy { padding: 25px clamp(22px, 5vw, 52px) 32px; }
+.df-highlight-modal-date { display: inline-block; margin-bottom: 3px; color: var(--df-accent); font-size: 11px; font-variant-numeric: tabular-nums; }
 .df-highlight-modal-copy > p:last-child { margin: 14px 0 0; color: var(--df-subtitle); font-size: 13px; line-height: 1.9; white-space: pre-wrap; }
 
 .highlight-add-form { max-width: 720px; margin-top: 18px; display: grid; gap: 12px; }
@@ -1031,6 +1033,7 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
 .highlight-file-name { margin: -6px 0 0; color: #89948b; font-size: 9px; overflow-wrap: anywhere; }
 .highlight-upload-error { margin: 0; color: #ad5149; font-size: 10px; }
 .highlight-add-button { justify-self: start; }
+.highlight-list-fields { min-width: 0; display: grid; grid-template-columns: minmax(130px, 180px) minmax(0, 1fr); align-items: start; gap: 12px; }
 .highlight-list { margin-top: 22px; display: grid; gap: 10px; }
 .highlight-list-item { min-height: 94px; padding: 10px; display: grid; grid-template-columns: 130px minmax(0, 1fr) 104px; align-items: center; gap: 13px; border: 1px solid #e1e4dc; background: #fffefa; }
 .highlight-list-preview { width: 130px; height: 74px; overflow: hidden; border-radius: 3px; background: #f0eee9; }
@@ -1081,6 +1084,7 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
   .df-highlight-modal-copy { padding: 21px 19px 24px; }
   .highlight-list-item { grid-template-columns: 84px minmax(0, 1fr) 96px; gap: 8px; padding: 8px; }
   .highlight-list-preview { width: 84px; height: 62px; }
+  .highlight-list-fields { grid-template-columns: 1fr; gap: 8px; }
   .highlight-list-actions { gap: 4px; }
   .showcase-item-actions { gap: 5px; }
   .showcase-type-select { width: 122px; }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, type ChangeEvent } from "react";
-import type { PortfolioContentItem } from "@/lib/profile";
+import { formatYearMonth, type PortfolioContentItem } from "@/lib/profile";
 import { Glyph } from "@/components/glyph";
 import { adminFetch } from "@/components/admin-fetch";
 
@@ -9,14 +9,14 @@ const ACCEPTED_MEDIA = "image/jpeg,image/png,image/webp,image/gif,image/avif,vid
 
 type UploadResult = { url: string; kind: "image" | "video"; error?: string };
 
-function emptyItem(id: string, url: string, kind: "image" | "video", summary: string): PortfolioContentItem {
+function emptyItem(id: string, url: string, kind: "image" | "video", summary: string, period: string): PortfolioContentItem {
   return {
     id,
     title: "",
     subtitle: "",
     summary,
     organization: "",
-    period: "",
+    period,
     url: "",
     urlLabel: "查看详情",
     secondaryUrl: "",
@@ -36,6 +36,7 @@ export function HighlightManager({ items, onChange }: { items: PortfolioContentI
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [description, setDescription] = useState("");
+  const [period, setPeriod] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -56,9 +57,10 @@ export function HighlightManager({ items, onChange }: { items: PortfolioContentI
       const result = await response.json() as UploadResult;
       if (!response.ok) throw new Error(result.error || "上传失败，请重试。");
 
-      onChange([...items, emptyItem(crypto.randomUUID(), result.url, result.kind, description.trim())]);
+      onChange([...items, emptyItem(crypto.randomUUID(), result.url, result.kind, description.trim(), period)]);
       setFile(null);
       setDescription("");
+      setPeriod("");
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "上传失败，请重试。");
@@ -69,6 +71,10 @@ export function HighlightManager({ items, onChange }: { items: PortfolioContentI
 
   function updateDescription(id: string, summary: string) {
     onChange(items.map((item) => item.id === id ? { ...item, summary } : item));
+  }
+
+  function updatePeriod(id: string, value: string) {
+    onChange(items.map((item) => item.id === id ? { ...item, period: value } : item));
   }
 
   function removeItem(id: string) {
@@ -90,6 +96,7 @@ export function HighlightManager({ items, onChange }: { items: PortfolioContentI
       <div className="highlight-add-form">
         <label className="field-label">图片或视频<input ref={fileInputRef} className="field-input highlight-file-input" type="file" accept={ACCEPTED_MEDIA} onChange={selectFile} /></label>
         {file ? <p className="highlight-file-name">{file.name}</p> : null}
+        <label className="field-label">日期（年月，可选）<input className="field-input" type="month" value={period} onChange={(event) => setPeriod(event.target.value)} /></label>
         <label className="field-label">描述<textarea className="field-input field-textarea" value={description} onChange={(event) => setDescription(event.target.value)} maxLength={800} rows={3} placeholder="简单介绍这个瞬间" /></label>
         {error ? <p className="highlight-upload-error" role="alert">{error}</p> : null}
         <button className="button button-quiet highlight-add-button" type="button" onClick={addHighlight} disabled={!file || !description.trim() || busy || items.length >= 20}>
@@ -103,7 +110,10 @@ export function HighlightManager({ items, onChange }: { items: PortfolioContentI
             <div className="highlight-list-preview">
               {item.imageUrl ? <img src={item.imageUrl} alt="" /> : item.embedUrl ? <video src={item.embedUrl} muted playsInline preload="metadata" /> : <span aria-hidden="true" />}
             </div>
-            <label className="field-label highlight-description-field">描述<textarea className="field-input field-textarea" value={item.summary || item.title} onChange={(event) => updateDescription(item.id, event.target.value)} maxLength={800} rows={2} /></label>
+            <div className="highlight-list-fields">
+              <label className="field-label">日期<input className="field-input" type="month" value={formatYearMonth(item.period).replace(".", "-")} onChange={(event) => updatePeriod(item.id, event.target.value)} /></label>
+              <label className="field-label highlight-description-field">描述<textarea className="field-input field-textarea" value={item.summary || item.title} onChange={(event) => updateDescription(item.id, event.target.value)} maxLength={800} rows={2} /></label>
+            </div>
             <div className="highlight-list-actions">
               <div className="item-reorder-controls" role="group" aria-label={`调整高光时刻 ${index + 1} 的顺序`}>
                 <button className="icon-button item-reorder-button" type="button" aria-label={`上移高光时刻 ${index + 1}`} title="上移" disabled={index === 0} onClick={() => moveItem(index, -1)}><Glyph name="arrow" className="item-order-arrow item-order-arrow-up" /></button>

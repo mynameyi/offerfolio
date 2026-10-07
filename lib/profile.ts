@@ -339,6 +339,11 @@ export function showcaseMediaItems(item: PortfolioContentItem): PortfolioMediaIt
   ];
 }
 
+export function formatYearMonth(value: string): string {
+  const match = /^(\d{4})[-.](0[1-9]|1[0-2])$/.exec(value.trim());
+  return match ? `${match[1]}.${match[2]}` : "";
+}
+
 export function normalizeProfile(value: unknown): PortfolioProfile {
   const input = asRecord(value);
   const fallbackMilestones = DEFAULT_PROFILE.milestones;
