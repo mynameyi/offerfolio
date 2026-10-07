@@ -83,11 +83,12 @@ export function ShowcaseGallery({ items, emptyText }: { items: PortfolioContentI
             }
 
             const media = mediaFor(item);
-            const cover = media.find((entry) => entry.kind === "image");
+            const cover = media.find((entry) => entry.kind === "image") ?? media.find((entry) => entry.kind === "video");
+            const coverIndex = cover ? media.indexOf(cover) : 0;
             return (
-              <button className="df-showcase-card df-showcase-company-card" type="button" key={item.id} onClick={() => setActive({ itemId: item.id, mediaIndex: 0 })} aria-label={`查看项目介绍：${item.summary || item.title}`}>
+              <button className="df-showcase-card df-showcase-company-card" type="button" key={item.id} onClick={() => setActive({ itemId: item.id, mediaIndex: coverIndex })} aria-label={`查看项目介绍：${item.summary || item.title}`}>
                 <span className="df-showcase-company-cover">
-                  {cover ? <img src={cover.url} alt="" loading="lazy" /> : <span className="df-showcase-company-cover-placeholder"><span aria-hidden="true">▶</span><small>点击查看视频</small></span>}
+                  {cover?.kind === "image" ? <img src={cover.url} alt="" loading="lazy" /> : cover?.kind === "video" ? <><video src={cover.url} muted playsInline preload="metadata" aria-hidden="true" /><span className="df-showcase-company-video-play" aria-hidden="true">▶</span></> : <span className="df-showcase-company-cover-placeholder" aria-hidden="true" />}
                   <span className="df-showcase-company-count">{media.length} 项素材</span>
                 </span>
                 <span className="df-showcase-company-copy"><span>{item.summary || item.title}</span><span>查看作品 <Glyph name="arrow" /></span></span>
