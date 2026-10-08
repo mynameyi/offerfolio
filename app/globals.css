@@ -919,6 +919,12 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
 .admin-sidebar-item.is-active .admin-sidebar-arrow { color: #52735d; }
 .admin-workspace-main, .content-settings-panel { min-width: 0; }
 .layout-panel { padding-bottom: 12px; }
+.search-snapshot-setting { margin-top: 20px; padding: 15px 17px; border: 1px solid #e1e4dc; background: #fffefa; }
+.search-snapshot-setting label { display: flex; align-items: flex-start; gap: 11px; cursor: pointer; }
+.search-snapshot-setting input { width: 16px; height: 16px; margin: 1px 0 0; accent-color: #5f8067; cursor: pointer; }
+.search-snapshot-setting strong, .search-snapshot-setting small { display: block; }
+.search-snapshot-setting strong { color: #394b40; font-size: 11px; font-weight: 650; }
+.search-snapshot-setting small { margin-top: 5px; color: #89948b; font-size: 9px; line-height: 1.6; }
 .layout-module-list { margin: 0; padding: 0; list-style: none; }
 .layout-module-row { min-height: 74px; padding: 10px 3px; display: grid; grid-template-columns: 35px minmax(0, 1fr) minmax(230px, 290px) 82px 66px; align-items: center; gap: 12px; border-top: 1px solid #e7e9e2; }
 .layout-module-row.is-fixed { background: #f5f5ef; }

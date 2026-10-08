@@ -79,6 +79,7 @@ export type PortfolioMilestone = {
 };
 
 export type PortfolioProfile = {
+  preventSearchSnapshots: boolean;
   displayName: string;
   avatarUrl: string;
   avatarPositionX: number;
@@ -167,6 +168,7 @@ const emptyContentItem = (id: string, title = ""): PortfolioContentItem => ({
 });
 
 export const DEFAULT_PROFILE: PortfolioProfile = {
+  preventSearchSnapshots: true,
   displayName: "你的姓名",
   avatarUrl: "",
   avatarPositionX: 50,
@@ -407,6 +409,9 @@ export function normalizeProfile(value: unknown): PortfolioProfile {
   ) as PortfolioModuleLabels;
 
   return {
+    preventSearchSnapshots: typeof input.preventSearchSnapshots === "boolean"
+      ? input.preventSearchSnapshots
+      : DEFAULT_PROFILE.preventSearchSnapshots,
     displayName: text(input.displayName, DEFAULT_PROFILE.displayName, 80),
     avatarUrl: safeUrl(input.avatarUrl, DEFAULT_PROFILE.avatarUrl),
     avatarPositionX: numberValue(input.avatarPositionX, DEFAULT_PROFILE.avatarPositionX),

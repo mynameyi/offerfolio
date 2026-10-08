@@ -326,6 +326,16 @@ export function AdminWorkspace({ onLogout }: { onLogout: () => Promise<void> }) 
                       );
                     })}
                   </ol>
+                  <div className="search-snapshot-setting">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={profile.preventSearchSnapshots}
+                        onChange={(event) => setField("preventSearchSnapshots", event.target.checked)}
+                      />
+                      <span><strong>禁止搜索引擎保存页面快照</strong><small>默认开启。通过 robots 元数据发送 noarchive / nocache 指令；搜索引擎是否支持由其自行决定。</small></span>
+                    </label>
+                  </div>
                 </section>
               ) : (
                 <section className="content-settings-panel">
