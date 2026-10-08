@@ -55,7 +55,7 @@ export function HighlightCarousel({ items }: { items: PortfolioContentItem[] }) 
 
       {activeItem ? (
         <div className="df-highlight-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setActiveItem(null); }}>
-          <section className="df-highlight-modal" role="dialog" aria-modal="true" aria-label="高光时刻详情">
+          <section className="df-highlight-modal df-highlight-modal-unobstructed" role="dialog" aria-modal="true" aria-label="高光时刻详情">
             <button className="df-highlight-modal-close" type="button" onClick={() => setActiveItem(null)} aria-label="关闭高光时刻详情">×</button>
             <div className="df-highlight-modal-media">
               {activeItem.embedUrl ? isVideoFile(activeItem.embedUrl)

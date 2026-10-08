@@ -721,11 +721,11 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
 .df-showcase-company-copy > span:first-child { min-width: 0; display: -webkit-box; overflow: hidden; color: var(--df-card-subtitle); font-size: 11px; line-height: 1.7; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
 .df-showcase-company-copy > span:last-child { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 4px; color: var(--df-purple); font-size: 9px; font-weight: 620; }
 .df-showcase-company-copy svg { width: 12px; height: 12px; }
-.df-showcase-modal { width: min(1120px, 100%); max-width: calc(100vw - 52px); }
-.df-showcase-modal-media-grid { padding: 24px 24px 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 12px; }
+.df-showcase-modal { width: min(1120px, 100%); max-width: calc(100vw - 52px); max-height: min(92vh, 900px); overflow: auto; }
+.df-showcase-modal-media-grid { padding: 24px 24px 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); align-items: start; gap: 12px; }
 .df-showcase-modal-media-grid.is-single { grid-template-columns: minmax(0, 760px); justify-content: center; }
-.df-showcase-modal-media { min-width: 0; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 4px; background: #090a10; }
-.df-showcase-modal-media > img, .df-showcase-modal-media > video { width: 100%; height: 100%; display: block; border: 0; object-fit: contain; }
+.df-showcase-modal-media { min-width: 0; display: grid; place-items: center; overflow: hidden; border-radius: 4px; background: #090a10; }
+.df-showcase-modal-media > img, .df-showcase-modal-media > video { width: auto; height: auto; max-width: 100%; max-height: min(68vh, 760px); display: block; border: 0; object-fit: contain; }
 .df-showcase-modal-copy > p { margin-top: 0 !important; }
 .showcase-cover-status { display: block; margin-top: 7px; color: var(--df-subtitle, #7d858c); font-size: 11px; }
 .showcase-cover-status.is-error { color: #a9473b; }
@@ -1050,6 +1050,11 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
 .df-highlight-modal-close { width: 39px; height: 39px; position: absolute; top: 13px; right: 13px; z-index: 2; display: grid; place-items: center; border: 1px solid #ffffff80; border-radius: 50%; color: #fff; background: #171c2880; cursor: pointer; font-size: 26px; line-height: 1; backdrop-filter: blur(6px); }
 .df-highlight-modal-media { width: 100%; aspect-ratio: 16 / 9; display: grid; place-items: center; overflow: hidden; background: #090a10; }
 .df-highlight-modal-media > img, .df-highlight-modal-media > video, .df-highlight-modal-media > iframe { width: 100%; height: 100%; display: block; border: 0; object-fit: contain; }
+.df-highlight-modal-unobstructed { padding-top: 52px; }
+.df-highlight-modal-unobstructed .df-highlight-modal-media { aspect-ratio: auto; overflow: visible; }
+.df-highlight-modal-unobstructed .df-highlight-modal-media { background: var(--df-bg-soft); }
+.df-highlight-modal-unobstructed .df-highlight-modal-media > img, .df-highlight-modal-unobstructed .df-highlight-modal-media > video { width: auto; height: auto; max-width: 100%; max-height: min(66vh, 740px); }
+.df-highlight-modal-unobstructed .df-highlight-modal-media > iframe { width: 100%; height: auto; max-height: min(66vh, 740px); aspect-ratio: 16 / 9; }
 .df-highlight-modal-copy { padding: 25px clamp(22px, 5vw, 52px) 32px; }
 .df-highlight-modal-date { display: inline-block; margin-bottom: 3px; color: var(--df-accent); font-size: 11px; }
 .df-highlight-modal-copy > p:last-child { margin: 14px 0 0; color: var(--df-subtitle); font-size: 13px; line-height: 1.9; white-space: pre-wrap; }
@@ -1107,8 +1112,10 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
   .df-highlight-track-many > .df-highlight-card { flex-basis: min(78vw, 320px); }
   .df-highlight-modal-backdrop { padding: 12px; }
   .df-highlight-modal { max-height: 94vh; }
+  .df-highlight-modal-unobstructed .df-highlight-modal-media > img, .df-highlight-modal-unobstructed .df-highlight-modal-media > video, .df-highlight-modal-unobstructed .df-highlight-modal-media > iframe { max-height: 60vh; }
   .df-highlight-modal-copy { padding: 21px 19px 24px; }
   .df-showcase-modal-media-grid { padding: 12px 12px 0; gap: 9px; }
+  .df-showcase-modal-media > img, .df-showcase-modal-media > video { max-height: min(62vh, 560px); }
   .highlight-list-item { grid-template-columns: 84px minmax(0, 1fr) 96px; gap: 8px; padding: 8px; }
   .highlight-list-preview { width: 84px; height: 62px; }
   .highlight-list-fields { grid-template-columns: 1fr; gap: 8px; }
