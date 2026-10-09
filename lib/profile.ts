@@ -76,13 +76,16 @@ export type PortfolioMilestone = {
   title: string;
   organization: string;
   summary: string;
+  logoUrl: string;
 };
 
 export type ExperienceDisplayMode = "timeline" | "chapters";
+export type EducationDisplayMode = "timeline" | "cards";
 
 export type PortfolioProfile = {
   preventSearchSnapshots: boolean;
   experienceDisplayMode: ExperienceDisplayMode;
+  educationDisplayMode: EducationDisplayMode;
   displayName: string;
   avatarUrl: string;
   avatarPositionX: number;
@@ -173,6 +176,7 @@ const emptyContentItem = (id: string, title = ""): PortfolioContentItem => ({
 export const DEFAULT_PROFILE: PortfolioProfile = {
   preventSearchSnapshots: true,
   experienceDisplayMode: "timeline",
+  educationDisplayMode: "cards",
   displayName: "你的姓名",
   avatarUrl: "",
   avatarPositionX: 50,
@@ -221,6 +225,7 @@ export const DEFAULT_PROFILE: PortfolioProfile = {
       title: "职位 / 角色",
       organization: "公司或项目名称",
       summary: "介绍负责内容、协作范围与可复核的工作成果。",
+      logoUrl: "",
     },
     {
       id: "milestone-two",
@@ -229,6 +234,7 @@ export const DEFAULT_PROFILE: PortfolioProfile = {
       title: "专业 / 学位",
       organization: "学校或组织",
       summary: "填写与专业相关的主要课程、实践或学习重点。",
+      logoUrl: "",
     },
   ],
   modules: { ...DEFAULT_MODULES },
@@ -369,6 +375,7 @@ export function normalizeProfile(value: unknown): PortfolioProfile {
           title: text(milestone.title, "经历标题", 140),
           organization: text(milestone.organization, "组织名称", 160),
           summary: text(milestone.summary, "", 1200),
+          logoUrl: safeUrl(milestone.logoUrl, ""),
         };
       })
     : DEFAULT_PROFILE.milestones;
@@ -417,6 +424,7 @@ export function normalizeProfile(value: unknown): PortfolioProfile {
       ? input.preventSearchSnapshots
       : DEFAULT_PROFILE.preventSearchSnapshots,
     experienceDisplayMode: input.experienceDisplayMode === "chapters" ? "chapters" : "timeline",
+    educationDisplayMode: input.educationDisplayMode === "timeline" ? "timeline" : "cards",
     displayName: text(input.displayName, DEFAULT_PROFILE.displayName, 80),
     avatarUrl: safeUrl(input.avatarUrl, DEFAULT_PROFILE.avatarUrl),
     avatarPositionX: numberValue(input.avatarPositionX, DEFAULT_PROFILE.avatarPositionX),

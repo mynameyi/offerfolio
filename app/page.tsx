@@ -11,6 +11,7 @@ import { VisitorAnalytics } from "@/components/visitor-analytics";
 import { ShowcaseGallery } from "@/components/showcase-gallery";
 import { AchievementGallery } from "@/components/achievement-gallery";
 import { ExperienceDisplay } from "@/components/experience-display";
+import { EducationDisplay } from "@/components/education-display";
 import { PortfolioImage } from "@/components/portfolio-image";
 
 export const dynamic = "force-dynamic";
@@ -178,8 +179,8 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   ].filter((item, index, items) => item.url && items.findIndex((other) => other.url === item.url) === index);
 
   return (
-    <main className="developerfolio-site" data-theme="light">
-      <header className="df-header" id="top">
+    <main className="developerfolio-site" id="top" data-theme="light">
+      <header className="df-header">
         <Link href="/" className="df-logo" aria-label="OfferFolio 首页">{profile.avatarUrl ? <PortfolioImage className="df-logo-avatar" src={profile.avatarUrl} alt="" width={64} height={64} sizes="48px" style={{ objectPosition: avatarObjectPosition }} /> : null}<span className="df-logo-muted">&lt;</span><span className="df-logo-name">{profile.displayName}</span><span className="df-logo-muted">/&gt;</span></Link>
         <PortfolioNavigation items={navItems} />
       </header>
@@ -228,7 +229,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       {modules.education && education.length ? (
         <section className="df-main df-content-section" id="education" data-module-key="education" style={sectionOrder("education")}>
           <SectionHeading title={profile.moduleLabels.education} subtitle="教育背景、专业训练与主要课程。" />
-          <div className="df-education-grid">{education.map((item) => <article className="df-education-card" key={item.id}><div className="df-institution-mark">{item.organization.slice(0, 1) || "学"}</div><div><p className="df-card-period">{item.period}</p><h3>{item.organization}</h3><h4>{item.title}</h4><p>{item.summary}</p></div></article>)}</div>
+          <EducationDisplay items={education} mode={profile.educationDisplayMode} />
         </section>
       ) : null}
 
@@ -241,7 +242,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
       {modules.showcase ? (
         <section className="df-main df-content-section" id="showcase" data-module-key="showcase" style={sectionOrder("showcase")}>
-          <SectionHeading title={profile.moduleLabels.showcase} subtitle="开源作品可直达源码；企业项目可通过图片或视频了解成果。" />
+          <SectionHeading title={profile.moduleLabels.showcase} subtitle="开源作品展示仓库简介与主题标签；企业项目通过精选图片和视频呈现。" />
           <ShowcaseGallery items={profile.showcaseItems} emptyText="尚未添加展示作品，可在后台添加源码链接或企业项目素材。" />
         </section>
       ) : null}
@@ -288,7 +289,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       </div>
 
       {isStaticSnapshot ? null : <VisitorAnalytics visitKey={visitKey} />}
-      <footer className="df-footer"><p>用真实作品与清晰经历，展示每一份专业价值。</p><span>© {new Date().getFullYear()} {profile.displayName} · EckyStudio</span>{isStaticSnapshot ? <small className="df-analytics-notice">此为静态导出页面，不会记录访客访问数据。</small> : <small className="df-analytics-notice">所有公开页面访问都会记录访问时间、来源 IP、来源页面、终端信息、模块阅读情况，以及联系、简历下载和社交链接点击。专属链接用于标记具体投递来源。</small>}</footer>
+      <footer className="df-footer"><p>用真实作品与清晰经历，展示每一份专业价值。</p><span>© {new Date().getFullYear()} {profile.displayName} · EckyStudio</span></footer>
       <a className="df-back-to-top" href="#top" aria-label="返回顶部">↑</a>
     </main>
   );

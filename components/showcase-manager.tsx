@@ -10,6 +10,14 @@ type ShowcaseType = "open-source" | "company-project";
 type UploadResult = { url: string; kind: "image" | "video"; error?: string };
 type MediaFrame = { source: HTMLImageElement | HTMLVideoElement; width: number; height: number; cleanup: () => void };
 
+function repositoryName(url: string) {
+  try {
+    return new URL(url).pathname.split("/").filter(Boolean).at(-1)?.replace(/\.git$/i, "") || "开源作品";
+  } catch {
+    return "开源作品";
+  }
+}
+
 function loadImageFrame(url: string): Promise<MediaFrame> {
   return new Promise((resolve, reject) => {
     const image = new Image();
@@ -136,6 +144,8 @@ export function ShowcaseManager({ items, onChange }: { items: PortfolioContentIt
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
   const [error, setError] = useState<Record<string, string>>({});
   const [coverStatus, setCoverStatus] = useState<Record<string, string>>({});
+  const [repositoryLoading, setRepositoryLoading] = useState<Record<string, boolean>>({});
+  const [repositoryStatus, setRepositoryStatus] = useState<Record<string, string>>({});
   const inputs = useRef<Record<string, HTMLInputElement | null>>({});
   const itemsRef = useRef(items);
   const onChangeRef = useRef(onChange);
@@ -208,6 +218,40 @@ export function ShowcaseManager({ items, onChange }: { items: PortfolioContentIt
     replaceItems(reordered);
   }
 
+  async function readRepositoryMetadata(item: PortfolioContentItem) {
+    if (!item.url.trim() || repositoryLoading[item.id]) return;
+    setRepositoryLoading((current) => ({ ...current, [item.id]: true }));
+    setRepositoryStatus((current) => ({ ...current, [item.id]: "正在读取仓库简介和标签…" }));
+    try {
+      const response = await adminFetch("/api/admin/showcase/repository-metadata", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: item.url }),
+      });
+      const result = await response.json() as {
+        metadata?: { title?: string; summary?: string; language?: string; tags?: string[]; stars?: number; forks?: number };
+        error?: string;
+      };
+      if (!response.ok || !result.metadata) throw new Error(result.error || "仓库信息读取失败。");
+      const metadata = result.metadata;
+      const latestItem = itemsRef.current.find((candidate) => candidate.id === item.id);
+      if (!latestItem || latestItem.url.trim() !== item.url.trim()) throw new Error("仓库链接已更改，请重新读取信息。");
+      update(item.id, {
+        title: metadata.title || latestItem.title || repositoryName(item.url),
+        summary: metadata.summary || latestItem.summary,
+        language: metadata.language || latestItem.language,
+        tags: metadata.tags?.length ? metadata.tags : latestItem.tags,
+        stars: metadata.stars ?? latestItem.stars,
+        forks: metadata.forks ?? latestItem.forks,
+      });
+      setRepositoryStatus((current) => ({ ...current, [item.id]: "仓库信息已填入，可继续编辑；点页面底部“保存更改”后写入数据库。" }));
+    } catch (caught) {
+      setRepositoryStatus((current) => ({ ...current, [item.id]: caught instanceof Error ? caught.message : "仓库信息读取失败。" }));
+    } finally {
+      setRepositoryLoading((current) => ({ ...current, [item.id]: false }));
+    }
+  }
+
   async function upload(id: string, event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.currentTarget.files ?? []);
     event.currentTarget.value = "";
@@ -268,11 +312,36 @@ export function ShowcaseManager({ items, onChange }: { items: PortfolioContentIt
               </div>
 
               {type === "open-source" ? (
-                <label className="field-label" htmlFor={`${item.id}-repository`}>源码链接
-                  <input id={`${item.id}-repository`} className="field-input" type="url" value={item.url} onChange={(event) => update(item.id, { url: event.target.value })} placeholder="https://github.com/用户名/仓库名" />
-                </label>
+                <div className="showcase-repository-fields">
+                  <div className="showcase-repository-fetch-row">
+                    <label className="field-label" htmlFor={`${item.id}-repository`}>源码链接
+                      <input id={`${item.id}-repository`} className="field-input" type="url" value={item.url} onChange={(event) => update(item.id, { url: event.target.value })} placeholder="https://github.com/用户名/仓库名 或 https://gitee.com/用户名/仓库名" />
+                    </label>
+                    <button className="button button-quiet showcase-repository-fetch" type="button" disabled={!item.url.trim() || repositoryLoading[item.id]} onClick={() => void readRepositoryMetadata(item)}>{repositoryLoading[item.id] ? "正在读取…" : "读取仓库信息"}</button>
+                  </div>
+                  <p className={`showcase-repository-status${repositoryStatus[item.id] && !repositoryStatus[item.id].includes("已填入") && !repositoryStatus[item.id].includes("正在读取") ? " is-error" : ""}`} role="status">{repositoryStatus[item.id] || "读取公开仓库的名称、About 简介、Topics 和主要语言；信息可修改后再保存。"}</p>
+                  <div className="showcase-repository-metadata-fields">
+                    <label className="field-label">作品名称
+                      <input className="field-input" type="text" value={item.title} onChange={(event) => update(item.id, { title: event.target.value })} placeholder="默认使用仓库名称" />
+                    </label>
+                    <label className="field-label">About 简介
+                      <textarea className="field-input field-textarea" rows={3} value={item.summary} onChange={(event) => update(item.id, { summary: event.target.value })} placeholder="从仓库自动读取，也可以自行补充" />
+                    </label>
+                    <div className="showcase-repository-meta-row">
+                      <label className="field-label">Topics / 主题标签
+                        <input className="field-input" type="text" value={item.tags.join(", ")} onChange={(event) => update(item.id, { tags: event.target.value.split(/[,，;；、]/).map((tag) => tag.trim()).filter(Boolean).slice(0, 12) })} placeholder="例如：nextjs, portfolio, sqlite" />
+                      </label>
+                      <label className="field-label">主要语言
+                        <input className="field-input" type="text" value={item.language} onChange={(event) => update(item.id, { language: event.target.value })} placeholder="例如：TypeScript" />
+                      </label>
+                    </div>
+                  </div>
+                </div>
               ) : (
                 <div className="showcase-company-fields">
+                  <label className="field-label">项目名称
+                    <input className="field-input" type="text" value={item.title} onChange={(event) => update(item.id, { title: event.target.value })} placeholder="例如：AI 研发平台" />
+                  </label>
                   <div className="field-label">项目图片或视频
                     <div className="showcase-media-list">
                       {mediaItems.map((media, mediaIndex) => (

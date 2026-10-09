@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" role="img" aria-labelledby="title desc">
+  <title id="title">教育经历原型 02：学校档案卡</title>
+  <desc id="desc">两张并列的学校档案卡，以学校标识为视觉中心，分别呈现学习阶段、专业与课程标签。</desc>
+  <defs>
+    <filter id="shadow" x="-10%" y="-15%" width="120%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="24" flood-color="#17231f" flood-opacity=".09"/>
+    </filter>
+    <linearGradient id="szuHeader" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#eee5f6"/>
+      <stop offset="1" stop-color="#f6f0f8"/>
+    </linearGradient>
+    <linearGradient id="gdmecHeader" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e7efec"/>
+      <stop offset="1" stop-color="#f1f5f2"/>
+    </linearGradient>
+    <pattern id="lines" width="34" height="34" patternUnits="userSpaceOnUse" patternTransform="rotate(35)">
+      <path d="M0 0 V34" stroke="#fff" stroke-opacity=".28" stroke-width="2"/>
+    </pattern>
+  </defs>
+
+  <rect width="1920" height="1080" fill="#f7f6f2"/>
+  <circle cx="1760" cy="130" r="230" fill="#eee9f1" opacity=".52"/>
+  <circle cx="1760" cy="130" r="160" fill="none" stroke="#fff" stroke-width="2" opacity=".7"/>
+
+  <g font-family="Inter, 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif">
+    <text x="145" y="149" fill="#171a1c" font-size="58" font-weight="700" letter-spacing="-2">教育经历</text>
+    <text x="148" y="201" fill="#858a88" font-size="22">两所学校，两段学习阶段；把专业背景和知识结构一眼讲清。</text>
+    <g transform="translate(1522 123)">
+      <rect width="250" height="42" rx="21" fill="#fff" stroke="#e9e5e9"/>
+      <circle cx="22" cy="21" r="5" fill="#76519b"/>
+      <text x="40" y="27" fill="#65616a" font-size="15" font-weight="650" letter-spacing="1">方案 02 · 学校档案卡</text>
+    </g>
+
+    <!-- Shenzhen University credential card -->
+    <g>
+      <rect x="145" y="270" width="800" height="650" rx="22" fill="#fff" stroke="#e8e5e8" filter="url(#shadow)"/>
+      <path d="M167 270 H923 Q945 270 945 292 V500 H145 V292 Q145 270 167 270Z" fill="url(#szuHeader)"/>
+      <path d="M145 270 H945 V500 H145Z" fill="url(#lines)" opacity=".65"/>
+      <image href="assets/shenzhen-university-emblem.png" x="185" y="314" width="138" height="138" preserveAspectRatio="xMidYMid meet"/>
+
+      <rect x="699" y="304" width="204" height="38" rx="19" fill="#fff" fill-opacity=".83"/>
+      <text x="801" y="329" text-anchor="middle" fill="#6f4b91" font-size="14" font-weight="700">2024 — 2025</text>
+      <text x="365" y="355" fill="#85808a" font-size="14" font-weight="650" letter-spacing="1.7">CONTINUING STUDY</text>
+      <text x="365" y="399" fill="#1b1b20" font-size="32" font-weight="720">深圳大学</text>
+      <text x="365" y="438" fill="#5f5965" font-size="19" font-weight="500">计算机信息管理 <tspan fill="#b0aab5">/</tspan> 学士</text>
+      <rect x="365" y="458" width="103" height="25" rx="12.5" fill="#fff" fill-opacity=".72"/>
+      <text x="416" y="475" text-anchor="middle" fill="#71538b" font-size="12" font-weight="650">继续教育</text>
+
+      <text x="190" y="552" fill="#77717d" font-size="14" font-weight="700" letter-spacing="1.5">主要课程</text>
+      <text x="900" y="552" text-anchor="end" fill="#a6a1aa" font-size="13" letter-spacing="1.2">CURRICULUM</text>
+      <line x1="190" y1="570" x2="900" y2="570" stroke="#eeeaf0"/>
+
+      <g font-size="15" font-weight="550" fill="#4d4a52">
+        <rect x="190" y="596" width="190" height="42" rx="12" fill="#f5f1f8"/><text x="285" y="623" text-anchor="middle">数据结构导论</text>
+        <rect x="392" y="596" width="190" height="42" rx="12" fill="#f5f1f8"/><text x="487" y="623" text-anchor="middle">操作系统概论</text>
+        <rect x="594" y="596" width="190" height="42" rx="12" fill="#f5f1f8"/><text x="689" y="623" text-anchor="middle">数据库系统原理</text>
+        <rect x="190" y="650" width="190" height="42" rx="12" fill="#f5f1f8"/><text x="285" y="677" text-anchor="middle">C++ 程序设计</text>
+        <rect x="392" y="650" width="190" height="42" rx="12" fill="#f5f1f8"/><text x="487" y="677" text-anchor="middle">计算机网络原理</text>
+        <rect x="594" y="650" width="306" height="42" rx="12" fill="#f5f1f8"/><text x="747" y="677" text-anchor="middle">信息系统开发与管理</text>
+        <rect x="190" y="704" width="190" height="42" rx="12" fill="#f5f1f8"/><text x="285" y="731" text-anchor="middle">管理经济学</text>
+        <rect x="392" y="704" width="190" height="42" rx="12" fill="#f5f1f8"/><text x="487" y="731" text-anchor="middle">信息资源管理</text>
+        <rect x="594" y="704" width="190" height="42" rx="12" fill="#f5f1f8"/><text x="689" y="731" text-anchor="middle">运筹学基础</text>
+      </g>
+      <rect x="190" y="805" width="710" height="1" fill="#f0edf1"/>
+      <text x="190" y="850" fill="#99939d" font-size="14">课程标签展示真实学习内容，不用一整段文字挤在一起。</text>
+      <text x="900" y="870" text-anchor="end" fill="#ded8e3" font-size="46" font-weight="700">01</text>
+    </g>
+
+    <!-- Guangdong Mechanical & Electrical Polytechnic credential card -->
+    <g>
+      <rect x="975" y="270" width="800" height="650" rx="22" fill="#fff" stroke="#e8e5e8" filter="url(#shadow)"/>
+      <path d="M997 270 H1753 Q1775 270 1775 292 V500 H975 V292 Q975 270 997 270Z" fill="url(#gdmecHeader)"/>
+      <path d="M975 270 H1775 V500 H975Z" fill="url(#lines)" opacity=".65"/>
+      <circle cx="1084" cy="377" r="69" fill="#356b59"/>
+      <image href="assets/gdmec-emblem.png" x="1027" y="320" width="114" height="114" preserveAspectRatio="xMidYMid meet"/>
+
+      <rect x="1529" y="304" width="204" height="38" rx="19" fill="#fff" fill-opacity=".83"/>
+      <text x="1631" y="329" text-anchor="middle" fill="#4d766b" font-size="14" font-weight="700">2008 — 2011</text>
+      <text x="1195" y="355" fill="#818b87" font-size="14" font-weight="650" letter-spacing="1.7">FOUNDATION</text>
+      <text x="1195" y="399" fill="#1b1b20" font-size="29" font-weight="720">广东机电职业技术学院</text>
+      <text x="1195" y="438" fill="#59645f" font-size="19" font-weight="500">信息安全技术</text>
+      <rect x="1195" y="458" width="103" height="25" rx="12.5" fill="#fff" fill-opacity=".75"/>
+      <text x="1246" y="475" text-anchor="middle" fill="#4f776b" font-size="12" font-weight="650">专业教育</text>
+
+      <text x="1020" y="552" fill="#77717d" font-size="14" font-weight="700" letter-spacing="1.5">主要课程</text>
+      <text x="1730" y="552" text-anchor="end" fill="#a6a1aa" font-size="13" letter-spacing="1.2">CURRICULUM</text>
+      <line x1="1020" y1="570" x2="1730" y2="570" stroke="#ecefeb"/>
+
+      <g font-size="15" font-weight="550" fill="#4d4a52">
+        <rect x="1020" y="596" width="190" height="42" rx="12" fill="#f0f5f2"/><text x="1115" y="623" text-anchor="middle">数据库应用开发</text>
+        <rect x="1232" y="596" width="190" height="42" rx="12" fill="#f0f5f2"/><text x="1327" y="623" text-anchor="middle">网络通信基础</text>
+        <rect x="1444" y="596" width="190" height="42" rx="12" fill="#f0f5f2"/><text x="1539" y="623" text-anchor="middle">C# 程序设计</text>
+        <rect x="1020" y="650" width="190" height="42" rx="12" fill="#f0f5f2"/><text x="1115" y="677" text-anchor="middle">网页设计</text>
+        <rect x="1232" y="650" width="190" height="42" rx="12" fill="#f0f5f2"/><text x="1327" y="677" text-anchor="middle">信息安全概论</text>
+        <rect x="1444" y="650" width="190" height="42" rx="12" fill="#f0f5f2"/><text x="1539" y="677" text-anchor="middle">Linux 服务器配置</text>
+        <rect x="1020" y="704" width="190" height="42" rx="12" fill="#f0f5f2"/><text x="1115" y="731" text-anchor="middle">Windows 服务器配置</text>
+        <rect x="1232" y="704" width="190" height="42" rx="12" fill="#f0f5f2"/><text x="1327" y="731" text-anchor="middle">网络攻防技术</text>
+        <rect x="1444" y="704" width="190" height="42" rx="12" fill="#f0f5f2"/><text x="1539" y="731" text-anchor="middle">网络安全实践</text>
+        <rect x="1020" y="758" width="190" height="42" rx="12" fill="#f0f5f2"/><text x="1115" y="785" text-anchor="middle">Web 应用开发</text>
+        <rect x="1232" y="758" width="190" height="42" rx="12" fill="#f0f5f2"/><text x="1327" y="785" text-anchor="middle">Delphi 程序设计</text>
+        <rect x="1444" y="758" width="190" height="42" rx="12" fill="#f0f5f2"/><text x="1539" y="785" text-anchor="middle">C / 汇编程序设计</text>
+      </g>
+      <rect x="1020" y="827" width="710" height="1" fill="#edf0ed"/>
+      <text x="1020" y="870" fill="#99939d" font-size="14">官网白色校徽以深色底衬托，和深大红色圆徽形成对照。</text>
+      <text x="1730" y="870" text-anchor="end" fill="#d6e1dc" font-size="46" font-weight="700">02</text>
+    </g>
+
+    <text x="145" y="994" fill="#8b908f" font-size="14">与职业经历的时间线区分：教育采用并列档案卡，重点突出学校、专业和课程。</text>
+    <text x="1775" y="994" text-anchor="end" fill="#a7aaa8" font-size="13" letter-spacing="1.2">EDUCATION · PROTOTYPE 02</text>
+  </g>
+</svg>

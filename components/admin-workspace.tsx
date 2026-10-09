@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import {
   DEFAULT_PROFILE,
   PROFILE_MODULES,
@@ -50,6 +50,12 @@ function formatExperiencePeriod(start: string, end: string, isCurrent: boolean) 
   if (!start && !end) return "";
   if (start && end) return `${formatMonth(start)} - ${formatMonth(end)}`;
   return formatMonth(start || end);
+}
+
+function defaultEducationLogo(organization: string) {
+  if (organization.trim() === "深圳大学") return "/education-logos/shenzhen-university-emblem.png";
+  if (organization.trim() === "广东机电职业技术学院") return "/education-logos/gdmec-emblem.png";
+  return "";
 }
 
 const socialFields: ContentField[] = [
@@ -118,6 +124,7 @@ export function AdminWorkspace({ onLogout }: { onLogout: () => Promise<void> }) 
   const [exporting, setExporting] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [educationLogoUploads, setEducationLogoUploads] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     let active = true;
@@ -172,11 +179,32 @@ export function AdminWorkspace({ onLogout }: { onLogout: () => Promise<void> }) 
     }));
   }
 
+  async function uploadEducationLogo(index: number, milestoneId: string, event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    setEducationLogoUploads((current) => ({ ...current, [milestoneId]: true }));
+    setError("");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await adminFetch("/api/admin/education/logo", { method: "POST", body: formData });
+      const result = await readJson<{ url: string }>(response);
+      if (!response.ok || !result.url) throw new Error(result.error || "校徽上传失败，请重试。");
+      updateMilestone(index, "logoUrl", result.url);
+      setMessage("学校校徽已上传，保存档案后会显示在公开页面。");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "校徽上传失败，请重试。");
+    } finally {
+      setEducationLogoUploads((current) => ({ ...current, [milestoneId]: false }));
+    }
+  }
+
   function addMilestone(kind: PortfolioMilestone["kind"]) {
     const titles = { experience: "职位 / 角色", education: "专业 / 学位", growth: "高光节点" };
     setProfile((current) => ({
       ...current,
-      milestones: [...current.milestones, { id: crypto.randomUUID(), kind, period: "", title: titles[kind], organization: "", summary: "" }],
+      milestones: [...current.milestones, { id: crypto.randomUUID(), kind, period: "", title: titles[kind], organization: "", summary: "", logoUrl: "" }],
     }));
   }
 
@@ -253,6 +281,21 @@ export function AdminWorkspace({ onLogout }: { onLogout: () => Promise<void> }) 
             </div>
           </fieldset>
         ) : null}
+        {kind === "education" ? (
+          <fieldset className="experience-display-settings">
+            <legend>展示方式</legend>
+            <div className="experience-display-options">
+              <label className={profile.educationDisplayMode === "timeline" ? "is-selected" : ""}>
+                <input type="radio" name="educationDisplayMode" value="timeline" checked={profile.educationDisplayMode === "timeline"} onChange={() => setField("educationDisplayMode", "timeline")} />
+                <span><strong>纵向时间线</strong><small>以时间节点串联学校与学习阶段</small></span>
+              </label>
+              <label className={profile.educationDisplayMode === "cards" ? "is-selected" : ""}>
+                <input type="radio" name="educationDisplayMode" value="cards" checked={profile.educationDisplayMode === "cards"} onChange={() => setField("educationDisplayMode", "cards")} />
+                <span><strong>学校档案卡</strong><small>突出校徽、专业信息与主要课程（默认）</small></span>
+              </label>
+            </div>
+          </fieldset>
+        ) : null}
         <div className="editor-items">
           {items.map(({ item: milestone, index }) => (
             <article className="editor-item" key={milestone.id}>
@@ -275,6 +318,11 @@ export function AdminWorkspace({ onLogout }: { onLogout: () => Promise<void> }) 
                 })() : <label className="field-label">时间段<input className="field-input" value={milestone.period} onChange={(event) => updateMilestone(index, "period", event.target.value)} maxLength={100} /></label>}
                 <label className="field-label">{kind === "education" ? "专业 / 学位" : kind === "experience" ? "职位 / 角色" : "节点标题"}<input className="field-input" value={milestone.title} onChange={(event) => updateMilestone(index, "title", event.target.value)} maxLength={140} /></label>
                 <label className="field-label field-span-two">{kind === "education" ? "学校 / 组织" : kind === "experience" ? "公司 / 组织" : "相关组织"}<input className="field-input" value={milestone.organization} onChange={(event) => updateMilestone(index, "organization", event.target.value)} maxLength={160} /></label>
+                {kind === "education" ? (() => {
+                  const defaultLogo = defaultEducationLogo(milestone.organization);
+                  const logo = milestone.logoUrl || defaultLogo;
+                  return <div className="field-label field-span-two"><span>学校校徽（可选）</span><div className="education-logo-upload"><div className={`education-logo-preview${!milestone.logoUrl && defaultLogo.includes("gdmec") ? " is-gdmec" : ""}`}>{logo ? <img src={logo} alt={`${milestone.organization || "学校"}校徽预览`} /> : <span>{milestone.organization.trim().slice(0, 1) || "学"}</span>}</div><label className="button button-quiet content-image-upload-button"><input type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" onChange={(event) => void uploadEducationLogo(index, milestone.id, event)} disabled={educationLogoUploads[milestone.id]} />{educationLogoUploads[milestone.id] ? "正在上传…" : milestone.logoUrl ? "更换校徽" : "上传校徽"}</label>{milestone.logoUrl ? <button className="button button-quiet" type="button" onClick={() => updateMilestone(index, "logoUrl", "")}>恢复默认</button> : null}<small>不上传时，深圳大学和广东机电职业技术学院会自动显示对应校徽。</small></div></div>;
+                })() : null}
                 <label className="field-label field-span-two">{kind === "education" ? "主要课程" : "经历与成果"}<textarea className="field-input field-textarea" value={milestone.summary} onChange={(event) => updateMilestone(index, "summary", event.target.value)} maxLength={1200} rows={3} /></label>
               </div>
             </article>
