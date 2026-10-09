@@ -25,6 +25,33 @@ async function readJson<T>(response: Response): Promise<T & { error?: string }> 
   return (await response.json()) as T & { error?: string };
 }
 
+function parseExperiencePeriod(period: string) {
+  const matches = [...period.matchAll(/((?:19|20|21)\d{2})[./年-](\d{1,2})月?/g)]
+    .map((match) => {
+      const month = Number(match[2]);
+      return month >= 1 && month <= 12 ? `${match[1]}-${String(month).padStart(2, "0")}` : "";
+    })
+    .filter(Boolean);
+  const isCurrent = /至今|现在|目前|present/i.test(period);
+  const hasMonth = matches.length > 0;
+  const isPlaceholder = !period.trim() || period.trim() === "时间段";
+
+  return {
+    start: matches[0] || "",
+    end: matches[1] || "",
+    isCurrent,
+    legacyText: !hasMonth && !isPlaceholder ? period : "",
+  };
+}
+
+function formatExperiencePeriod(start: string, end: string, isCurrent: boolean) {
+  const formatMonth = (value: string) => value.replace("-", ".");
+  if (isCurrent) return start ? `${formatMonth(start)} - 至今` : "至今";
+  if (!start && !end) return "";
+  if (start && end) return `${formatMonth(start)} - ${formatMonth(end)}`;
+  return formatMonth(start || end);
+}
+
 const socialFields: ContentField[] = [
   { key: "title", label: "平台名称", placeholder: "个人网站 / 知乎 / Gitee" },
   { key: "url", label: "链接地址", kind: "url", fullWidth: true },
@@ -88,6 +115,7 @@ export function AdminWorkspace({ onLogout }: { onLogout: () => Promise<void> }) 
   const [selectedModule, setSelectedModule] = useState<PortfolioModuleKey>("intro");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -178,20 +206,76 @@ export function AdminWorkspace({ onLogout }: { onLogout: () => Promise<void> }) 
     }
   }
 
+  async function exportStaticPage() {
+    setExporting(true);
+    setError("");
+    setMessage("");
+    try {
+      const response = await adminFetch("/api/admin/export-static", { cache: "no-store" });
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({})) as { error?: string };
+        throw new Error(result.error || "静态页面导出失败，请重试。");
+      }
+      const archive = await response.blob();
+      const objectUrl = URL.createObjectURL(archive);
+      const anchor = document.createElement("a");
+      anchor.href = objectUrl;
+      anchor.download = "offerfolio-static.zip";
+      document.body.append(anchor);
+      anchor.click();
+      anchor.remove();
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+      setMessage("静态页面已下载。内容按上次保存的档案生成；上传 ZIP 内的文件即可发布到 GitHub Pages 等静态托管。");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "静态页面导出失败，请重试。");
+    } finally {
+      setExporting(false);
+    }
+  }
+
   function milestoneEditor(kind: PortfolioMilestone["kind"], number: string, title: string, hint: string) {
     const items = profile.milestones.map((item, index) => ({ item, index })).filter(({ item }) => item.kind === kind);
     return (
       <section className="editor-panel">
         <div className="editor-panel-title"><span>{number}</span><div><h2>{title}</h2><p>{hint}</p></div></div>
+        {kind === "experience" ? (
+          <fieldset className="experience-display-settings">
+            <legend>展示方式</legend>
+            <div className="experience-display-options">
+              <label className={profile.experienceDisplayMode === "timeline" ? "is-selected" : ""}>
+                <input type="radio" name="experienceDisplayMode" value="timeline" checked={profile.experienceDisplayMode === "timeline"} onChange={() => setField("experienceDisplayMode", "timeline")} />
+                <span><strong>纵向时间线</strong><small>按时间顺序展示全部经历，默认样式</small></span>
+              </label>
+              <label className={profile.experienceDisplayMode === "chapters" ? "is-selected" : ""}>
+                <input type="radio" name="experienceDisplayMode" value="chapters" checked={profile.experienceDisplayMode === "chapters"} onChange={() => setField("experienceDisplayMode", "chapters")} />
+                <span><strong>横向章节</strong><small>选择一段经历，展开查看职责与成果</small></span>
+              </label>
+            </div>
+          </fieldset>
+        ) : null}
         <div className="editor-items">
           {items.map(({ item: milestone, index }) => (
             <article className="editor-item" key={milestone.id}>
               <div className="editor-item-top"><strong>{milestone.title || title}</strong><button className="icon-button danger-button" type="button" aria-label={`删除${title}`} onClick={() => removeMilestone(index)}><Glyph name="trash" /></button></div>
               <div className="editor-fields editor-fields-two">
-                <label className="field-label">时间段<input className="field-input" value={milestone.period} onChange={(event) => updateMilestone(index, "period", event.target.value)} maxLength={100} /></label>
+                {kind === "experience" ? (() => {
+                  const period = parseExperiencePeriod(milestone.period);
+                  const updatePeriod = (start: string, end: string, isCurrent: boolean) => updateMilestone(index, "period", formatExperiencePeriod(start, end, isCurrent));
+                  return (
+                    <div className="field-label experience-period-field">
+                      <span>任职时间</span>
+                      <div className="experience-date-range">
+                        <label>开始年月<input className="field-input" type="month" value={period.start} max={period.end || undefined} onChange={(event) => updatePeriod(event.target.value, period.end, period.isCurrent)} /></label>
+                        <label>结束年月<input className="field-input" type="month" value={period.end} min={period.start || undefined} disabled={period.isCurrent} onChange={(event) => updatePeriod(period.start, event.target.value, period.isCurrent)} /></label>
+                      </div>
+                      <label className="experience-current-toggle"><input type="checkbox" checked={period.isCurrent} onChange={(event) => updatePeriod(period.start, period.end, event.target.checked)} /> 目前在职</label>
+                      {period.legacyText ? <small className="experience-period-legacy">现有时间记录：{period.legacyText}。选择年月后将替换为年月范围。</small> : null}
+                    </div>
+                  );
+                })() : <label className="field-label">时间段<input className="field-input" value={milestone.period} onChange={(event) => updateMilestone(index, "period", event.target.value)} maxLength={100} /></label>}
                 <label className="field-label">{kind === "education" ? "专业 / 学位" : kind === "experience" ? "职位 / 角色" : "节点标题"}<input className="field-input" value={milestone.title} onChange={(event) => updateMilestone(index, "title", event.target.value)} maxLength={140} /></label>
                 <label className="field-label field-span-two">{kind === "education" ? "学校 / 组织" : kind === "experience" ? "公司 / 组织" : "相关组织"}<input className="field-input" value={milestone.organization} onChange={(event) => updateMilestone(index, "organization", event.target.value)} maxLength={160} /></label>
-                <label className="field-label field-span-two">经历与成果<textarea className="field-input field-textarea" value={milestone.summary} onChange={(event) => updateMilestone(index, "summary", event.target.value)} maxLength={1200} rows={3} /></label>
+                <label className="field-label field-span-two">{kind === "education" ? "主要课程" : "经历与成果"}<textarea className="field-input field-textarea" value={milestone.summary} onChange={(event) => updateMilestone(index, "summary", event.target.value)} maxLength={1200} rows={3} /></label>
               </div>
             </article>
           ))}
@@ -233,7 +317,7 @@ export function AdminWorkspace({ onLogout }: { onLogout: () => Promise<void> }) 
       case "strengths":
         return <ContentListEditor number="05" title="擅长领域" hint="列出长期实践的技术方向，并用项目经历支撑。" items={profile.strengths} fields={strengthFields} onChange={(items) => setCollection("strengths", items)} itemLabel="方向" addLabel="添加擅长方向" />;
       case "education":
-        return milestoneEditor("education", "06", "学习经历", "填写学校、专业和学习阶段。");
+        return milestoneEditor("education", "06", "教育经历", "填写学校、专业、就读阶段和主要课程。");
       case "career":
         return milestoneEditor("experience", "07", "职业经历", "填写任职经历、职责范围和实际成果。");
       case "featuredProjects":
@@ -281,13 +365,15 @@ export function AdminWorkspace({ onLogout }: { onLogout: () => Promise<void> }) 
         <div>
           <p className="section-kicker">ECKYSTUDIO / OFFERFOLIO</p>
           <h1>主页管理</h1>
-          <p>调整展示布局、编辑内容并查看公开页面访问情况。</p>
+          <p>调整展示布局、编辑内容并查看公开页面访问情况；静态导出使用已保存的档案。</p>
         </div>
         <div className="editor-heading-actions">
+          <button className="button button-quiet" type="button" onClick={exportStaticPage} disabled={exporting}><Glyph name="download" />{exporting ? "正在生成" : "导出静态页面"}</button>
           <a className="button button-quiet" href="/" target="_blank" rel="noreferrer">预览公开页面 <Glyph name="arrow" /></a>
           <button className="button button-quiet" type="button" onClick={onLogout}>退出 <Glyph name="logout" /></button>
         </div>
       </div>
+      {error || message ? <p className={error ? "form-error" : "form-success"} role={error ? "alert" : "status"}>{error || message}</p> : null}
 
       <div className="admin-workspace">
         <nav className="admin-sidebar" aria-label="管理导航">
@@ -333,7 +419,7 @@ export function AdminWorkspace({ onLogout }: { onLogout: () => Promise<void> }) 
                         checked={profile.preventSearchSnapshots}
                         onChange={(event) => setField("preventSearchSnapshots", event.target.checked)}
                       />
-                      <span><strong>禁止搜索引擎保存页面快照</strong><small>默认开启。通过 robots 元数据发送 noarchive / nocache 指令；搜索引擎是否支持由其自行决定。</small></span>
+                      <span><strong>减少搜索引擎留痕</strong><small>默认开启：robots.txt 建议爬虫不抓取全站，页面同时声明 noindex、noarchive 等指令。适合求职期间短期展示；不能删除已有收录，也不能代替访问权限。</small></span>
                     </label>
                   </div>
                 </section>

@@ -234,6 +234,22 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .editor-fields { display: grid; gap: 16px; }
 .editor-fields-two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .field-span-two { grid-column: 1 / -1; }
+.experience-display-settings { min-width: 0; margin: 0 0 22px; padding: 16px; border: 1px solid #e3e5dd; }
+.experience-display-settings legend { padding-inline: 5px; color: #43594c; font-size: 10px; font-weight: 650; }
+.experience-display-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.experience-display-options > label { min-width: 0; padding: 12px; display: flex; align-items: flex-start; gap: 9px; border: 1px solid #e3e5dd; background: #fffefa; cursor: pointer; }
+.experience-display-options > label.is-selected { border-color: #9caf9d; background: #f4f7f1; }
+.experience-display-options input { margin: 2px 0 0; accent-color: #608169; }
+.experience-display-options label > span { display: grid; gap: 4px; }
+.experience-display-options strong { color: #43594c; font-size: 10px; }
+.experience-display-options small { color: #8a958d; font-size: 9px; line-height: 1.6; }
+.experience-period-field { min-width: 0; }
+.experience-date-range { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.experience-date-range label { min-width: 0; display: flex; flex-direction: column; gap: 6px; color: #77847b; font-size: 9px; font-weight: 500; }
+.experience-date-range .field-input { min-width: 0; padding-inline: 8px; }
+.experience-current-toggle { display: flex; align-items: center; gap: 6px; color: #77847b; font-size: 9px; font-weight: 500; }
+.experience-current-toggle input { width: 14px; height: 14px; margin: 0; accent-color: #608169; }
+.experience-period-legacy { color: #9a7561; font-size: 9px; font-weight: 400; line-height: 1.6; }
 .field-hint { display: inline; margin-left: 5px; color: #9ca69d; font-size: 9px; font-weight: 400; }
 .editor-items { display: grid; gap: 12px; }
 .editor-item { padding: 18px; border: 1px solid #e3e5dd; background: #fffefa; }
@@ -681,6 +697,50 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
 .df-experience-title p { margin: 6px 0 0; color: var(--df-card-subtitle); font-size: 12px; }
 .df-experience-title > span { color: var(--df-subtitle); font-size: 10px; white-space: nowrap; }
 .df-experience-content > p { margin: 14px 0 0; color: var(--df-subtitle); font-size: 11px; line-height: 1.8; }
+.df-experience-timeline { display: grid; }
+.df-experience-timeline-item { min-width: 0; padding-bottom: 14px; display: grid; grid-template-columns: 34px minmax(118px, 150px) minmax(0, 1fr); gap: 14px; }
+.df-experience-timeline-marker { position: relative; display: flex; justify-content: center; }
+.df-experience-timeline-marker::after { content: ""; position: absolute; top: 31px; bottom: -14px; left: 50%; width: 1px; background: color-mix(in srgb, var(--df-purple) 40%, var(--df-border)); }
+.df-experience-timeline-item:last-child .df-experience-timeline-marker::after { display: none; }
+.df-experience-timeline-marker > span { width: 30px; height: 30px; position: relative; z-index: 1; display: grid; place-items: center; border: 1px solid color-mix(in srgb, var(--df-purple) 35%, var(--df-border)); border-radius: 50%; color: var(--df-purple); background: var(--df-bg); font-size: 10px; font-weight: 650; }
+.df-experience-timeline-period { padding-top: 8px; color: var(--df-subtitle); font-family: "SFMono-Regular", Consolas, monospace; font-size: 10px; line-height: 1.6; }
+.df-experience-timeline-content { min-width: 0; padding: 16px 20px; border-bottom: 1px solid var(--df-border); }
+.df-experience-timeline-item.is-featured .df-experience-timeline-marker > span { border-color: var(--df-purple); color: #fff; background: var(--df-purple); }
+.df-experience-timeline-item.is-featured .df-experience-timeline-content { border: 1px solid color-mix(in srgb, var(--df-purple) 18%, var(--df-border)); border-radius: 5px; background: color-mix(in srgb, var(--df-purple) 5%, var(--df-card)); }
+.df-experience-timeline-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.df-experience-timeline-heading h3 { margin: 0; color: var(--df-text); font-size: 17px; font-weight: 650; }
+.df-experience-timeline-heading p { margin: 5px 0 0; color: var(--df-card-subtitle); font-size: 12px; }
+.df-experience-recent-label { flex: 0 0 auto; padding: 5px 10px; border-radius: 99px; color: var(--df-purple); background: color-mix(in srgb, var(--df-purple) 10%, var(--df-card)); font-size: 9px; font-weight: 600; }
+.df-experience-summary { margin: 12px 0 0; color: var(--df-subtitle); font-size: 11px; line-height: 1.8; }
+.df-experience-achievements { margin: 12px 0 0; padding: 0; display: grid; gap: 8px; list-style: none; }
+.df-experience-achievements li { position: relative; padding-left: 15px; color: var(--df-subtitle); font-size: 11px; line-height: 1.8; }
+.df-experience-achievements li::before { content: ""; width: 5px; height: 5px; position: absolute; top: .72em; left: 1px; border-radius: 50%; background: var(--df-purple); }
+.df-experience-chapters { min-width: 0; }
+.df-experience-chapter-nav { position: relative; margin-bottom: 28px; padding-bottom: 12px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(175px, 100%), 1fr)); gap: 10px; }
+.df-experience-chapter-nav::before { content: ""; height: 1px; position: absolute; right: 0; bottom: 17px; left: 0; background: var(--df-border); }
+.df-experience-chapter { min-width: 0; min-height: 93px; padding: 12px 14px 24px; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; border: 1px solid transparent; border-radius: 5px; color: var(--df-text); background: transparent; cursor: pointer; text-align: center; transition: background .18s ease, color .18s ease, border-color .18s ease; }
+.df-experience-chapter:hover { background: color-mix(in srgb, var(--df-purple) 5%, var(--df-bg)); }
+.df-experience-chapter.is-active { border-color: color-mix(in srgb, var(--df-purple) 20%, transparent); color: #fff; background: var(--df-purple); }
+.df-experience-chapter-title { max-width: 100%; font-size: 13px; font-weight: 650; line-height: 1.5; }
+.df-experience-chapter-period { color: var(--df-subtitle); font-family: "SFMono-Regular", Consolas, monospace; font-size: 9px; }
+.df-experience-chapter.is-active .df-experience-chapter-period { color: #ffffffc9; }
+.df-experience-chapter > i { width: 12px; height: 12px; position: absolute; bottom: -6px; left: calc(50% - 6px); z-index: 1; border: 1px solid #a4adc0; border-radius: 50%; background: var(--df-bg); }
+.df-experience-chapter.is-active > i { border: 3px solid var(--df-purple); background: var(--df-bg); }
+.df-experience-chapter:focus-visible, .df-experience-chapter-pagination button:focus-visible { outline: 3px solid color-mix(in srgb, var(--df-purple) 35%, transparent); outline-offset: 3px; }
+.df-experience-chapter-detail { padding-top: 24px; border-top: 1px solid var(--df-border); }
+.df-experience-chapter-detail[hidden] { display: none; }
+.df-experience-chapter-controls { margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.df-experience-chapter-pagination { display: flex; align-items: center; gap: 8px; color: var(--df-subtitle); font-family: "SFMono-Regular", Consolas, monospace; font-size: 10px; }
+.df-experience-chapter-pagination button { width: 36px; height: 36px; display: grid; place-items: center; border: 1px solid var(--df-border); border-radius: 50%; color: var(--df-text); background: var(--df-card); cursor: pointer; font-size: 20px; line-height: 1; }
+.df-experience-chapter-pagination button:disabled { color: var(--df-subtitle); opacity: .45; cursor: not-allowed; }
+.df-experience-chapter-heading { padding-bottom: 20px; border-bottom: 1px solid var(--df-border); }
+.df-experience-chapter-heading h3 { margin: 0; color: var(--df-text); font-size: clamp(25px, 3.2vw, 38px); font-weight: 650; letter-spacing: -.04em; }
+.df-experience-chapter-heading p { margin: 8px 0 0; color: var(--df-card-subtitle); font-size: 17px; }
+.df-experience-chapter-heading > span { margin-top: 5px; display: block; color: var(--df-subtitle); font-family: "SFMono-Regular", Consolas, monospace; font-size: 12px; }
+.df-experience-chapter-detail .df-experience-achievements { margin-top: 21px; gap: 13px; }
+.df-experience-chapter-detail .df-experience-achievements li { padding-left: 19px; font-size: 13px; }
+.df-experience-chapter-detail .df-experience-achievements li::before { width: 7px; height: 7px; }
+.df-experience-chapter-detail .df-experience-summary { margin-top: 21px; font-size: 13px; }
 .df-repo-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .df-repo-card { min-height: 174px; padding: 19px; border: 1px solid var(--df-border); border-radius: 5px; color: var(--df-card-subtitle); background: var(--df-card); box-shadow: 0 4px 16px var(--df-shadow); }
 .df-repo-heading { display: flex; align-items: center; gap: 9px; }
@@ -873,6 +933,16 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
   .df-achievement-grid, .df-blog-grid, .df-podcast-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .df-achievement-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .df-experience-title { flex-direction: column; gap: 7px; }
+  .experience-display-options { grid-template-columns: 1fr; }
+  .df-experience-timeline-item { grid-template-columns: 30px minmax(100px, 125px) minmax(0, 1fr); gap: 9px; }
+  .df-experience-timeline-content { padding: 14px; }
+  .df-experience-chapter-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+  .df-experience-chapter-nav::before, .df-experience-chapter > i { display: none; }
+  .df-experience-chapter { min-height: 78px; padding: 10px; border-color: var(--df-border); background: var(--df-card); }
+  .df-experience-chapter.is-active { border-color: var(--df-purple); }
+  .df-experience-chapter-detail { padding-top: 18px; }
+  .df-experience-chapter-heading p { font-size: 14px; }
+  .df-experience-chapter-detail .df-experience-achievements li, .df-experience-chapter-detail .df-experience-summary { font-size: 12px; }
   .df-resume-inner { flex-direction: column; align-items: flex-start; }
   .df-contact-card { padding: 21px; gap: 18px; }
   .df-contact-avatar { width: 82px; height: 82px; font-size: 35px; }
@@ -893,6 +963,18 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
   .df-achievement-lightbox > img { max-height: 75vh; }
   .df-growth-list article { grid-template-columns: 76px 10px 1fr; gap: 9px; }
   .df-growth-list article > span { font-size: 8px; }
+  .df-experience-timeline-item { grid-template-columns: 27px minmax(0, 1fr); gap: 8px; padding-bottom: 10px; }
+  .df-experience-timeline-marker { grid-column: 1; grid-row: 1 / span 2; }
+  .df-experience-timeline-period { grid-column: 2; grid-row: 1; padding: 2px 0 5px; font-size: 9px; }
+  .df-experience-timeline-content { grid-column: 2; grid-row: 2; padding: 12px; }
+  .df-experience-timeline-heading h3 { font-size: 15px; }
+  .df-experience-timeline-heading p { font-size: 11px; }
+  .df-experience-summary, .df-experience-achievements li { font-size: 11px; }
+  .df-experience-chapter-nav { grid-template-columns: 1fr; }
+  .df-experience-chapter { min-height: 60px; align-items: flex-start; text-align: left; }
+  .df-experience-chapter-title { font-size: 12px; }
+  .df-experience-chapter-heading h3 { font-size: 25px; }
+  .df-experience-chapter-pagination button { width: 32px; height: 32px; }
   .df-experience-card { padding: 16px; gap: 12px; }
   .df-company-mark { width: 39px; height: 39px; }
   .df-contact-card { flex-direction: column; align-items: flex-start; }
@@ -992,6 +1074,20 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
 .radar-list-heading > span { color: #87938a; font-size: 10px; }
 .radar-scope-note { margin: -14px 0 0; color: #87938a; font-size: 9px; line-height: 1.7; }
 .radar-scope-note code { color: #62736a; }
+.radar-source-summary { display: grid; gap: 10px; }
+.radar-source-summary .radar-list-heading { margin-top: 0; }
+.radar-source-summary ul { margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; list-style: none; }
+.radar-source-summary li { min-width: 0; padding: 11px 12px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 8px; border: 1px solid #e1e4dc; background: #fbfaf6; }
+.radar-source-summary li > span { grid-column: 1 / -1; color: #98a198; font-size: 8px; }
+.radar-source-summary li > strong { overflow: hidden; color: #53685a; font-size: 10px; font-weight: 550; text-overflow: ellipsis; white-space: nowrap; }
+.radar-source-summary li > b { color: #496c54; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.radar-source-summary li > b small { margin-left: 2px; color: #98a198; font-size: 8px; font-weight: 400; }
+.radar-retention-panel { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.radar-retention-panel strong { color: #53685a; font-size: 10px; }
+.radar-retention-panel p { margin: 5px 0 0; color: #98a198; font-size: 8px; line-height: 1.6; }
+.radar-retention-controls { display: flex; flex: 0 0 auto; gap: 8px; }
+.radar-retention-controls select { min-width: 125px; min-height: 36px; padding: 0 10px; font-size: 9px; }
+.radar-retention-controls .button { min-height: 36px; padding-inline: 12px; font-size: 9px; }
 .radar-link-list { display: grid; gap: 12px; }
 .radar-link-card { padding: 20px; border: 1px solid #dfe2d9; background: #fbfaf6; }
 .radar-link-card.is-revoked { opacity: .76; }
@@ -1024,6 +1120,9 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
 .radar-visit-modules { margin: 9px 0 0; padding: 0; display: grid; gap: 5px; list-style: none; }
 .radar-visit-modules li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; color: #89948b; font-size: 8px; }
 .radar-visit-modules li strong { min-width: 76px; color: #53685a; font-size: 9px; }
+.radar-visit-actions { margin-top: 8px; display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
+.radar-visit-actions strong { margin-right: 4px; color: #53685a; font-size: 9px; }
+.radar-visit-actions span { padding: 3px 7px; border-radius: 99px; color: #53685a; background: #edf1e9; font-size: 8px; }
 .radar-agent-details { margin-top: 8px; color: #98a198; font-size: 8px; }
 .radar-agent-details summary { cursor: pointer; }
 .radar-agent-details code { margin-top: 5px; display: block; overflow-wrap: anywhere; }
@@ -1113,6 +1212,9 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
   .radar-link-url { align-items: stretch; flex-direction: column; }
   .radar-link-url > div { flex-wrap: wrap; }
   .radar-visit-history ol { grid-template-columns: 1fr; }
+  .radar-source-summary ul { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .radar-retention-panel { align-items: stretch; flex-direction: column; }
+  .radar-retention-controls select { flex: 1; }
   .df-highlight-track-static > .df-highlight-card { flex-basis: calc((100% - 16px) / 2); }
   .df-highlight-track-static > .df-highlight-card:only-child { flex-basis: min(78vw, 320px); }
   .df-highlight-track-many > .df-highlight-card { flex-basis: min(78vw, 320px); }

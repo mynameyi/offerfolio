@@ -4,7 +4,7 @@ export const PROFILE_MODULES = [
   { key: "showcase", label: "作品展示", description: "作品卡片、简介与相关链接" },
   { key: "skills", label: "技能", description: "技能标签与技术栈" },
   { key: "strengths", label: "擅长", description: "擅长的技术方向及熟练度" },
-  { key: "education", label: "学习经历", description: "学校、专业与学习经历" },
+  { key: "education", label: "教育经历", description: "学校、专业与主要课程" },
   { key: "career", label: "职业经历", description: "职位、公司与工作成果" },
   { key: "featuredProjects", label: "代表项目", description: "重点项目、图片与项目链接" },
   { key: "awards", label: "成就与证书", description: "奖项、证书与荣誉成果" },
@@ -78,8 +78,11 @@ export type PortfolioMilestone = {
   summary: string;
 };
 
+export type ExperienceDisplayMode = "timeline" | "chapters";
+
 export type PortfolioProfile = {
   preventSearchSnapshots: boolean;
+  experienceDisplayMode: ExperienceDisplayMode;
   displayName: string;
   avatarUrl: string;
   avatarPositionX: number;
@@ -169,6 +172,7 @@ const emptyContentItem = (id: string, title = ""): PortfolioContentItem => ({
 
 export const DEFAULT_PROFILE: PortfolioProfile = {
   preventSearchSnapshots: true,
+  experienceDisplayMode: "timeline",
   displayName: "你的姓名",
   avatarUrl: "",
   avatarPositionX: 50,
@@ -224,7 +228,7 @@ export const DEFAULT_PROFILE: PortfolioProfile = {
       period: "时间段",
       title: "专业 / 学位",
       organization: "学校或组织",
-      summary: "补充与目标方向相关的专业背景、项目和阶段成果。",
+      summary: "填写与专业相关的主要课程、实践或学习重点。",
     },
   ],
   modules: { ...DEFAULT_MODULES },
@@ -412,6 +416,7 @@ export function normalizeProfile(value: unknown): PortfolioProfile {
     preventSearchSnapshots: typeof input.preventSearchSnapshots === "boolean"
       ? input.preventSearchSnapshots
       : DEFAULT_PROFILE.preventSearchSnapshots,
+    experienceDisplayMode: input.experienceDisplayMode === "chapters" ? "chapters" : "timeline",
     displayName: text(input.displayName, DEFAULT_PROFILE.displayName, 80),
     avatarUrl: safeUrl(input.avatarUrl, DEFAULT_PROFILE.avatarUrl),
     avatarPositionX: numberValue(input.avatarPositionX, DEFAULT_PROFILE.avatarPositionX),

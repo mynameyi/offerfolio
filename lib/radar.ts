@@ -4,6 +4,9 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { isIP } from "node:net";
 import { db } from "@/lib/db";
 import type { PortfolioModuleKey } from "@/lib/profile";
+import { visitorSource, VISITOR_RETENTION_OPTIONS } from "@/lib/radar-common";
+
+export type VisitorActionKey = "contact" | "resume" | "github" | "gitee";
 
 export type ShareLink = {
   token: string;
@@ -20,6 +23,8 @@ export type ShareVisitModule = {
   dwellSeconds: number;
 };
 
+export type ShareVisitAction = { key: VisitorActionKey; count: number };
+
 export type ShareVisit = {
   visitKey: string;
   visitedAt: string;
@@ -35,7 +40,9 @@ export type ShareVisit = {
   utmSource: string;
   utmMedium: string;
   utmCampaign: string;
+  entryModuleKey: PortfolioModuleKey | "";
   modules: ShareVisitModule[];
+  actions: ShareVisitAction[];
 };
 
 export type VisitContext = {
@@ -54,7 +61,11 @@ export type ShareVisitEngagement = {
   durationSeconds: number;
   clicks: PortfolioModuleKey[];
   dwellSeconds: Partial<Record<PortfolioModuleKey, number>>;
+  entryModuleKey?: PortfolioModuleKey;
+  actions?: VisitorActionKey[];
 };
+
+export type VisitorSourceCount = { category: string; label: string; count: number };
 
 export function visitContextFromHeaders(
   requestHeaders: Headers,
@@ -109,6 +120,38 @@ export function countVisitorVisits(): number {
   return Number((db.prepare("SELECT COUNT(*) AS count FROM share_visits").get() as { count: number }).count);
 }
 
+export function getVisitorRetentionDays(): number {
+  const row = db.prepare("SELECT setting_value FROM app_settings WHERE setting_key = 'visitor_retention_days'").get() as { setting_value: string } | undefined;
+  const value = Number(row?.setting_value ?? 0);
+  return VISITOR_RETENTION_OPTIONS.includes(value as (typeof VISITOR_RETENTION_OPTIONS)[number]) ? value : 0;
+}
+
+export function setVisitorRetentionDays(days: number): { retentionDays: number; deletedCount: number } {
+  if (!VISITOR_RETENTION_OPTIONS.includes(days as (typeof VISITOR_RETENTION_OPTIONS)[number])) {
+    throw new Error("访问记录保留期限无效。");
+  }
+  db.prepare(`
+    INSERT INTO app_settings (setting_key, setting_value) VALUES ('visitor_retention_days', ?)
+    ON CONFLICT(setting_key) DO UPDATE SET setting_value = excluded.setting_value
+  `).run(String(days));
+  return { retentionDays: days, deletedCount: days ? deleteExpiredVisitorVisits(days) : 0 };
+}
+
+function deleteExpiredVisitorVisits(days: number): number {
+  const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+  const result = db.prepare("DELETE FROM share_visits WHERE visited_at < ?").run(cutoff);
+  return result.changes;
+}
+
+let lastRetentionSweepAt = 0;
+function applyVisitorRetentionPolicy(): void {
+  const days = getVisitorRetentionDays();
+  const now = Date.now();
+  if (!days || now - lastRetentionSweepAt < 60 * 60 * 1000) return;
+  deleteExpiredVisitorVisits(days);
+  lastRetentionSweepAt = now;
+}
+
 export function getActiveShareLink(token: string): boolean {
   return Boolean(db.prepare("SELECT 1 FROM share_links WHERE token = ? AND active = 1").get(token));
 }
@@ -137,6 +180,7 @@ function isAutomatedUserAgent(value: string): boolean {
 }
 
 export function recordVisitorVisit(context: VisitContext): string | null {
+  applyVisitorRetentionPolicy();
   if (context.token && !getActiveShareLink(context.token)) return null;
   const linkLabel = context.token
     ? (db.prepare("SELECT label FROM share_links WHERE token = ?").get(context.token) as { label: string } | undefined)?.label || "未命名链接"
@@ -196,6 +240,17 @@ export function recordVisitorVisitEngagement(
     for (const [key, seconds] of Object.entries(engagement.dwellSeconds) as Array<[PortfolioModuleKey, number]>) {
       if (seconds > 0) upsertModule.run(visit.id, key, 0, seconds);
     }
+    if (engagement.entryModuleKey) {
+      db.prepare("UPDATE share_visits SET entry_module_key = ? WHERE id = ? AND entry_module_key = ''")
+        .run(engagement.entryModuleKey, visit.id);
+    }
+    if (engagement.actions?.length) {
+      const upsertAction = db.prepare(`
+        INSERT INTO share_visit_actions (visit_id, action_key, action_count) VALUES (?, ?, 1)
+        ON CONFLICT(visit_id, action_key) DO UPDATE SET action_count = share_visit_actions.action_count + 1
+      `);
+      for (const action of engagement.actions) upsertAction.run(visit.id, action);
+    }
   });
   updateEngagement();
   return true;
@@ -211,9 +266,26 @@ export function listShareVisits(token: string, limit = 50): ShareVisit[] | null 
   return listVisits("share_visits.token = ?", [token], limit);
 }
 
-export function listVisitorVisits(limit = 100): { total: number; visits: ShareVisit[] } {
+export function listVisitorVisits(limit = 100): { total: number; visits: ShareVisit[]; sourceSummary: VisitorSourceCount[]; retentionDays: number } {
   const total = countVisitorVisits();
-  return { total, visits: listVisits("1 = 1", [], limit) };
+  return { total, visits: listVisits("1 = 1", [], limit), sourceSummary: listVisitorSourceSummary(), retentionDays: getVisitorRetentionDays() };
+}
+
+export function listVisitorSourceSummary(): VisitorSourceCount[] {
+  const rows = db.prepare(`
+    SELECT token, link_label AS linkLabel, referrer, utm_source AS utmSource,
+      utm_medium AS utmMedium, utm_campaign AS utmCampaign
+    FROM share_visits
+  `).all() as Array<{ token: string | null; linkLabel: string; referrer: string; utmSource: string; utmMedium: string; utmCampaign: string }>;
+  const counts = new Map<string, VisitorSourceCount>();
+  for (const row of rows) {
+    const source = visitorSource(row);
+    const key = `${source.category}\u0000${source.label}`;
+    const existing = counts.get(key);
+    if (existing) existing.count += 1;
+    else counts.set(key, { ...source, count: 1 });
+  }
+  return [...counts.values()].sort((a, b) => b.count - a.count || a.label.localeCompare(b.label)).slice(0, 12);
 }
 
 function listVisits(where: string, params: unknown[], limit: number): ShareVisit[] {
@@ -234,13 +306,14 @@ function listVisits(where: string, params: unknown[], limit: number): ShareVisit
       recent.utm_source AS utmSource,
       recent.utm_medium AS utmMedium,
       recent.utm_campaign AS utmCampaign,
+      recent.entry_module_key AS entryModuleKey,
       share_visit_modules.module_key AS moduleKey,
       share_visit_modules.click_count AS clickCount,
       share_visit_modules.dwell_seconds AS dwellSeconds
     FROM (
       SELECT id, visit_key, visited_at, ip_address, duration_seconds, token, link_label,
         entry_path, referrer, user_agent, accept_language, is_automated,
-        utm_source, utm_medium, utm_campaign
+        utm_source, utm_medium, utm_campaign, entry_module_key
       FROM share_visits
       WHERE ${where}
       ORDER BY id DESC
@@ -265,6 +338,7 @@ function listVisits(where: string, params: unknown[], limit: number): ShareVisit
     utmSource: string;
     utmMedium: string;
     utmCampaign: string;
+    entryModuleKey: PortfolioModuleKey | "";
     moduleKey: PortfolioModuleKey | null;
     clickCount: number | null;
     dwellSeconds: number | null;
@@ -289,7 +363,9 @@ function listVisits(where: string, params: unknown[], limit: number): ShareVisit
         utmSource: row.utmSource,
         utmMedium: row.utmMedium,
         utmCampaign: row.utmCampaign,
+        entryModuleKey: row.entryModuleKey,
         modules: [],
+        actions: [],
       };
       visits.set(row.id, visit);
     }
@@ -300,6 +376,15 @@ function listVisits(where: string, params: unknown[], limit: number): ShareVisit
         dwellSeconds: Number(row.dwellSeconds ?? 0),
       });
     }
+  }
+  const visitIds = [...visits.keys()];
+  if (visitIds.length) {
+    const placeholders = visitIds.map(() => "?").join(",");
+    const actionRows = db.prepare(`
+      SELECT visit_id AS visitId, action_key AS key, action_count AS count
+      FROM share_visit_actions WHERE visit_id IN (${placeholders}) ORDER BY action_key ASC
+    `).all(...visitIds) as Array<{ visitId: number; key: VisitorActionKey; count: number }>;
+    for (const action of actionRows) visits.get(action.visitId)?.actions.push({ key: action.key, count: Number(action.count) });
   }
   return [...visits.values()];
 }

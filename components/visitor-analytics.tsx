@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { PROFILE_MODULES, type PortfolioModuleKey } from "@/lib/profile";
 
 const moduleKeys = new Set<string>(PROFILE_MODULES.map(({ key }) => key));
+const visitorActions = new Set(["contact", "resume", "github", "gitee"]);
 
 export function VisitorAnalytics({ visitKey: initialVisitKey }: { visitKey: string }) {
   useEffect(() => {
@@ -24,7 +25,21 @@ export function VisitorAnalytics({ visitKey: initialVisitKey }: { visitKey: stri
     const moduleMilliseconds = new Map<PortfolioModuleKey, number>();
     const activeModules = new Set<PortfolioModuleKey>();
     const pendingClicks: PortfolioModuleKey[] = [];
+    const pendingActions: Array<"contact" | "resume" | "github" | "gitee"> = [];
+    let pendingEntryModule: PortfolioModuleKey | undefined;
+    let entryModuleCaptured = false;
     const endpoint = "/api/radar/engagement";
+
+    try {
+      const initialId = decodeURIComponent(window.location.hash.slice(1));
+      const initialKey = document.getElementById(initialId)?.dataset.moduleKey;
+      if (initialKey && moduleKeys.has(initialKey)) {
+        pendingEntryModule = initialKey as PortfolioModuleKey;
+        entryModuleCaptured = true;
+      }
+    } catch {
+      // Ignore malformed hashes; the first visible section will be used instead.
+    }
 
     function tick() {
       const now = Date.now();
@@ -35,7 +50,7 @@ export function VisitorAnalytics({ visitKey: initialVisitKey }: { visitKey: stri
       for (const key of activeModules) moduleMilliseconds.set(key, (moduleMilliseconds.get(key) ?? 0) + elapsed);
     }
 
-    function send(payload: { visitKey: string; durationSeconds: number; clicks: PortfolioModuleKey[]; dwellSeconds: Partial<Record<PortfolioModuleKey, number>> }) {
+    function send(payload: { visitKey: string; durationSeconds: number; clicks: PortfolioModuleKey[]; dwellSeconds: Partial<Record<PortfolioModuleKey, number>>; entryModuleKey?: PortfolioModuleKey; actions: Array<"contact" | "resume" | "github" | "gitee"> }) {
       const body = JSON.stringify(payload);
       const blob = new Blob([body], { type: "application/json" });
       if (!navigator.sendBeacon(endpoint, blob)) {
@@ -55,13 +70,18 @@ export function VisitorAnalytics({ visitKey: initialVisitKey }: { visitKey: stri
         }
       }
       const clicks = pendingClicks.splice(0, 64);
-      if (durationSeconds === 0 && clicks.length === 0 && Object.keys(dwellSeconds).length === 0) return;
-      send({ visitKey, durationSeconds, clicks, dwellSeconds });
+      const actions = pendingActions.splice(0, 32);
+      if (durationSeconds === 0 && clicks.length === 0 && Object.keys(dwellSeconds).length === 0 && !pendingEntryModule && actions.length === 0) return;
+      const entryModuleKey = pendingEntryModule;
+      pendingEntryModule = undefined;
+      send({ visitKey, durationSeconds, clicks, dwellSeconds, entryModuleKey, actions });
     }
 
     function handleClick(event: MouseEvent) {
       const target = event.target;
       if (!(target instanceof Element)) return;
+      const action = target.closest<HTMLElement>("[data-visitor-action]")?.dataset.visitorAction;
+      if (action && visitorActions.has(action)) pendingActions.push(action as "contact" | "resume" | "github" | "gitee");
       const anchor = target.closest<HTMLAnchorElement>('a[href^="#"]');
       if (!anchor) return;
       const id = anchor.getAttribute("href")?.slice(1);
@@ -87,6 +107,10 @@ export function VisitorAnalytics({ visitKey: initialVisitKey }: { visitKey: stri
         const key = (entry.target as HTMLElement).dataset.moduleKey;
         if (!key || !moduleKeys.has(key)) continue;
         const visibleArea = entry.intersectionRect.height / Math.max(window.innerHeight, 1);
+        if (!entryModuleCaptured && entry.isIntersecting && visibleArea >= 0.15) {
+          pendingEntryModule = key as PortfolioModuleKey;
+          entryModuleCaptured = true;
+        }
         if (entry.isIntersecting && visibleArea >= 0.15) activeModules.add(key as PortfolioModuleKey);
         else activeModules.delete(key as PortfolioModuleKey);
       }

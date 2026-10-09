@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { PROFILE_MODULES, type PortfolioModuleKey } from "@/lib/profile";
-import { recordVisitorVisitEngagement } from "@/lib/radar";
+import { recordVisitorVisitEngagement, type VisitorActionKey } from "@/lib/radar";
 
 export const dynamic = "force-dynamic";
 
 const moduleKeys = new Set<string>(PROFILE_MODULES.map(({ key }) => key));
+const actionKeys = new Set<VisitorActionKey>(["contact", "resume", "github", "gitee"]);
 const isModuleKey = (value: unknown): value is PortfolioModuleKey => typeof value === "string" && moduleKeys.has(value);
 const boundedSeconds = (value: unknown): value is number => typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= 60;
 
@@ -42,11 +43,17 @@ export async function POST(request: Request) {
       if (isModuleKey(key) && boundedSeconds(value)) dwellSeconds[key] = value;
     }
   }
+  const entryModuleKey = isModuleKey(input.entryModuleKey) ? input.entryModuleKey : undefined;
+  const actions = Array.isArray(input.actions)
+    ? input.actions.slice(0, 32).filter((value): value is VisitorActionKey => typeof value === "string" && actionKeys.has(value as VisitorActionKey))
+    : [];
 
   const recorded = recordVisitorVisitEngagement(visitKey, {
     durationSeconds: input.durationSeconds,
     clicks,
     dwellSeconds,
+    entryModuleKey,
+    actions,
   });
   if (!recorded) return NextResponse.json({ error: "访问记录不存在。" }, { status: 404 });
   return new NextResponse(null, { status: 204, headers: { "Cache-Control": "no-store" } });

@@ -1,6 +1,6 @@
 import type { ReactNode, SVGProps } from "react";
 
-type GlyphName = "arrow" | "pin" | "spark" | "link" | "lock" | "save" | "plus" | "trash" | "logout";
+type GlyphName = "arrow" | "pin" | "spark" | "link" | "lock" | "save" | "plus" | "trash" | "logout" | "download";
 
 const paths: Record<GlyphName, ReactNode> = {
   arrow: <><path d="M5 12h14" /><path d="m13 6 6 6-6 6" /></>,
@@ -12,6 +12,7 @@ const paths: Record<GlyphName, ReactNode> = {
   plus: <><path d="M12 5v14M5 12h14" /></>,
   trash: <><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m4 4v6m6-6v6" /></>,
   logout: <><path d="M10 17l5-5-5-5M15 12H3" /><path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6" /></>,
+  download: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m7 10 5 5 5-5M12 15V3" /></>,
 };
 
 export function Glyph({ name, ...props }: SVGProps<SVGSVGElement> & { name: GlyphName }) {

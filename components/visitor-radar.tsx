@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { PROFILE_MODULES, type PortfolioModuleKey } from "@/lib/profile";
 import { adminFetch } from "@/components/admin-fetch";
+import { visitorActionLabels, visitorSource, VISITOR_RETENTION_OPTIONS, type VisitorSourceCount } from "@/lib/radar-common";
 
 type ShareLink = {
   token: string;
@@ -28,10 +29,12 @@ type ShareVisit = {
   utmSource: string;
   utmMedium: string;
   utmCampaign: string;
+  entryModuleKey: PortfolioModuleKey | "";
   modules: Array<{ key: PortfolioModuleKey; clickCount: number; dwellSeconds: number }>;
+  actions: Array<{ key: "contact" | "resume" | "github" | "gitee"; count: number }>;
 };
 
-type VisitorRecordsResponse = { total: number; visits: ShareVisit[] };
+type VisitorRecordsResponse = { total: number; visits: ShareVisit[]; sourceSummary: VisitorSourceCount[]; retentionDays: number };
 
 const moduleLabels = new Map(PROFILE_MODULES.map(({ key, label }) => [key, label]));
 
@@ -64,6 +67,9 @@ export function VisitorRadar() {
   const [visits, setVisits] = useState<Record<string, ShareVisit[]>>({});
   const [allVisits, setAllVisits] = useState<ShareVisit[]>([]);
   const [visitCount, setVisitCount] = useState(0);
+  const [sourceSummary, setSourceSummary] = useState<VisitorSourceCount[]>([]);
+  const [retentionDays, setRetentionDays] = useState(0);
+  const [retentionChoice, setRetentionChoice] = useState(0);
   const [label, setLabel] = useState("");
   const [expandedToken, setExpandedToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -85,6 +91,9 @@ export function VisitorRadar() {
     setLinks(linksResult);
     setAllVisits(visitsResult.visits);
     setVisitCount(visitsResult.total);
+    setSourceSummary(visitsResult.sourceSummary);
+    setRetentionDays(visitsResult.retentionDays);
+    setRetentionChoice(visitsResult.retentionDays);
   }, []);
 
   useEffect(() => {
@@ -185,12 +194,55 @@ export function VisitorRadar() {
     }
   }
 
+  async function saveRetention() {
+    const message = retentionChoice === 0
+      ? "关闭自动清理。已有访问记录会继续保留。"
+      : `设置为保留最近 ${retentionChoice} 天。超过期限的访问记录将被永久删除，是否继续？`;
+    if (!window.confirm(message)) return;
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const response = await adminFetch("/api/admin/visits", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ retentionDays: retentionChoice }),
+      });
+      const result = await readJson<{ retentionDays: number; deletedCount: number }>(response);
+      if (!response.ok) throw new Error(result.error || "保存保留期限失败。");
+      setRetentionDays(result.retentionDays);
+      setMessage(result.deletedCount
+        ? `保留期限已更新，已清理 ${result.deletedCount} 条过期访问记录。`
+        : "访问记录保留期限已更新。");
+      await refresh();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "保存保留期限失败。");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <section className="visitor-radar">
       <div className="editor-panel radar-intro-panel">
         <div className="editor-panel-title"><span>04</span><div><h2>访问雷达</h2><p>所有公开主页访问都会记录。专属链接额外标记投递来源；直接访问也会出现在访客记录中。</p></div></div>
         {error ? <p className="form-error" role="alert">{error}</p> : null}
         {message ? <p className="form-success" role="status">{message}</p> : null}
+      </div>
+
+      <div className="radar-source-summary">
+        <div className="radar-list-heading"><div><p className="section-kicker">TRAFFIC SOURCES</p><h2>访问来源汇总</h2></div><span>按全部记录统计</span></div>
+        {sourceSummary.length ? <ul>{sourceSummary.map((source) => <li key={`${source.category}-${source.label}`}><span>{source.category}</span><strong>{source.label}</strong><b>{source.count}<small>次</small></b></li>)}</ul> : <p className="radar-empty">还没有来源数据。来源页可能会被浏览器隐藏；使用专属投递链接或 UTM 参数通常更容易准确归因。</p>}
+      </div>
+
+      <div className="editor-panel radar-retention-panel">
+        <div><strong>访问记录保留期限</strong><p>启用后会立即清理超期记录，并在后续访问时定期清理；选择“不自动清理”会持续保留记录。</p></div>
+        <div className="radar-retention-controls">
+          <select className="field-input" aria-label="访问记录保留期限" value={retentionChoice} onChange={(event) => setRetentionChoice(Number(event.target.value))}>
+            {VISITOR_RETENTION_OPTIONS.map((days) => <option key={days} value={days}>{days === 0 ? "不自动清理" : `${days} 天`}</option>)}
+          </select>
+          <button className="button button-quiet" type="button" disabled={busy || retentionChoice === retentionDays} onClick={() => void saveRetention()}>保存期限</button>
+        </div>
       </div>
 
       <div className="radar-list-heading"><div><p className="section-kicker">ALL VISITS</p><h2>全部访客记录</h2></div><span>{visitCount} 次访问 · 显示最近 {allVisits.length} 条</span></div>
@@ -203,16 +255,19 @@ export function VisitorRadar() {
                 <span>IP：{visit.ipAddress || "未获取"}</span>
                 <span>{visit.token || visit.linkLabel || visit.entryPath.startsWith("/r/") ? `专属链接：${visit.linkLabel || "未命名"}` : "普通访问"}</span>
                 <span>页面停留：{formatDuration(visit.durationSeconds)}</span>
+                {visit.entryModuleKey ? <span>首次进入：{moduleLabels.get(visit.entryModuleKey) || visit.entryModuleKey}</span> : null}
                 {visit.isAutomated ? <span className="radar-automated-tag">可能是机器人或链接预览</span> : null}
               </div>
               <div className="radar-visit-context">
                 <span>入口：{visit.entryPath.startsWith("/r/") ? "专属链接" : visit.entryPath}</span>
-                <span>来源：{visit.referrer || "直接进入 / 未提供来源页"}</span>
+                <span>归因：{visitorSource(visit).category} · {visitorSource(visit).label}</span>
+                <span>来源页：{visit.referrer || "直接进入 / 未提供来源页"}</span>
                 <span>终端：{describeUserAgent(visit.userAgent)}</span>
                 {visit.acceptLanguage ? <span>语言：{visit.acceptLanguage}</span> : null}
                 {visit.utmSource || visit.utmMedium || visit.utmCampaign ? <span>UTM：{[visit.utmSource, visit.utmMedium, visit.utmCampaign].filter(Boolean).join(" / ")}</span> : null}
               </div>
               {visit.modules.length ? <ul className="radar-visit-modules">{visit.modules.map((module) => <li key={module.key}><strong>{moduleLabels.get(module.key) || module.key}</strong><span>{module.clickCount ? `导航点击 ${module.clickCount} 次` : "未点击导航"}</span><span>停留 {formatDuration(module.dwellSeconds)}</span></li>)}</ul> : <p className="radar-no-engagement">模块行为数据会在访问页面开始停留或点击后出现。</p>}
+              {visit.actions.length ? <div className="radar-visit-actions"><strong>关键操作</strong>{visit.actions.map((action) => <span key={action.key}>{visitorActionLabels[action.key] || action.key} {action.count} 次</span>)}</div> : null}
               {visit.userAgent ? <details className="radar-agent-details"><summary>终端原始信息</summary><code>{visit.userAgent}</code></details> : null}
             </article>
           ))}
@@ -232,12 +287,31 @@ export function VisitorRadar() {
               <div className="radar-link-top"><div><div className="radar-link-name"><h3>{link.label || "未命名链接"}</h3><span className={`radar-link-status ${link.active ? "is-active" : ""}`}>{link.active ? "有效" : "已停用"}</span></div><p>创建于 {formatDate(link.createdAt)}</p></div><strong className="radar-visit-count">{link.visitCount}<small>次访问</small></strong></div>
               <div className="radar-link-url"><code>{origin ? `${origin}/r/${link.token}` : `/r/${link.token}`}</code><div><button className="button button-quiet" type="button" onClick={() => void copyLink(link.token)}>{copiedToken === link.token ? "已复制" : "复制链接"}</button><button className="button button-quiet" type="button" onClick={() => void toggleVisits(link.token)}>{expandedToken === link.token ? "收起记录" : "访问记录"}</button>{link.active ? <button className="button button-quiet radar-revoke" type="button" disabled={busy} onClick={() => void revokeLink(link.token)}>停用</button> : null}<button className="button button-quiet radar-delete" type="button" disabled={busy} onClick={() => void deleteLink(link.token, link.label)}>删除</button></div></div>
               <p className="radar-last-visit">最近访问：{formatDate(link.lastVisitedAt)}</p>
-              {expandedToken === link.token ? <div className="radar-visit-history"><strong>最近 50 次访问 · 时间 / IP / 停留 / 模块</strong>{visits[link.token] ? visits[link.token].length ? <div className="radar-visit-entries">{visits[link.token].map((visit) => <article className="radar-visit-entry" key={visit.visitKey}><div className="radar-visit-meta"><time>{formatDate(visit.visitedAt)}</time><span>IP：{visit.ipAddress || "未获取"}</span><span>页面停留：{formatDuration(visit.durationSeconds)}</span></div>{visit.modules.length ? <ul>{visit.modules.map((module) => <li key={module.key}><strong>{moduleLabels.get(module.key) || module.key}</strong><span>{module.clickCount ? `导航点击 ${module.clickCount} 次` : "未点击导航"}</span><span>停留 {formatDuration(module.dwellSeconds)}</span></li>)}</ul> : <p className="radar-no-engagement">尚无模块点击或可见停留记录。</p>}</article>)}</div> : <p>这条专属链接还没有访问记录。请将卡片中的链接用于简历投递；访客打开后，记录会显示在这里。</p> : <p><span className="loading-spinner" />正在读取记录…</p>}</div> : null}
+              {expandedToken === link.token ? (
+                <div className="radar-visit-history">
+                  <strong>最近 50 次访问 · 来源 / 入口 / 操作</strong>
+                  {visits[link.token] ? visits[link.token].length ? (
+                    <div className="radar-visit-entries">
+                      {visits[link.token].map((visit) => {
+                        const source = visitorSource(visit);
+                        return (
+                          <article className="radar-visit-entry" key={visit.visitKey}>
+                            <div className="radar-visit-meta"><time>{formatDate(visit.visitedAt)}</time><span>IP：{visit.ipAddress || "未获取"}</span><span>页面停留：{formatDuration(visit.durationSeconds)}</span>{visit.entryModuleKey ? <span>首次进入：{moduleLabels.get(visit.entryModuleKey) || visit.entryModuleKey}</span> : null}</div>
+                            <div className="radar-visit-context"><span>归因：{source.category} · {source.label}</span><span>来源页：{visit.referrer || "未提供"}</span>{visit.utmSource || visit.utmMedium || visit.utmCampaign ? <span>UTM：{[visit.utmSource, visit.utmMedium, visit.utmCampaign].filter(Boolean).join(" / ")}</span> : null}</div>
+                            {visit.modules.length ? <ul>{visit.modules.map((module) => <li key={module.key}><strong>{moduleLabels.get(module.key) || module.key}</strong><span>{module.clickCount ? `导航点击 ${module.clickCount} 次` : "未点击导航"}</span><span>停留 {formatDuration(module.dwellSeconds)}</span></li>)}</ul> : <p className="radar-no-engagement">尚无模块点击或可见停留记录。</p>}
+                            {visit.actions.length ? <div className="radar-visit-actions"><strong>关键操作</strong>{visit.actions.map((action) => <span key={action.key}>{visitorActionLabels[action.key] || action.key} {action.count} 次</span>)}</div> : null}
+                          </article>
+                        );
+                      })}
+                    </div>
+                  ) : <p>这条专属链接还没有访问记录。请将卡片中的链接用于简历投递；访客打开后，记录会显示在这里。</p> : <p><span className="loading-spinner" />正在读取记录…</p>}
+                </div>
+              ) : null}
             </article>
           ))}
         </div>
       ) : <div className="radar-empty">{loading ? null : "还没有专属投递链接。所有公开页面访问仍会显示在上方；创建专属链接后，可将访问单独归因到对应投递。"}</div>}
-      <p className="radar-footnote">每次进入公开主页都会生成一条访问记录，链接预览和机器人访问会保留并标记为“可能是机器人或链接预览”，不自动过滤。模块点击目前统计页内导航；停留时长仅在页面处于前台且模块可见时累计。IP 从 X-Real-IP / X-Forwarded-For 请求头读取，反向代理需正确转发。</p>
+      <p className="radar-footnote">来源页由浏览器 Referer 提供，可能被浏览器或邮件、社交应用隐藏；专属投递链接和 UTM 参数更可靠。首次进入位置、联系我、简历下载、GitHub 和 Gitee 点击需要访客浏览器运行脚本后才能记录。机器人判断依据浏览器标识，仅供参考。</p>
     </section>
   );
 }

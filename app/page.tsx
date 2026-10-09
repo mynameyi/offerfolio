@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { headers } from "next/headers";
 import { readProfile } from "@/lib/db";
+import { isAdminAuthenticated } from "@/lib/admin-auth";
 import { type PortfolioContentItem, type PortfolioModuleKey } from "@/lib/profile";
 import { getVisitorVisitKey, recordVisitorVisit, visitContextFromHeaders } from "@/lib/radar";
 import { Glyph } from "@/components/glyph";
@@ -9,12 +10,23 @@ import { PortfolioNavigation } from "@/components/portfolio-navigation";
 import { VisitorAnalytics } from "@/components/visitor-analytics";
 import { ShowcaseGallery } from "@/components/showcase-gallery";
 import { AchievementGallery } from "@/components/achievement-gallery";
+import { ExperienceDisplay } from "@/components/experience-display";
 import { PortfolioImage } from "@/components/portfolio-image";
 
 export const dynamic = "force-dynamic";
 
 function externalLinkProps(url: string) {
   return url.startsWith("http") ? { target: "_blank" as const, rel: "noreferrer" } : {};
+}
+
+function socialVisitorAction(url: string): "github" | "gitee" | undefined {
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    if (host === "github.com" || host.endsWith(".github.com")) return "github";
+    if (host === "gitee.com" || host.endsWith(".gitee.com")) return "gitee";
+  } catch {
+    return undefined;
+  }
 }
 
 function SectionHeading({ title, subtitle }: { title: string; subtitle?: string }) {
@@ -99,13 +111,14 @@ function ProjectGrid({ items, emptyText }: { items: PortfolioContentItem[]; empt
 
 export default async function HomePage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const query = await searchParams;
+  const isStaticSnapshot = query.__of_static_snapshot === "1" && await isAdminAuthenticated();
   const linkedToken = typeof query.of_token === "string" ? query.of_token : "";
   const linkedVisitKey = typeof query.of_visit === "string" ? query.of_visit : "";
   const existingLinkedVisit = /^[A-Za-z0-9_-]{16}$/.test(linkedToken)
     && /^[0-9a-f-]{36}$/i.test(linkedVisitKey)
     && getVisitorVisitKey(linkedVisitKey, linkedToken);
   let visitKey = existingLinkedVisit ? linkedVisitKey : "";
-  if (!visitKey) {
+  if (!visitKey && !isStaticSnapshot) {
     const requestHeaders = await headers();
     const recordedVisitKey = recordVisitorVisit(visitContextFromHeaders(requestHeaders, "/", null, {
       source: typeof query.utm_source === "string" ? query.utm_source : "",
@@ -178,10 +191,10 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             <p className="df-greeting-title">{profile.headline || `你好，我是${profile.displayName}`} <span className="df-wave" aria-hidden="true">👋</span></p>
             <p className="df-greeting-subtitle">{profile.introduction}</p>
             <div className="df-greeting-buttons">
-              {profile.resumeUrl ? <a className="df-button" href={profile.resumeUrl} {...externalLinkProps(profile.resumeUrl)}>下载简历 <Glyph name="arrow" /></a> : null}
-              {modules.contact ? <a className="df-button df-button-outline" href="#contact">联系我 <Glyph name="arrow" /></a> : null}
-              {profile.githubUrl ? <a className="df-social-link df-social-link-github" href={profile.githubUrl} title="GitHub" aria-label="GitHub" {...externalLinkProps(profile.githubUrl)}><img src="/brand/github-invertocat.svg" alt="" /></a> : null}
-              {profile.giteeUrl ? <a className="df-social-link df-social-link-gitee" href={profile.giteeUrl} title="Gitee" aria-label="Gitee" {...externalLinkProps(profile.giteeUrl)}><img src="/brand/gitee-mark.svg" alt="" /></a> : null}
+              {profile.resumeUrl ? <a className="df-button" data-visitor-action="resume" href={profile.resumeUrl} {...externalLinkProps(profile.resumeUrl)}>下载简历 <Glyph name="arrow" /></a> : null}
+              {modules.contact ? <a className="df-button df-button-outline" data-visitor-action="contact" href="#contact">联系我 <Glyph name="arrow" /></a> : null}
+              {profile.githubUrl ? <a className="df-social-link df-social-link-github" data-visitor-action="github" href={profile.githubUrl} title="GitHub" aria-label="GitHub" {...externalLinkProps(profile.githubUrl)}><img src="/brand/github-invertocat.svg" alt="" /></a> : null}
+              {profile.giteeUrl ? <a className="df-social-link df-social-link-gitee" data-visitor-action="gitee" href={profile.giteeUrl} title="Gitee" aria-label="Gitee" {...externalLinkProps(profile.giteeUrl)}><img src="/brand/gitee-mark.svg" alt="" /></a> : null}
             </div>
           </div>
           <div className="df-greeting-image">{profile.avatarUrl ? <PortfolioImage className="df-profile-hero-avatar" src={profile.avatarUrl} alt={`${profile.displayName}的头像`} width={900} height={900} sizes="(max-width: 767px) 68vw, 410px" style={{ objectPosition: avatarObjectPosition }} priority /> : <DeveloperIllustration />}</div>
@@ -214,7 +227,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
       {modules.education && education.length ? (
         <section className="df-main df-content-section" id="education" data-module-key="education" style={sectionOrder("education")}>
-          <SectionHeading title={profile.moduleLabels.education} subtitle="专业训练、持续学习与实践积累。" />
+          <SectionHeading title={profile.moduleLabels.education} subtitle="教育背景、专业训练与主要课程。" />
           <div className="df-education-grid">{education.map((item) => <article className="df-education-card" key={item.id}><div className="df-institution-mark">{item.organization.slice(0, 1) || "学"}</div><div><p className="df-card-period">{item.period}</p><h3>{item.organization}</h3><h4>{item.title}</h4><p>{item.summary}</p></div></article>)}</div>
         </section>
       ) : null}
@@ -222,7 +235,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       {modules.career && experience.length ? (
         <section className="df-main df-content-section df-experience-section" id="experience" data-module-key="career" style={sectionOrder("career")}>
           <SectionHeading title={profile.moduleLabels.career} subtitle="承担责任、解决问题，并与团队一起交付有价值的成果。" />
-          <div className="df-experience-list">{experience.map((item) => <article className="df-experience-card" key={item.id}><div className="df-company-mark">{item.organization.slice(0, 1) || "工"}</div><div className="df-experience-content"><div className="df-experience-title"><div><h3>{item.title}</h3><p>{item.organization}</p></div><span>{item.period}</span></div><p>{item.summary}</p></div></article>)}</div>
+          <ExperienceDisplay items={experience} mode={profile.experienceDisplayMode} />
         </section>
       ) : null}
 
@@ -270,12 +283,12 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       ) : null}
 
       {modules.contact ? (
-        <section className="df-main df-contact-section" id="contact" data-module-key="contact" style={sectionOrder("contact")}><SectionHeading title={profile.moduleLabels.contact} subtitle="如需了解项目细节或工作经历，可通过邮件或社交平台联系。" /><div className="df-contact-card"><div className="df-contact-avatar">{profile.avatarUrl ? <PortfolioImage src={profile.avatarUrl} alt={`${profile.displayName}的头像`} width={180} height={180} sizes="110px" style={{ objectPosition: avatarObjectPosition }} /> : profile.displayName.slice(0, 1) || "你"}</div><div className="df-contact-info"><h3>{profile.displayName}</h3><div className="df-contact-details">{profile.email ? <a href={`mailto:${profile.email}`}>{profile.email}</a> : null}{profile.phone ? <a href={`tel:${profile.phone}`}>{profile.phone}</a> : null}{profile.location ? <span><Glyph name="pin" />{profile.location}</span> : null}</div>{socialItems.length ? <div className="df-contact-social">{socialItems.map((item) => <a href={item.url} key={`contact-${item.id}`} {...externalLinkProps(item.url)}>{item.title}</a>)}</div> : null}</div></div></section>
+        <section className="df-main df-contact-section" id="contact" data-module-key="contact" style={sectionOrder("contact")}><SectionHeading title={profile.moduleLabels.contact} subtitle="如需了解项目细节或工作经历，可通过邮件或社交平台联系。" /><div className="df-contact-card"><div className="df-contact-avatar">{profile.avatarUrl ? <PortfolioImage src={profile.avatarUrl} alt={`${profile.displayName}的头像`} width={180} height={180} sizes="110px" style={{ objectPosition: avatarObjectPosition }} /> : profile.displayName.slice(0, 1) || "你"}</div><div className="df-contact-info"><h3>{profile.displayName}</h3><div className="df-contact-details">{profile.email ? <a data-visitor-action="contact" href={`mailto:${profile.email}`}>{profile.email}</a> : null}{profile.phone ? <a data-visitor-action="contact" href={`tel:${profile.phone}`}>{profile.phone}</a> : null}{profile.location ? <span><Glyph name="pin" />{profile.location}</span> : null}</div>{socialItems.length ? <div className="df-contact-social">{socialItems.map((item) => <a href={item.url} key={`contact-${item.id}`} data-visitor-action={socialVisitorAction(item.url)} {...externalLinkProps(item.url)}>{item.title}</a>)}</div> : null}</div></div></section>
       ) : null}
       </div>
 
-      <VisitorAnalytics visitKey={visitKey} />
-      <footer className="df-footer"><p>用真实作品与清晰经历，展示每一份专业价值。</p><span>© {new Date().getFullYear()} {profile.displayName} · EckyStudio</span><small className="df-analytics-notice">所有公开页面访问都会记录访问时间、来源 IP、来源页面、终端信息和模块阅读情况。专属链接用于标记具体投递来源。</small></footer>
+      {isStaticSnapshot ? null : <VisitorAnalytics visitKey={visitKey} />}
+      <footer className="df-footer"><p>用真实作品与清晰经历，展示每一份专业价值。</p><span>© {new Date().getFullYear()} {profile.displayName} · EckyStudio</span>{isStaticSnapshot ? <small className="df-analytics-notice">此为静态导出页面，不会记录访客访问数据。</small> : <small className="df-analytics-notice">所有公开页面访问都会记录访问时间、来源 IP、来源页面、终端信息、模块阅读情况，以及联系、简历下载和社交链接点击。专属链接用于标记具体投递来源。</small>}</footer>
       <a className="df-back-to-top" href="#top" aria-label="返回顶部">↑</a>
     </main>
   );

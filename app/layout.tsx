@@ -13,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
     applicationName: "OfferFolio",
     icons: { icon: "/icon.svg" },
     ...(profile.preventSearchSnapshots
-      ? { robots: { index: true, follow: true, noarchive: true, nocache: true } }
+      ? { robots: { index: false, follow: false, noarchive: true, nocache: true } }
       : {}),
   };
 }

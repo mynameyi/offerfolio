@@ -58,7 +58,8 @@ function openDatabase(): CachedDatabase {
       is_automated INTEGER NOT NULL DEFAULT 0,
       utm_source TEXT NOT NULL DEFAULT '',
       utm_medium TEXT NOT NULL DEFAULT '',
-      utm_campaign TEXT NOT NULL DEFAULT ''
+      utm_campaign TEXT NOT NULL DEFAULT '',
+      entry_module_key TEXT NOT NULL DEFAULT ''
     );
     CREATE TABLE IF NOT EXISTS share_visit_modules (
       visit_id INTEGER NOT NULL REFERENCES share_visits(id) ON DELETE CASCADE,
@@ -68,6 +69,10 @@ function openDatabase(): CachedDatabase {
       PRIMARY KEY (visit_id, module_key)
     );
     CREATE INDEX IF NOT EXISTS share_visits_token_idx ON share_visits(token, visited_at);
+    CREATE TABLE IF NOT EXISTS app_settings (
+      setting_key TEXT PRIMARY KEY,
+      setting_value TEXT NOT NULL
+    );
   `);
 
   const visitColumns = new Set(
@@ -92,6 +97,7 @@ function openDatabase(): CachedDatabase {
     ["utm_source", "TEXT NOT NULL DEFAULT ''"],
     ["utm_medium", "TEXT NOT NULL DEFAULT ''"],
     ["utm_campaign", "TEXT NOT NULL DEFAULT ''"],
+    ["entry_module_key", "TEXT NOT NULL DEFAULT ''"],
   ] as const) {
     if (!visitColumns.has(name)) connection.exec(`ALTER TABLE share_visits ADD COLUMN ${name} ${definition}`);
   }
@@ -125,10 +131,11 @@ function openDatabase(): CachedDatabase {
           is_automated INTEGER NOT NULL DEFAULT 0,
           utm_source TEXT NOT NULL DEFAULT '',
           utm_medium TEXT NOT NULL DEFAULT '',
-          utm_campaign TEXT NOT NULL DEFAULT ''
+          utm_campaign TEXT NOT NULL DEFAULT '',
+          entry_module_key TEXT NOT NULL DEFAULT ''
         );
-        INSERT INTO share_visits_new (id, token, link_label, visited_at, ip_address, duration_seconds, visit_key, entry_path, referrer, user_agent, accept_language, is_automated, utm_source, utm_medium, utm_campaign)
-          SELECT id, token, link_label, visited_at, ip_address, duration_seconds, visit_key, entry_path, referrer, user_agent, accept_language, is_automated, utm_source, utm_medium, utm_campaign FROM share_visits;
+        INSERT INTO share_visits_new (id, token, link_label, visited_at, ip_address, duration_seconds, visit_key, entry_path, referrer, user_agent, accept_language, is_automated, utm_source, utm_medium, utm_campaign, entry_module_key)
+          SELECT id, token, link_label, visited_at, ip_address, duration_seconds, visit_key, entry_path, referrer, user_agent, accept_language, is_automated, utm_source, utm_medium, utm_campaign, entry_module_key FROM share_visits;
         CREATE TABLE share_visit_modules_new (
           visit_id INTEGER NOT NULL REFERENCES share_visits_new(id) ON DELETE CASCADE,
           module_key TEXT NOT NULL,
@@ -153,7 +160,16 @@ function openDatabase(): CachedDatabase {
   }
 
   connection.exec("CREATE INDEX IF NOT EXISTS share_visits_token_idx ON share_visits(token, visited_at)");
+  connection.exec("CREATE INDEX IF NOT EXISTS share_visits_visited_at_idx ON share_visits(visited_at)");
   connection.exec("CREATE UNIQUE INDEX IF NOT EXISTS share_visits_visit_key_idx ON share_visits(visit_key)");
+  connection.exec(`
+    CREATE TABLE IF NOT EXISTS share_visit_actions (
+      visit_id INTEGER NOT NULL REFERENCES share_visits(id) ON DELETE CASCADE,
+      action_key TEXT NOT NULL,
+      action_count INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (visit_id, action_key)
+    );
+  `);
 
   connection
     .prepare(
