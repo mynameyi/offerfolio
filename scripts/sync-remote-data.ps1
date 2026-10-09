@@ -8,6 +8,8 @@ param(
 
   [string]$IdentityFile,
 
+  [switch]$UseSudo,
+
   [switch]$Preview
 )
 
@@ -32,6 +34,7 @@ if (-not $sshCommand -or -not $scpCommand -or -not $tarCommand -or -not $nodeCom
 }
 
 $sshOptions = @("-o", "BatchMode=yes")
+$dockerCommand = if ($UseSudo) { "sudo docker" } else { "docker" }
 if ($IdentityFile) {
   $IdentityFile = (Resolve-Path $IdentityFile).Path
   $sshOptions += @("-i", $IdentityFile, "-o", "IdentitiesOnly=yes")
@@ -58,7 +61,7 @@ try {
 
   $remoteCommand = "cd '$RemoteDirectory' && if [ -d data/uploads ]; then find data/uploads -type f -exec sha256sum {} +; fi"
   $remoteManifestLines = Invoke-Ssh $remoteCommand
-  Invoke-Ssh "cd '$RemoteDirectory' && docker compose exec -T offerfolio node --check /app/scripts/import-deploy-data.mjs" | Out-Null
+  Invoke-Ssh "cd '$RemoteDirectory' && $dockerCommand compose exec -T offerfolio node --check /app/scripts/import-deploy-data.mjs" | Out-Null
   $remoteHashes = @{}
   foreach ($line in $remoteManifestLines) {
     if ($line -match '^([A-Fa-f0-9]{64})\s+\*?(data/uploads/.+)$') {
@@ -114,7 +117,7 @@ try {
   if ($LASTEXITCODE -ne 0) { throw "Could not upload the non-visitor data bundle." }
   $uploadedRemotePaths += $remoteBundle
 
-  $importCommand = 'cd "{0}" && container_id=$(docker compose ps -q offerfolio) && test -n "$container_id" && trap ''docker exec "$container_id" rm -f /app/data/.offerfolio-sync.json >/dev/null 2>&1 || true; rm -f "{1}"'' EXIT && docker cp "{1}" "$container_id:/app/data/.offerfolio-sync.json" && docker compose exec -T offerfolio node /app/scripts/import-deploy-data.mjs /app/data/.offerfolio-sync.json' -f $RemoteDirectory, $remoteBundle
+  $importCommand = 'cd "{0}" && container_id=$({2} compose ps -q offerfolio) && test -n "$container_id" && trap ''{2} exec "$container_id" rm -f /app/data/.offerfolio-sync.json >/dev/null 2>&1 || true; rm -f "{1}"'' EXIT && {2} cp "{1}" "$container_id:/app/data/.offerfolio-sync.json" && {2} compose exec -T offerfolio node /app/scripts/import-deploy-data.mjs /app/data/.offerfolio-sync.json' -f $RemoteDirectory, $remoteBundle, $dockerCommand
   $importOutput = Invoke-Ssh $importCommand
   $uploadedRemotePaths = @()
   Write-Output "远端同步完成。"

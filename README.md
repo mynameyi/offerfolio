@@ -194,6 +194,7 @@ Windows 上可使用 `scripts/sync-remote-data.ps1`。它通过 SSH 比较本地
   -SshTarget "部署用户@服务器地址或SSH别名" `
   -RemoteDirectory "/opt/offerfolio" `
   -IdentityFile "C:/Users/用户名/路径/KO.pem" `
+  -UseSudo `
   -Preview
 ```
 
