@@ -53,7 +53,7 @@ function transcodeToH264(inputPath: string, outputPath: string) {
   });
 }
 
-export async function saveUploadedMedia(file: File, collection: "highlights" | "showcase" | "achievements" | "education") {
+export async function saveUploadedMedia(file: File, collection: "highlights" | "showcase" | "achievements" | "education" | "projects") {
   const media = getUploadedMediaType(file.type);
   if (!media) throw new Error("不支持的媒体格式。");
 

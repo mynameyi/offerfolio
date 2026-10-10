@@ -1,15 +1,16 @@
 import { NextResponse } from "next/server";
-import { createShareLink, listShareLinks } from "@/lib/radar";
+import { createShareLink, listShareLinks, parseVisitorVisitView } from "@/lib/radar";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: Request) {
   if (!await isAdminAuthenticated()) {
     return NextResponse.json({ error: "请先登录管理后台。" }, { status: 401 });
   }
 
-  return NextResponse.json(listShareLinks(), { headers: { "Cache-Control": "no-store" } });
+  const view = parseVisitorVisitView(new URL(request.url).searchParams.get("view"));
+  return NextResponse.json(listShareLinks(view), { headers: { "Cache-Control": "no-store" } });
 }
 
 export async function POST(request: Request) {

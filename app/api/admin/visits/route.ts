@@ -1,16 +1,17 @@
 import { NextResponse } from "next/server";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
-import { listVisitorVisits, setVisitorRetentionDays } from "@/lib/radar";
+import { listVisitorVisits, parseVisitorVisitView, setVisitorRetentionDays } from "@/lib/radar";
 import { VISITOR_RETENTION_OPTIONS } from "@/lib/radar-common";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: Request) {
   if (!await isAdminAuthenticated()) {
     return NextResponse.json({ error: "请先登录管理后台。" }, { status: 401 });
   }
 
-  return NextResponse.json(listVisitorVisits(100), { headers: { "Cache-Control": "no-store" } });
+  const view = parseVisitorVisitView(new URL(request.url).searchParams.get("view"));
+  return NextResponse.json(listVisitorVisits(100, view), { headers: { "Cache-Control": "no-store" } });
 }
 
 export async function PATCH(request: Request) {

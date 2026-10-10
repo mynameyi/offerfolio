@@ -1,17 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { isIP } from "node:net";
 import { secureCookie } from "@/lib/admin-session";
-import { getActiveShareLink, getShareVisitKey, recordShareVisit } from "@/lib/radar";
-
-function clientIp(request: Request): string {
-  const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  const realIp = request.headers.get("x-real-ip")?.trim();
-  for (const candidate of [realIp, forwarded]) {
-    if (candidate && isIP(candidate)) return candidate;
-  }
-  return "";
-}
+import { clientIpFromHeaders, getActiveShareLink, getShareVisitKey, recordShareVisit } from "@/lib/radar";
 
 function setVisitCookie(response: NextResponse, token: string, visitKey: string) {
   response.cookies.set(`offerfolio_seen_${token}`, visitKey, {
@@ -40,7 +30,7 @@ export async function POST(request: Request, context: { params: Promise<{ token:
     setVisitCookie(response, token, previousVisitKey);
     return response;
   }
-  const visitKey = recordShareVisit(token, clientIp(request));
+  const visitKey = recordShareVisit(token, clientIpFromHeaders(request.headers));
   if (!visitKey) return NextResponse.json({ error: "链接不存在或已撤销。" }, { status: 404 });
 
   const response = NextResponse.json({ recorded: true, visitKey });

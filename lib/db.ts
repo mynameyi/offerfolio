@@ -73,6 +73,20 @@ function openDatabase(): CachedDatabase {
       setting_key TEXT PRIMARY KEY,
       setting_value TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS ignored_visitor_ips (
+      ip_address TEXT PRIMARY KEY,
+      created_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS visitor_ip_geolocations (
+      ip_address TEXT PRIMARY KEY,
+      status TEXT NOT NULL,
+      country TEXT NOT NULL DEFAULT '',
+      region TEXT NOT NULL DEFAULT '',
+      city TEXT NOT NULL DEFAULT '',
+      district TEXT NOT NULL DEFAULT '',
+      isp TEXT NOT NULL DEFAULT '',
+      updated_at TEXT NOT NULL
+    );
   `);
 
   const visitColumns = new Set(

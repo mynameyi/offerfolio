@@ -2,7 +2,7 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { readProfile } from "@/lib/db";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
-import { type PortfolioContentItem, type PortfolioModuleKey } from "@/lib/profile";
+import { type PortfolioModuleKey } from "@/lib/profile";
 import { getVisitorVisitKey, recordVisitorVisit, visitContextFromHeaders } from "@/lib/radar";
 import { Glyph } from "@/components/glyph";
 import { HighlightCarousel } from "@/components/highlight-carousel";
@@ -13,6 +13,7 @@ import { AchievementGallery } from "@/components/achievement-gallery";
 import { ExperienceDisplay } from "@/components/experience-display";
 import { EducationDisplay } from "@/components/education-display";
 import { PortfolioImage } from "@/components/portfolio-image";
+import { ProjectGallery } from "@/components/project-gallery";
 
 export const dynamic = "force-dynamic";
 
@@ -84,29 +85,6 @@ function DeveloperIllustration({ variant = "greeting" }: { variant?: "greeting" 
       <path d="m381 237 10 10 20-23" fill="none" stroke="#55198b" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
       <path d="m400 110 8-16 8 16h-6v15h-5v-15h-5Z" fill="#9e7cba" /><circle cx="86" cy="147" r="8" fill="#f3ce7c" /><path d="M440 151h24m-12-12v24" stroke="#9e7cba" strokeWidth="3" strokeLinecap="round" />
     </svg>
-  );
-}
-
-function ProjectGrid({ items, emptyText }: { items: PortfolioContentItem[]; emptyText: string }) {
-  if (!items.length) return <div className="df-empty-state">{emptyText}</div>;
-  return (
-    <div className="df-project-grid">
-      {items.map((project) => (
-        <article className="df-project-card" key={project.id}>
-          {project.imageUrl ? <div className="df-project-image"><PortfolioImage src={project.imageUrl} alt={project.title} width={900} height={570} sizes="(max-width: 768px) 90vw, (max-width: 1200px) 45vw, 32vw" /></div> : <div className="df-project-image df-project-image-placeholder"><span>{project.title.slice(0, 1) || "作"}</span></div>}
-          <div className="df-project-body">
-            <p className="df-project-subtitle">{project.subtitle || project.tags.slice(0, 2).join(" · ")}</p>
-            <h3>{project.title}</h3>
-            <p>{project.summary}</p>
-            {project.tags.length ? <div className="df-tag-row">{project.tags.map((tag) => <span key={tag}>{tag}</span>)}</div> : null}
-            <div className="df-project-links">
-              {project.url ? <a href={project.url} {...externalLinkProps(project.url)}>{project.urlLabel || "查看作品"} <Glyph name="arrow" /></a> : null}
-              {project.secondaryUrl ? <a href={project.secondaryUrl} {...externalLinkProps(project.secondaryUrl)}>{project.secondaryLabel || "了解更多"} <Glyph name="arrow" /></a> : null}
-            </div>
-          </div>
-        </article>
-      ))}
-    </div>
   );
 }
 
@@ -250,7 +228,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       {modules.featuredProjects ? (
         <section className="df-main df-content-section df-projects-section" id="projects" data-module-key="featuredProjects" style={sectionOrder("featuredProjects")}>
           <SectionHeading title={profile.moduleLabels.featuredProjects} subtitle="参与设计与构建的项目，以及其中的思考和成果。" />
-          <ProjectGrid items={profile.projects} emptyText="尚未添加代表项目，可在后台添加介绍、图片与链接。" />
+          <ProjectGallery items={profile.projects} experiences={profile.milestones.filter((item) => item.kind === "experience")} emptyText="尚未添加代表项目，可在后台添加介绍、图片与链接。" />
         </section>
       ) : null}
 

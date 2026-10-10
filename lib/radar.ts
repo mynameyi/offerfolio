@@ -3,6 +3,7 @@ import "server-only";
 import { randomBytes, randomUUID } from "node:crypto";
 import { isIP } from "node:net";
 import { db } from "@/lib/db";
+import { isPublicIpAddress, scheduleIpGeolocationLookup } from "@/lib/ip-geolocation";
 import type { PortfolioModuleKey } from "@/lib/profile";
 import { visitorSource, VISITOR_RETENTION_OPTIONS } from "@/lib/radar-common";
 
@@ -29,6 +30,8 @@ export type ShareVisit = {
   visitKey: string;
   visitedAt: string;
   ipAddress: string;
+  ipLocation: string;
+  ipLocationStatus: "resolved" | "pending" | "failed" | "private" | "unconfigured" | "unqueried" | "unavailable";
   durationSeconds: number;
   token: string | null;
   linkLabel: string;
@@ -66,6 +69,42 @@ export type ShareVisitEngagement = {
 };
 
 export type VisitorSourceCount = { category: string; label: string; count: number };
+export type VisitorVisitView = "active" | "ignored" | "all";
+export type IgnoredVisitorIp = {
+  ipAddress: string;
+  createdAt: string;
+  visitCount: number;
+  lastVisitedAt: string | null;
+};
+
+export function parseVisitorVisitView(value: string | null): VisitorVisitView {
+  if (value === "ignored" || value === "all") return value;
+  return "active";
+}
+
+function normalizeVisitorIp(value: string): string {
+  const candidate = value.trim().toLowerCase();
+  const version = isIP(candidate);
+  if (version === 4) return candidate;
+  if (version === 6) return new URL(`http://[${candidate}]/`).hostname.slice(1, -1);
+  return "";
+}
+
+export function clientIpFromHeaders(requestHeaders: Headers): string {
+  const forwarded = requestHeaders.get("x-forwarded-for")?.split(",").map((value) => value.trim()) ?? [];
+  const real = requestHeaders.get("x-real-ip")?.trim() || "";
+  for (const candidate of [...forwarded, real]) {
+    const normalized = normalizeVisitorIp(candidate);
+    if (normalized) return normalized;
+  }
+  return "";
+}
+
+function visitorViewWhere(view: VisitorVisitView): string {
+  const isIgnored = "EXISTS (SELECT 1 FROM ignored_visitor_ips WHERE ignored_visitor_ips.ip_address = share_visits.ip_address)";
+  if (view === "all") return "1 = 1";
+  return view === "ignored" ? isIgnored : `NOT ${isIgnored}`;
+}
 
 export function visitContextFromHeaders(
   requestHeaders: Headers,
@@ -73,9 +112,7 @@ export function visitContextFromHeaders(
   token: string | null,
   campaign: { source?: string; medium?: string; name?: string } = {},
 ): VisitContext {
-  const forwarded = requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() || "";
-  const real = requestHeaders.get("x-real-ip")?.trim() || "";
-  const ipAddress = [real, forwarded].find((candidate) => isIP(candidate)) || "";
+  const ipAddress = clientIpFromHeaders(requestHeaders);
   const rawReferrer = requestHeaders.get("referer") || "";
   let referrer = "";
   try {
@@ -97,7 +134,7 @@ export function visitContextFromHeaders(
   };
 }
 
-export function listShareLinks(): ShareLink[] {
+export function listShareLinks(view: VisitorVisitView = "active"): ShareLink[] {
   return db.prepare(`
     SELECT
       share_links.token AS token,
@@ -107,7 +144,7 @@ export function listShareLinks(): ShareLink[] {
       COUNT(share_visits.id) AS visitCount,
       MAX(share_visits.visited_at) AS lastVisitedAt
     FROM share_links
-    LEFT JOIN share_visits ON share_visits.token = share_links.token
+    LEFT JOIN share_visits ON share_visits.token = share_links.token AND (${visitorViewWhere(view)})
     GROUP BY share_links.token
     ORDER BY share_links.created_at DESC
   `).all().map((row) => {
@@ -116,8 +153,40 @@ export function listShareLinks(): ShareLink[] {
   });
 }
 
-export function countVisitorVisits(): number {
-  return Number((db.prepare("SELECT COUNT(*) AS count FROM share_visits").get() as { count: number }).count);
+export function countVisitorVisits(view: VisitorVisitView = "all"): number {
+  return Number((db.prepare(`SELECT COUNT(*) AS count FROM share_visits WHERE ${visitorViewWhere(view)}`).get() as { count: number }).count);
+}
+
+export function listIgnoredVisitorIps(): IgnoredVisitorIp[] {
+  return db.prepare(`
+    SELECT ignored_visitor_ips.ip_address AS ipAddress,
+      ignored_visitor_ips.created_at AS createdAt,
+      COUNT(share_visits.id) AS visitCount,
+      MAX(share_visits.visited_at) AS lastVisitedAt
+    FROM ignored_visitor_ips
+    LEFT JOIN share_visits ON share_visits.ip_address = ignored_visitor_ips.ip_address
+    GROUP BY ignored_visitor_ips.ip_address
+    ORDER BY ignored_visitor_ips.created_at DESC, ignored_visitor_ips.ip_address ASC
+  `).all().map((row) => {
+    const item = row as Omit<IgnoredVisitorIp, "visitCount"> & { visitCount: number };
+    return { ...item, visitCount: Number(item.visitCount) };
+  });
+}
+
+export function addIgnoredVisitorIp(ipAddress: string): IgnoredVisitorIp {
+  const normalizedIp = normalizeVisitorIp(ipAddress);
+  if (!normalizedIp) throw new Error("请输入有效的 IPv4 或 IPv6 地址。");
+  db.prepare(`
+    INSERT INTO ignored_visitor_ips (ip_address, created_at) VALUES (?, ?)
+    ON CONFLICT(ip_address) DO NOTHING
+  `).run(normalizedIp, new Date().toISOString());
+  return listIgnoredVisitorIps().find((item) => item.ipAddress === normalizedIp)!;
+}
+
+export function removeIgnoredVisitorIp(ipAddress: string): boolean {
+  const normalizedIp = normalizeVisitorIp(ipAddress);
+  if (!normalizedIp) return false;
+  return db.prepare("DELETE FROM ignored_visitor_ips WHERE ip_address = ?").run(normalizedIp).changes > 0;
 }
 
 export function getVisitorRetentionDays(): number {
@@ -140,6 +209,12 @@ export function setVisitorRetentionDays(days: number): { retentionDays: number; 
 function deleteExpiredVisitorVisits(days: number): number {
   const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
   const result = db.prepare("DELETE FROM share_visits WHERE visited_at < ?").run(cutoff);
+  db.prepare(`
+    DELETE FROM visitor_ip_geolocations
+    WHERE NOT EXISTS (
+      SELECT 1 FROM share_visits WHERE share_visits.ip_address = visitor_ip_geolocations.ip_address
+    )
+  `).run();
   return result.changes;
 }
 
@@ -206,6 +281,7 @@ export function recordVisitorVisit(context: VisitContext): string | null {
     context.utmMedium || "",
     context.utmCampaign || "",
   );
+  scheduleIpGeolocationLookup(context.ipAddress);
   return visitKey;
 }
 
@@ -261,21 +337,34 @@ export function recordShareVisitEngagement(token: string, visitKey: string, enga
   return recordVisitorVisitEngagement(visitKey, engagement);
 }
 
-export function listShareVisits(token: string, limit = 50): ShareVisit[] | null {
+export function listShareVisits(token: string, limit = 50, view: VisitorVisitView = "active"): ShareVisit[] | null {
   if (!db.prepare("SELECT 1 FROM share_links WHERE token = ?").get(token)) return null;
-  return listVisits("share_visits.token = ?", [token], limit);
+  return listVisits(`share_visits.token = ? AND (${visitorViewWhere(view)})`, [token], limit);
 }
 
-export function listVisitorVisits(limit = 100): { total: number; visits: ShareVisit[]; sourceSummary: VisitorSourceCount[]; retentionDays: number } {
-  const total = countVisitorVisits();
-  return { total, visits: listVisits("1 = 1", [], limit), sourceSummary: listVisitorSourceSummary(), retentionDays: getVisitorRetentionDays() };
+export function listVisitorVisits(limit = 100, view: VisitorVisitView = "active") {
+  const activeTotal = countVisitorVisits("active");
+  const ignoredTotal = countVisitorVisits("ignored");
+  const allTotal = activeTotal + ignoredTotal;
+  return {
+    total: view === "all" ? allTotal : view === "ignored" ? ignoredTotal : activeTotal,
+    activeTotal,
+    ignoredTotal,
+    allTotal,
+    visits: listVisits(visitorViewWhere(view), [], limit),
+    sourceSummary: listVisitorSourceSummary(view),
+    ignoredIps: listIgnoredVisitorIps(),
+    retentionDays: getVisitorRetentionDays(),
+    ipGeolocationConfigured: Boolean(process.env.IP138_TOKEN?.trim()),
+  };
 }
 
-export function listVisitorSourceSummary(): VisitorSourceCount[] {
+export function listVisitorSourceSummary(view: VisitorVisitView = "active"): VisitorSourceCount[] {
   const rows = db.prepare(`
     SELECT token, link_label AS linkLabel, referrer, utm_source AS utmSource,
       utm_medium AS utmMedium, utm_campaign AS utmCampaign
     FROM share_visits
+    WHERE ${visitorViewWhere(view)}
   `).all() as Array<{ token: string | null; linkLabel: string; referrer: string; utmSource: string; utmMedium: string; utmCampaign: string }>;
   const counts = new Map<string, VisitorSourceCount>();
   for (const row of rows) {
@@ -295,6 +384,12 @@ function listVisits(where: string, params: unknown[], limit: number): ShareVisit
       recent.visit_key AS visitKey,
       recent.visited_at AS visitedAt,
       recent.ip_address AS ipAddress,
+      geo.country AS geoCountry,
+      geo.region AS geoRegion,
+      geo.city AS geoCity,
+      geo.district AS geoDistrict,
+      geo.isp AS geoIsp,
+      geo.status AS geoStatus,
       recent.duration_seconds AS durationSeconds,
       recent.token AS token,
       COALESCE(NULLIF(recent.link_label, ''), share_links.label, '') AS linkLabel,
@@ -319,6 +414,7 @@ function listVisits(where: string, params: unknown[], limit: number): ShareVisit
       ORDER BY id DESC
       LIMIT ?
     ) AS recent
+    LEFT JOIN visitor_ip_geolocations AS geo ON geo.ip_address = recent.ip_address
     LEFT JOIN share_links ON share_links.token = recent.token
     LEFT JOIN share_visit_modules ON share_visit_modules.visit_id = recent.id
     ORDER BY recent.id DESC, share_visit_modules.module_key ASC
@@ -327,6 +423,12 @@ function listVisits(where: string, params: unknown[], limit: number): ShareVisit
     visitKey: string;
     visitedAt: string;
     ipAddress: string;
+    geoCountry: string | null;
+    geoRegion: string | null;
+    geoCity: string | null;
+    geoDistrict: string | null;
+    geoIsp: string | null;
+    geoStatus: "pending" | "success" | "failed" | null;
     durationSeconds: number;
     token: string | null;
     linkLabel: string;
@@ -352,6 +454,22 @@ function listVisits(where: string, params: unknown[], limit: number): ShareVisit
         visitKey: row.visitKey,
         visitedAt: row.visitedAt,
         ipAddress: row.ipAddress,
+        ipLocation: [row.geoCountry, row.geoRegion, row.geoCity, row.geoDistrict, row.geoIsp]
+          .filter((value, index, values): value is string => Boolean(value) && values.indexOf(value) === index)
+          .join(" · "),
+        ipLocationStatus: row.geoStatus === "success"
+          ? "resolved"
+          : row.geoStatus === "pending"
+            ? "pending"
+            : row.geoStatus === "failed"
+              ? "failed"
+              : !row.ipAddress
+                ? "unavailable"
+                : !isPublicIpAddress(row.ipAddress)
+                  ? "private"
+                  : process.env.IP138_TOKEN?.trim()
+                    ? "unqueried"
+                    : "unconfigured",
         durationSeconds: Number(row.durationSeconds),
         token: row.token,
         linkLabel: row.linkLabel,

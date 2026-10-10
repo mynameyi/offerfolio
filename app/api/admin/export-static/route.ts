@@ -24,7 +24,7 @@ type GalleryEntry = {
   mediaItems?: ExportMedia[];
 };
 
-const mediaCollections = new Set(["avatars", "highlights", "showcase", "achievements", "education"]);
+const mediaCollections = new Set(["avatars", "highlights", "showcase", "achievements", "education", "projects"]);
 const clientScript = String.raw`
 (() => {
   const root = document.querySelector('.developerfolio-site');

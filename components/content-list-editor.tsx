@@ -35,6 +35,7 @@ function blankItem(id: string): PortfolioContentItem {
     subtitle: "",
     summary: "",
     organization: "",
+    careerExperienceId: "",
     period: "",
     url: "",
     urlLabel: "查看详情",

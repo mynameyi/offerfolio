@@ -54,6 +54,8 @@ export type PortfolioContentItem = {
   subtitle: string;
   summary: string;
   organization: string;
+  careerExperienceId?: string;
+  role?: string;
   period: string;
   url: string;
   urlLabel: string;
@@ -158,6 +160,8 @@ const emptyContentItem = (id: string, title = ""): PortfolioContentItem => ({
   subtitle: "",
   summary: "",
   organization: "",
+  careerExperienceId: "",
+  role: "",
   period: "",
   url: "",
   urlLabel: "查看详情",
@@ -327,6 +331,8 @@ function normalizeContentItems(
       subtitle: text(record.subtitle, base.subtitle, 240),
       summary: text(record.summary ?? record.description ?? record.projectDesc ?? record.desc ?? record.subtitle, base.summary, 1200),
       organization: text(record.organization ?? record.company, base.organization, 160),
+      careerExperienceId: text(record.careerExperienceId, base.careerExperienceId ?? "", 80),
+      role: text(record.role ?? record.projectRole, "", 120),
       period: text(record.period ?? record.date ?? record.duration, base.period, 100),
       url: safeUrl(record.url ?? record.evidenceUrl, base.url),
       urlLabel: text(record.urlLabel ?? record.evidenceLabel, base.urlLabel, 100),
@@ -419,6 +425,24 @@ export function normalizeProfile(value: unknown): PortfolioProfile {
     }),
   ) as PortfolioModuleLabels;
 
+  const projects = normalizeContentItems(input.projects, projectsFallback, 30).map((project) => {
+    const legacyRole = /^\s*项目(?:职责|角色)\s*[:：]\s*([^\r\n]{1,120})(?:\r?\n+|$)/.exec(project.summary);
+    const normalizedProject = legacyRole
+      ? {
+          ...project,
+          role: project.role || legacyRole[1].trim(),
+          summary: project.summary.slice(legacyRole[0].length).trimStart(),
+        }
+      : project;
+    if (normalizedProject.careerExperienceId) return normalizedProject;
+    const matchingExperience = milestones.find((milestone) =>
+      milestone.kind === "experience"
+      && normalizedProject.organization
+      && milestone.organization.trim() === normalizedProject.organization.trim(),
+    );
+    return matchingExperience ? { ...normalizedProject, careerExperienceId: matchingExperience.id } : normalizedProject;
+  });
+
   return {
     preventSearchSnapshots: typeof input.preventSearchSnapshots === "boolean"
       ? input.preventSearchSnapshots
@@ -443,7 +467,7 @@ export function normalizeProfile(value: unknown): PortfolioProfile {
     socialLinks: normalizeContentItems(input.socialLinks, DEFAULT_PROFILE.socialLinks, 16),
     strengths: normalizeContentItems(input.strengths ?? input.skillProgress, DEFAULT_PROFILE.strengths, 20),
     showcaseItems: normalizeContentItems(input.showcaseItems ?? input.openSourceProjects, DEFAULT_PROFILE.showcaseItems, 30, true),
-    projects: normalizeContentItems(input.projects, projectsFallback, 30),
+    projects,
     achievements: normalizeContentItems(input.achievements, DEFAULT_PROFILE.achievements, 30),
     blogs: normalizeContentItems(input.blogs, DEFAULT_PROFILE.blogs, 30),
     talks: normalizeContentItems(input.talks, DEFAULT_PROFILE.talks, 30),

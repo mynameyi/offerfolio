@@ -11,6 +11,7 @@ import {
 } from "@/lib/profile";
 import { Glyph } from "@/components/glyph";
 import { ContentListEditor, type ContentField } from "@/components/content-list-editor";
+import { ProjectListEditor } from "@/components/project-list-editor";
 import { HighlightManager } from "@/components/highlight-manager";
 import { ShowcaseManager } from "@/components/showcase-manager";
 import { ProfileAvatarUpload } from "@/components/profile-avatar-upload";
@@ -65,17 +66,6 @@ const socialFields: ContentField[] = [
 const strengthFields: ContentField[] = [
   { key: "title", label: "擅长方向", placeholder: "前端工程化" },
   { key: "level", label: "熟练度（0–100）", kind: "number" },
-];
-const projectFields: ContentField[] = [
-  { key: "title", label: "名称" },
-  { key: "subtitle", label: "副标题" },
-  { key: "summary", label: "内容介绍", kind: "textarea", fullWidth: true },
-  { key: "imageUrl", label: "图片 URL", kind: "url", fullWidth: true },
-  { key: "url", label: "主要链接", kind: "url" },
-  { key: "urlLabel", label: "主要链接文字" },
-  { key: "secondaryUrl", label: "补充链接", kind: "url" },
-  { key: "secondaryLabel", label: "补充链接文字" },
-  { key: "tags", label: "主题标签", kind: "tags", fullWidth: true },
 ];
 const achievementFields: ContentField[] = [
   { key: "title", label: "奖项 / 证书名称" },
@@ -369,7 +359,7 @@ export function AdminWorkspace({ onLogout }: { onLogout: () => Promise<void> }) 
       case "career":
         return milestoneEditor("experience", "07", "职业经历", "填写任职经历、职责范围和实际成果。");
       case "featuredProjects":
-        return <ContentListEditor number="08" title="代表项目" hint="重点介绍项目背景、个人贡献和交付结果。" items={profile.projects} fields={projectFields} onChange={(items) => setCollection("projects", items)} itemLabel="项目" addLabel="添加代表项目" />;
+        return <ProjectListEditor items={profile.projects} experiences={profile.milestones.filter((milestone) => milestone.kind === "experience")} onChange={(items) => setCollection("projects", items)} />;
       case "awards":
         return <ContentListEditor number="09" title="成就与证书" hint="添加奖项、证书图片和简要说明。" items={profile.achievements} fields={achievementFields} onChange={(items) => setCollection("achievements", items)} itemLabel="成就" addLabel="添加成就 / 证书" />;
       case "blogs":
