@@ -31,7 +31,7 @@ export type ShareVisit = {
   visitedAt: string;
   ipAddress: string;
   ipLocation: string;
-  ipLocationStatus: "resolved" | "pending" | "failed" | "private" | "unconfigured" | "unqueried" | "unavailable";
+  ipLocationStatus: "resolved" | "pending" | "failed" | "private" | "unqueried" | "unavailable";
   durationSeconds: number;
   token: string | null;
   linkLabel: string;
@@ -355,7 +355,6 @@ export function listVisitorVisits(limit = 100, view: VisitorVisitView = "active"
     sourceSummary: listVisitorSourceSummary(view),
     ignoredIps: listIgnoredVisitorIps(),
     retentionDays: getVisitorRetentionDays(),
-    ipGeolocationConfigured: Boolean(process.env.IP138_TOKEN?.trim()),
   };
 }
 
@@ -467,9 +466,7 @@ function listVisits(where: string, params: unknown[], limit: number): ShareVisit
                 ? "unavailable"
                 : !isPublicIpAddress(row.ipAddress)
                   ? "private"
-                  : process.env.IP138_TOKEN?.trim()
-                    ? "unqueried"
-                    : "unconfigured",
+                  : "unqueried",
         durationSeconds: Number(row.durationSeconds),
         token: row.token,
         linkLabel: row.linkLabel,

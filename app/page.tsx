@@ -31,6 +31,22 @@ function socialVisitorAction(url: string): "github" | "gitee" | undefined {
   }
 }
 
+function socialAccountLabel(url: string): string {
+  try {
+    const target = new URL(url);
+    const segments = target.pathname.split("/").filter(Boolean);
+    if (target.hostname.toLowerCase() === "linkedin.com" && segments[0] === "in") return segments[1] || "LinkedIn";
+    return segments[0] || target.hostname.replace(/^www\./i, "");
+  } catch {
+    return url;
+  }
+}
+
+function formatContactPhone(phone: string): string {
+  const digits = phone.replace(/\s+/g, "");
+  return /^1\d{10}$/.test(digits) ? `${digits.slice(0, 3)} ${digits.slice(3, 7)} ${digits.slice(7)}` : phone;
+}
+
 function SectionHeading({ title, subtitle }: { title: string; subtitle?: string }) {
   return <div className="df-section-heading"><h2>{title}</h2>{subtitle ? <p className="df-subtitle">{subtitle}</p> : null}</div>;
 }
@@ -262,7 +278,39 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       ) : null}
 
       {modules.contact ? (
-        <section className="df-main df-contact-section" id="contact" data-module-key="contact" style={sectionOrder("contact")}><SectionHeading title={profile.moduleLabels.contact} subtitle="如需了解项目细节或工作经历，可通过邮件或社交平台联系。" /><div className="df-contact-card"><div className="df-contact-avatar">{profile.avatarUrl ? <PortfolioImage src={profile.avatarUrl} alt={`${profile.displayName}的头像`} width={180} height={180} sizes="110px" style={{ objectPosition: avatarObjectPosition }} /> : profile.displayName.slice(0, 1) || "你"}</div><div className="df-contact-info"><h3>{profile.displayName}</h3><div className="df-contact-details">{profile.email ? <a data-visitor-action="contact" href={`mailto:${profile.email}`}>{profile.email}</a> : null}{profile.phone ? <a data-visitor-action="contact" href={`tel:${profile.phone}`}>{profile.phone}</a> : null}{profile.location ? <span><Glyph name="pin" />{profile.location}</span> : null}</div>{socialItems.length ? <div className="df-contact-social">{socialItems.map((item) => <a href={item.url} key={`contact-${item.id}`} data-visitor-action={socialVisitorAction(item.url)} {...externalLinkProps(item.url)}>{item.title}</a>)}</div> : null}</div></div></section>
+        <section className="df-main df-contact-section" id="contact" data-module-key="contact" style={sectionOrder("contact")}>
+          <p className="df-contact-eyebrow">CONTACT <span>/</span> {String(profile.moduleOrder.indexOf("contact") + 1).padStart(2, "0")}</p>
+          <SectionHeading title={profile.moduleLabels.contact} subtitle="如需了解项目细节或工作经历，可通过邮件或社交平台联系。" />
+          <div className="df-contact-card">
+            <div className="df-contact-identity">
+              <div className="df-contact-avatar">{profile.avatarUrl ? <PortfolioImage src={profile.avatarUrl} alt={`${profile.displayName}的头像`} width={180} height={180} sizes="104px" style={{ objectPosition: avatarObjectPosition }} /> : profile.displayName.slice(0, 1) || "你"}</div>
+              <div className="df-contact-identity-copy">
+                <h3>{profile.displayName}</h3>
+                {profile.location ? <span className="df-contact-location"><i aria-hidden="true" />{profile.location}</span> : null}
+              </div>
+            </div>
+            <div className="df-contact-panel">
+              <div className="df-contact-panel-heading"><h3>联系渠道</h3><span>选择你方便的方式</span></div>
+              <div className="df-contact-methods">
+                {profile.email ? <a className="df-contact-method" data-visitor-action="contact" href={`mailto:${profile.email}`}><span className="df-contact-method-icon"><Glyph name="mail" /></span><span className="df-contact-method-copy"><small>邮箱</small><strong>{profile.email}</strong></span></a> : null}
+                {profile.phone ? <a className="df-contact-method" data-visitor-action="contact" href={`tel:${profile.phone}`}><span className="df-contact-method-icon"><Glyph name="phone" /></span><span className="df-contact-method-copy"><small>电话</small><strong>{formatContactPhone(profile.phone)}</strong></span></a> : null}
+              </div>
+              {socialItems.length ? (
+                <div className="df-contact-social-grid">
+                  {socialItems.map((item) => {
+                    const action = socialVisitorAction(item.url);
+                    return <a className="df-contact-social-link" href={item.url} key={`contact-${item.id}`} data-visitor-action={action} aria-label={`${item.title}：${socialAccountLabel(item.url)}`} {...externalLinkProps(item.url)}>
+                      <span className={`df-contact-social-mark${action ? ` is-${action}` : ""}`} aria-hidden="true">{action ? <img src={action === "github" ? "/brand/github-invertocat.svg" : "/brand/gitee-mark.svg"} alt="" /> : item.title.slice(0, 1)}</span>
+                      <strong>{item.title}</strong>
+                      <span className="df-contact-social-account">{socialAccountLabel(item.url)}</span>
+                      <span className="df-contact-external" aria-hidden="true">↗</span>
+                    </a>;
+                  })}
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </section>
       ) : null}
       </div>
 

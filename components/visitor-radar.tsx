@@ -19,7 +19,7 @@ type ShareVisit = {
   visitedAt: string;
   ipAddress: string;
   ipLocation: string;
-  ipLocationStatus: "resolved" | "pending" | "failed" | "private" | "unconfigured" | "unqueried" | "unavailable";
+  ipLocationStatus: "resolved" | "pending" | "failed" | "private" | "unqueried" | "unavailable";
   durationSeconds: number;
   token: string | null;
   linkLabel: string;
@@ -47,7 +47,6 @@ type VisitorRecordsResponse = {
   sourceSummary: VisitorSourceCount[];
   ignoredIps: IgnoredVisitorIp[];
   retentionDays: number;
-  ipGeolocationConfigured: boolean;
 };
 
 const moduleLabels = new Map(PROFILE_MODULES.map(({ key, label }) => [key, label]));
@@ -73,7 +72,6 @@ function describeIpLocation(visit: ShareVisit) {
     pending: "查询中",
     failed: "查询失败，之后会重试",
     private: "内网 IP，无法查询",
-    unconfigured: "未配置 IP138_TOKEN",
     unqueried: "尚未查询（仅新访客触发）",
     unavailable: "无法获取 IP",
   }[visit.ipLocationStatus];
@@ -114,7 +112,6 @@ export function VisitorRadar() {
   const [sourceSummary, setSourceSummary] = useState<VisitorSourceCount[]>([]);
   const [retentionDays, setRetentionDays] = useState(0);
   const [retentionChoice, setRetentionChoice] = useState(0);
-  const [ipGeolocationConfigured, setIpGeolocationConfigured] = useState(false);
   const [label, setLabel] = useState("");
   const [expandedToken, setExpandedToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -146,7 +143,6 @@ export function VisitorRadar() {
     setSourceSummary(visitsResult.sourceSummary);
     setRetentionDays(visitsResult.retentionDays);
     setRetentionChoice(visitsResult.retentionDays);
-    setIpGeolocationConfigured(visitsResult.ipGeolocationConfigured);
   }, [visitView]);
 
   useEffect(() => {
@@ -331,7 +327,7 @@ export function VisitorRadar() {
       </div>
 
       <div className="radar-list-heading radar-visits-heading"><div><p className="section-kicker">VISITOR RECORDS</p><h2>访客记录</h2></div><span>{visitCount} 次访问 · 显示最近 {allVisits.length} 条</span></div>
-      {!ipGeolocationConfigured ? <p className="radar-scope-note">IP 归属地查询尚未配置。请在运行实例的 .env 中设置 IP138_TOKEN；查询时公网 IP 会发送至 IP138，查询结果会缓存。</p> : null}
+      <p className="radar-scope-note">公网 IP 归属地默认通过 HTTPS 访问 ipwho.is；查询失败时会改用 ip-api.com 的免费 HTTP 接口重试。查询时 IP 会发送给对应服务商，结果按 IP 缓存；内网 IP 不查询。</p>
       <div className="radar-visit-filters" role="group" aria-label="访客记录筛选">
         <button className={visitView === "active" ? "is-selected" : ""} type="button" aria-pressed={visitView === "active"} onClick={() => { setLoading(true); setVisits({}); setError(""); setVisitView("active"); }}>未忽略 <span>{activeVisitCount}</span></button>
         <button className={visitView === "ignored" ? "is-selected" : ""} type="button" aria-pressed={visitView === "ignored"} onClick={() => { setLoading(true); setVisits({}); setError(""); setVisitView("ignored"); }}>已忽略 <span>{ignoredVisitCount}</span></button>

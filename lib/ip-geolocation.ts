@@ -3,7 +3,7 @@ import "server-only";
 import { isIP } from "node:net";
 import { db } from "@/lib/db";
 
-type Ip138Location = {
+type IpLocation = {
   country: string;
   region: string;
   city: string;
@@ -11,7 +11,7 @@ type Ip138Location = {
   isp: string;
 };
 
-type CachedIpLocation = Ip138Location & {
+type CachedIpLocation = IpLocation & {
   status: "pending" | "success" | "failed";
   updatedAt: string;
 };
@@ -64,22 +64,56 @@ export function isPublicIpAddress(ip: string): boolean {
   return true;
 }
 
-function parseIp138Response(body: string): Ip138Location | null {
-  const trimmed = body.trim();
-  const jsonText = trimmed.startsWith("{") ? trimmed : trimmed.match(/^[^(]+\(([\s\S]*)\)\s*;?$/)?.[1];
-  if (!jsonText) return null;
+function stringValue(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
 
+function hasLocation(location: IpLocation): boolean {
+  return Boolean(location.country || location.region || location.city || location.district);
+}
+
+function parseIpWhoIsResponse(body: string): IpLocation | null {
   try {
-    const response = JSON.parse(jsonText) as { ret?: string; data?: unknown };
-    if (response.ret !== "ok" || !Array.isArray(response.data)) return null;
-    const values = response.data.map((value) => typeof value === "string" ? value.trim() : "");
-    return {
-      country: values[0] || "",
-      region: values[1] || "",
-      city: values[2] || "",
-      district: values[3] || "",
-      isp: values[4] || "",
+    const response = JSON.parse(body) as {
+      success?: boolean;
+      country?: unknown;
+      region?: unknown;
+      city?: unknown;
+      connection?: { isp?: unknown };
     };
+    if (!response.success) return null;
+    const location = {
+      country: stringValue(response.country),
+      region: stringValue(response.region),
+      city: stringValue(response.city),
+      district: "",
+      isp: stringValue(response.connection?.isp),
+    };
+    return hasLocation(location) ? location : null;
+  } catch {
+    return null;
+  }
+}
+
+function parseIpApiResponse(body: string): IpLocation | null {
+  try {
+    const response = JSON.parse(body) as {
+      status?: string;
+      country?: unknown;
+      regionName?: unknown;
+      city?: unknown;
+      district?: unknown;
+      isp?: unknown;
+    };
+    if (response.status !== "success") return null;
+    const location = {
+      country: stringValue(response.country),
+      region: stringValue(response.regionName),
+      city: stringValue(response.city),
+      district: stringValue(response.district),
+      isp: stringValue(response.isp),
+    };
+    return hasLocation(location) ? location : null;
   } catch {
     return null;
   }
@@ -92,22 +126,41 @@ function cachedLocation(ip: string): CachedIpLocation | undefined {
   `).get(ip) as CachedIpLocation | undefined;
 }
 
-async function lookupIp138(ip: string, token: string): Promise<Ip138Location | null> {
-  const url = new URL("https://api.ip138.com/ipdata/");
-  url.searchParams.set("ip", ip);
-  url.searchParams.set("datatype", "jsonp");
-  const response = await fetch(url, {
-    headers: { token },
-    cache: "no-store",
-    signal: AbortSignal.timeout(5000),
-  });
-  if (!response.ok) return null;
-  return parseIp138Response(await response.text());
+async function fetchLocation(url: URL, parse: (body: string) => IpLocation | null): Promise<IpLocation | null> {
+  try {
+    const response = await fetch(url, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!response.ok) return null;
+    return parse(await response.text());
+  } catch {
+    return null;
+  }
+}
+
+async function lookupIpWhoIs(ip: string): Promise<IpLocation | null> {
+  const url = new URL(`https://ipwho.is/${encodeURIComponent(ip)}`);
+  url.searchParams.set("lang", "zh-CN");
+  url.searchParams.set("fields", "success,country,region,city,connection.isp");
+  return fetchLocation(url, parseIpWhoIsResponse);
+}
+
+async function lookupIpApi(ip: string): Promise<IpLocation | null> {
+  const url = new URL(`http://ip-api.com/json/${encodeURIComponent(ip)}`);
+  url.searchParams.set("fields", "status,country,regionName,city,district,isp");
+  url.searchParams.set("lang", "zh-CN");
+  return fetchLocation(url, parseIpApiResponse);
+}
+
+async function lookupLocation(ip: string): Promise<IpLocation | null> {
+  const primary = await lookupIpWhoIs(ip);
+  if (primary) return primary;
+  return lookupIpApi(ip);
 }
 
 export function scheduleIpGeolocationLookup(ip: string): void {
-  const token = process.env.IP138_TOKEN?.trim();
-  if (!token || !isPublicIpAddress(ip) || inFlightLookups.has(ip)) return;
+  if (!isPublicIpAddress(ip) || inFlightLookups.has(ip)) return;
 
   const existing = cachedLocation(ip);
   if (existing?.status === "success") return;
@@ -124,7 +177,7 @@ export function scheduleIpGeolocationLookup(ip: string): void {
   `).run(ip, new Date().toISOString());
 
   inFlightLookups.add(ip);
-  void lookupIp138(ip, token)
+  void lookupLocation(ip)
     .then((location) => {
       if (!location) {
         db.prepare("UPDATE visitor_ip_geolocations SET status = 'failed', updated_at = ? WHERE ip_address = ?")
