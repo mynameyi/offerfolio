@@ -1025,11 +1025,11 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
 .df-contact-eyebrow span { color: #b7a1c8; }
 .df-contact-section > .df-section-heading { margin-bottom: 32px; text-align: center; }
 .df-contact-card { width: min(100%, 1000px); padding: 16px; display: grid; grid-template-columns: 250px minmax(0, 1fr); align-items: stretch; gap: 22px; border: 1px solid var(--df-border); border-radius: 18px; background: var(--df-card); box-shadow: 0 8px 25px var(--df-shadow); }
-.df-contact-identity { min-height: 256px; padding: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; border-radius: 13px; background: color-mix(in srgb, var(--df-purple) 5%, var(--df-card)); }
-.df-contact-avatar { width: 116px; height: 116px; padding: 5px; flex: 0 0 auto; display: grid; place-items: center; border: 1px solid color-mix(in srgb, var(--df-purple) 18%, var(--df-border)); border-radius: 50%; background: var(--df-card); }
-.df-contact-avatar img { width: 100%; height: 100%; display: block; border-radius: 50%; object-fit: cover; object-position: center top; }
-.df-contact-identity-copy { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.df-contact-identity-copy h3 { margin: 0; color: var(--df-text); font-size: 20px; font-weight: 700; }
+.df-contact-identity { min-height: 190px; padding: 16px; display: grid; grid-template-columns: 88px minmax(0, 1fr); align-items: center; justify-content: center; gap: 12px; border-radius: 13px; background: color-mix(in srgb, var(--df-purple) 5%, var(--df-card)); }
+.df-contact-avatar { width: 88px; height: 88px; padding: 4px; position: relative; flex: 0 0 auto; overflow: hidden; border: 1px solid color-mix(in srgb, var(--df-purple) 18%, var(--df-border)); border-radius: 50%; background: var(--df-card); box-sizing: border-box; }
+.df-contact-avatar img { width: 100%; height: 100%; max-width: none; max-height: none; position: absolute; inset: 0; display: block; border-radius: 50%; object-fit: cover; object-position: center top; }
+.df-contact-identity-copy { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.df-contact-identity-copy h3 { margin: 0; color: var(--df-text); font-size: 18px; font-weight: 700; }
 .df-contact-location { display: inline-flex; align-items: center; gap: 7px; color: var(--df-subtitle); font-size: 11px; }
 .df-contact-location i { width: 7px; height: 7px; border-radius: 50%; background: var(--df-purple); }
 .df-contact-panel { min-width: 0; padding: 10px 13px; display: flex; flex-direction: column; justify-content: center; }
@@ -1108,7 +1108,7 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
   .df-project-modal-image img { max-height: 43vh; }
   .df-project-modal-header { padding: 25px 66px 18px 22px; }
   .df-contact-card { grid-template-columns: 1fr; gap: 12px; }
-  .df-contact-identity { min-height: auto; padding: 13px 18px; flex-direction: row; justify-content: flex-start; }
+  .df-contact-identity { min-height: auto; padding: 13px 18px; grid-template-columns: 76px minmax(0, 1fr); justify-content: flex-start; }
   .df-contact-avatar { width: 76px; height: 76px; padding: 3px; }
   .df-contact-identity-copy { align-items: flex-start; }
   .df-contact-panel { padding: 8px; }
@@ -1135,8 +1135,8 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
   .df-experience-chapter-detail .df-experience-achievements li, .df-experience-chapter-detail .df-experience-summary { font-size: 12px; }
   .df-resume-inner { flex-direction: column; align-items: flex-start; }
   .df-contact-card { padding: 14px; grid-template-columns: 205px minmax(0, 1fr); gap: 14px; }
-  .df-contact-identity { min-height: 230px; }
-  .df-contact-avatar { width: 96px; height: 96px; }
+  .df-contact-identity { min-height: 170px; padding: 12px; grid-template-columns: 72px minmax(0, 1fr); gap: 9px; }
+  .df-contact-avatar { width: 72px; height: 72px; }
   .df-footer { min-height: 0; padding-block: 18px; flex-wrap: wrap; }
   .df-footer > p { width: 100%; }
 }
@@ -1191,7 +1191,7 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
   .df-experience-card { padding: 16px; gap: 12px; }
   .df-company-mark { width: 39px; height: 39px; }
   .df-contact-card { grid-template-columns: 1fr; padding: 11px; gap: 10px; }
-  .df-contact-identity { min-height: auto; padding: 11px 14px; flex-direction: row; justify-content: flex-start; gap: 14px; }
+  .df-contact-identity { min-height: auto; padding: 11px 14px; grid-template-columns: 68px minmax(0, 1fr); justify-content: flex-start; gap: 14px; }
   .df-contact-avatar { width: 68px; height: 68px; padding: 3px; }
   .df-contact-identity-copy { align-items: flex-start; gap: 6px; }
   .df-contact-panel { padding: 8px 2px; }
