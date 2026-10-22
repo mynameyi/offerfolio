@@ -95,6 +95,7 @@ export type PortfolioProfile = {
   headline: string;
   introduction: string;
   location: string;
+  icpRegistrationNumber: string;
   phone: string;
   email: string;
   githubUrl: string;
@@ -188,6 +189,7 @@ export const DEFAULT_PROFILE: PortfolioProfile = {
   headline: "你好，我是你的姓名 👋",
   introduction: "专注于构建清晰、可靠、好用的数字产品。欢迎浏览我的项目、经历与技术实践。",
   location: "",
+  icpRegistrationNumber: "",
   phone: "",
   email: "",
   githubUrl: "",
@@ -456,6 +458,7 @@ export function normalizeProfile(value: unknown): PortfolioProfile {
     headline: text(input.headline, DEFAULT_PROFILE.headline, 240),
     introduction: text(input.introduction, DEFAULT_PROFILE.introduction, 1600),
     location: location === "中国 · 可远程" ? "" : location,
+    icpRegistrationNumber: text(input.icpRegistrationNumber, DEFAULT_PROFILE.icpRegistrationNumber, 100),
     phone: text(input.phone, DEFAULT_PROFILE.phone, 100),
     email: text(input.email, DEFAULT_PROFILE.email, 200),
     githubUrl: safeUrl(input.githubUrl, DEFAULT_PROFILE.githubUrl),

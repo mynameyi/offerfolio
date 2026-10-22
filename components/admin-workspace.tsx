@@ -378,6 +378,7 @@ export function AdminWorkspace({ onLogout }: { onLogout: () => Promise<void> }) 
               <label className="field-label">所在地<input className="field-input" value={profile.location} onChange={(event) => setField("location", event.target.value)} maxLength={160} /></label>
               <label className="field-label">联系邮箱<input className="field-input" type="email" value={profile.email} onChange={(event) => setField("email", event.target.value)} maxLength={200} /></label>
               <label className="field-label">联系电话<input className="field-input" value={profile.phone} onChange={(event) => setField("phone", event.target.value)} maxLength={100} /></label>
+              <label className="field-label field-span-two">ICP备案号<input className="field-input" value={profile.icpRegistrationNumber} onChange={(event) => setField("icpRegistrationNumber", event.target.value)} placeholder="例如：粤ICP备12345678号-1" maxLength={100} /><span className="field-hint">选填，填写后会显示在公开页和静态导出页的底部。</span></label>
               <label className="field-label">LinkedIn 主页<input className="field-input" type="url" placeholder="https://linkedin.com/in/…" value={profile.linkedinUrl} onChange={(event) => setField("linkedinUrl", event.target.value)} /></label>
               <label className="field-label">X 用户名<input className="field-input" placeholder="不需要输入 @" value={profile.twitterHandle} onChange={(event) => setField("twitterHandle", event.target.value)} maxLength={80} /></label>
             </div>

@@ -1055,6 +1055,7 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
 .df-contact-external { flex: 0 0 auto; color: var(--df-purple); font-size: 12px; line-height: 1; }
 .df-footer { min-height: 90px; padding: 18px max(5%, calc((100vw - 1280px) / 2)); display: flex; align-items: center; justify-content: space-between; gap: 20px; border-top: 1px solid var(--df-border); color: var(--df-subtitle); background: var(--df-bg); font-size: 9px; }
 .df-footer > p { margin: 0; }
+.df-footer-meta { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px 18px; text-align: right; }
 .df-footer a { color: var(--df-purple); }
 .df-back-to-top { width: 42px; height: 42px; position: fixed; right: 22px; bottom: 22px; z-index: 40; display: grid; place-items: center; border-radius: 50%; color: #fff !important; background: var(--df-purple); box-shadow: 0 5px 16px var(--df-shadow); font-size: 20px; transition: background .16s ease, transform .16s ease; }
 .df-back-to-top:hover { background: var(--df-purple-hover); transform: translateY(-3px); }
@@ -1139,6 +1140,7 @@ a.folio-github-card:hover { box-shadow: 0 10px 25px #55198b17; transform: transl
   .df-contact-avatar { width: 72px; height: 72px; }
   .df-footer { min-height: 0; padding-block: 18px; flex-wrap: wrap; }
   .df-footer > p { width: 100%; }
+  .df-footer-meta { justify-content: flex-start; text-align: left; }
 }
 @media (max-width: 500px) {
   .df-greeting-title { font-size: clamp(31px, 9vw, 42px); }

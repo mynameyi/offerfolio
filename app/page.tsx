@@ -175,7 +175,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   return (
     <main className="developerfolio-site" id="top" data-theme="light">
       <header className="df-header">
-        <Link href="/" className="df-logo" aria-label="OfferFolio 首页">{profile.avatarUrl ? <PortfolioImage className="df-logo-avatar" src={profile.avatarUrl} alt="" width={64} height={64} sizes="48px" style={{ objectPosition: avatarObjectPosition }} /> : null}<span className="df-logo-muted">&lt;</span><span className="df-logo-name">{profile.displayName}</span><span className="df-logo-muted">/&gt;</span></Link>
+        <Link href="/" className="df-logo" aria-label="良乙Studio 首页">{profile.avatarUrl ? <PortfolioImage className="df-logo-avatar" src={profile.avatarUrl} alt="" width={64} height={64} sizes="48px" style={{ objectPosition: avatarObjectPosition }} /> : null}<span className="df-logo-muted">&lt;</span><span className="df-logo-name">良乙Studio</span><span className="df-logo-muted">/&gt;</span></Link>
         <PortfolioNavigation items={navItems} />
       </header>
 
@@ -315,7 +315,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       </div>
 
       {isStaticSnapshot ? null : <VisitorAnalytics visitKey={visitKey} />}
-      <footer className="df-footer"><p>用真实作品与清晰经历，展示每一份专业价值。</p><span>© {new Date().getFullYear()} {profile.displayName} · EckyStudio</span></footer>
+      <footer className="df-footer"><p>用真实作品与清晰经历，展示每一份专业价值。</p><div className="df-footer-meta"><span>© {new Date().getFullYear()} {profile.displayName} · 良乙Studio</span>{profile.icpRegistrationNumber ? <a className="df-footer-icp" href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">备案号：{profile.icpRegistrationNumber}</a> : null}</div></footer>
       <a className="df-back-to-top" href="#top" aria-label="返回顶部">↑</a>
     </main>
   );
